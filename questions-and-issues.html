@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Food Bank: your answers, my questions, and what could go wrong</title>
+<style>
+  :root {
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc;
+    --blue: #2563eb; --blue-bg: #dbeafe;
+    --green: #059669; --green-bg: #d1fae5;
+    --amber: #b45309; --amber-bg: #fef3c7;
+    --red: #dc2626; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 980px; margin: 0 auto; padding: 36px 20px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 .num { color: var(--blue); margin-right: 8px; }
+  h3 { font-size: 1.12rem; margin: 0 0 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  a { color: var(--blue); }
+
+  table { border-collapse: collapse; width: 100%; background: #fff; font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 18px 0; }
+  .card.q { border-left: 5px solid var(--blue); }
+  .card.p { border-left: 5px solid var(--red); }
+  .label { display: inline-block; font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 12px 0 2px; }
+  .example { background: var(--slate-bg); border-radius: 10px; padding: 10px 14px; margin: 6px 0; }
+  .example p { margin: 4px 0; }
+  .suggest { background: #eff6ff; border-radius: 10px; padding: 10px 14px; margin: 6px 0; }
+  .suggest p { margin: 4px 0; }
+  .note { border-left: 4px solid var(--amber); background: var(--amber-bg); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .note p { margin: 4px 0; }
+
+  .status { display: inline-block; font-size: .78em; font-weight: 700; padding: 1px 9px; border-radius: 999px; vertical-align: 2px; margin-left: 6px; }
+  .status.handled { background: var(--green-bg); color: #065f46; }
+  .status.known { background: var(--amber-bg); color: #92400e; }
+  .status.decide { background: var(--blue-bg); color: #1e40af; }
+
+  .screen { max-width: 520px; margin: 14px 0; border: 2px solid #334155; border-radius: 12px; overflow: hidden; background: #fff; font-size: .95rem; }
+  .screen .bar { background: #334155; color: #fff; padding: 6px 12px; font-weight: 600; font-size: .9rem; }
+  .screen .body { padding: 14px 16px; }
+  .screen .field { border: 1.5px solid #94a3b8; border-radius: 6px; padding: 4px 10px; font-family: ui-monospace, Consolas, monospace; display: inline-block; min-width: 140px; }
+  .screen .btn { display: inline-block; background: var(--green); color: #fff; border-radius: 6px; padding: 4px 12px; font-weight: 600; margin: 8px 6px 0 0; font-size: .9rem; }
+  .screen .btn.alt { background: #fff; color: var(--green); border: 1.5px solid var(--green); }
+  .screen .code { font: 700 1.5rem ui-monospace, Consolas, monospace; letter-spacing: .08em; color: var(--ink); }
+  .screen .small { color: var(--muted); font-size: .85rem; }
+
+  .story { counter-reset: st; list-style: none; padding: 0; }
+  .story li { position: relative; padding: 8px 12px 8px 46px; background: #fff; border: 1px solid var(--line); border-radius: 10px; margin: 8px 0; }
+  .story li::before { counter-increment: st; content: counter(st); position: absolute; left: 12px; top: 8px; width: 24px; height: 24px; border-radius: 50%; background: var(--blue); color: #fff; font-weight: 700; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
+
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 18px 0; }
+  .diagram svg { width: 100%; height: auto; display: block; }
+  svg .t-b { font: 600 15px system-ui, "Segoe UI", sans-serif; fill: #0f172a; }
+  svg .t-s { font: 13px system-ui, "Segoe UI", sans-serif; fill: #475569; }
+  svg .mid { text-anchor: middle; }
+
+  .slots { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .slots span { background: var(--blue-bg); border: 1px solid #93c5fd; border-radius: 6px; padding: 1px 8px; font-size: .85rem; }
+
+  footer { margin-top: 60px; color: var(--muted); font-size: .88rem; }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <p class="eyebrow">Campus Food Bank Booking System · 30 Oct 2026</p>
+  <h1>Your answers, my questions, and what could go wrong</h1>
+  <p class="lead">Part 1 is what I understood from your answers. Please check I got it right. Then come the answer to your setup-code question, a new explanation of the part that wasn't clear, my questions (each with an example), and the problems I can see in the system.</p>
+  <p class="lead"><b>All rounds are answered and the rules are done.</b> Every answer is in CONSTRAINTS.md and DECISIONS.md. This page is kept as a record.</p>
+</header>
+
+<!-- R4 -->
+<h2 id="r4"><span class="num">R4</span>Round 4: the last vital things <span class="status handled">Answered: all three yes</span></h2>
+<p>Your Round 3 answers are now in CONSTRAINTS.md, DECISIONS.md and how-it-works.html:</p>
+<ul>
+  <li>Walk-ins are recorded on a Walk-in screen: the volunteer checks the card and selects the items, so the 28-day rule and the stock count stay right.</li>
+  <li>A walk-in with a booking: the volunteer cancels the booking and serves them now. (I took this as a yes. Tell me if not.)</li>
+  <li>Volunteers update stock counts before each booking window. <b>Note:</b> Monday's booking opens Sunday 5 pm while the food bank is closed, so that update has to happen by Thursday evening or whenever volunteers are in before Sunday.</li>
+  <li>"Picked up" stays its own step, done by volunteers. DECISIONS.md has a blank "Why" here for you to fill in.</li>
+  <li>MCP cards stay with the food bank. Issues 4 and 6–9 are rules, and the coordinator can move a day's booking times. Issues 14–15 wait until going live.</li>
+  <li>Volunteers log in separately and set their password with a setup code.</li>
+</ul>
+
+<div class="card p">
+  <h3>Vital 1: Only a volunteer's click counts as "picked up", and mistakes can be fixed</h3>
+  <span class="label">Example: the student marks it</span>
+  <div class="example">
+    <p>You said the student could also mark their items as picked up. But no-shows don't count toward the 28 days. So if Ben collects his bag and it isn't marked, he becomes a no-show at 6 pm and can book again on Thursday. A student who knows this just won't press the button.</p>
+  </div>
+  <span class="label">Example: the internet goes down</span>
+  <div class="example">
+    <p>Wi-Fi is down on Monday from 4 to 6 pm. Volunteers hand out 8 bags but can't mark them. At 6 pm all 8 become no-shows. The system adds their items back to stock even though they're gone, and all 8 students can book again on Thursday. Right now no-show is final, so nobody can fix it.</p>
+  </div>
+  <span class="label">My suggestion</span>
+  <div class="suggest">
+    <p><b>Only a volunteer's click counts.</b> The student can't mark their own pickup.</p>
+    <p><b>Volunteers can fix a mistake afterwards:</b> change a no-show to picked up, or back. Every fix is logged with who made it. It should be fixed before the next booking window opens, so the 28-day check and the stock count are right in time.</p>
+  </div>
+</div>
+
+<div class="card p">
+  <h3>Vital 2: One held slot at a time, and check the rules before the hold</h3>
+  <span class="label">Example: many tabs</span>
+  <div class="example"><p>Sunday 5:00 pm. Ben opens 3 tabs and holds 3:30, 3:40 and 3:50. For 10 minutes, nobody else can have them, at the busiest moment of the week.</p></div>
+  <span class="label">Example: not allowed to book anyway</span>
+  <div class="example"><p>Ana picked up last Thursday, so she can't book for Monday. She holds 4:00, spends 8 minutes choosing 13 items, presses Book, and only then sees "28 days haven't passed". Her hold blocked 4:00 for 8 minutes for nothing.</p></div>
+  <span class="label">My suggestion</span>
+  <div class="suggest">
+    <p><b>A student can hold only one slot at a time.</b></p>
+    <p><b>Check the rules when they pick a slot, before the hold:</b> 28 days passed, no other upcoming booking, and they didn't cancel for this day. Then check again when they press Book, in case anything changed.</p>
+  </div>
+</div>
+
+<div class="card q">
+  <h3>Vital 3: Volunteer logins</h3>
+  <p>These details shape the accounts table.</p>
+  <table>
+    <tr><th style="width:42%">Question</th><th>My suggestion</th></tr>
+    <tr><td>Students log in with their MUN ID. What does a volunteer log in with?</td><td>A username the coordinator gives them, like a first name or nickname. No real name needed.</td></tr>
+    <tr><td>A volunteer who also uses the food bank: one account or two?</td><td>Two separate accounts: their volunteer login and their student account. A volunteer should also not record their own walk-in or hand themselves a bag, but the log (R4) shows it if they do.</td></tr>
+    <tr><td>Who creates the very first coordinator account?</td><td>It's made once, when the system is installed, with a small setup script.</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>That's everything vital I can find</h3>
+  <p>The rest are going-live topics (privacy review, hosting, accessibility). Once these three are settled, the rules are done, and we move on to the tech and the database tables.</p>
+</div>
+
+
+<!-- R3 -->
+<h2 id="r3"><span class="num">R3</span>Round 3: the main issues left before we build</h2>
+<p>Your Round 2 answers are now in CONSTRAINTS.md, DECISIONS.md and how-it-works.html: one student per slot, no-show at 6 pm, no daily limit, a 10-minute hold, and no booking again the same day after cancelling.</p>
+<p>I looked for anything that would change the database design or break the main rules. There are two real issues, plus a few quick yes-or-no questions.</p>
+
+<div class="card p">
+  <h3>Issue 1: Are walk-ins still recorded in the system?</h3>
+  <p>You said we only control online bookings and don't care about walk-ins for now. Not limiting walk-ins is fine. But if walk-ins aren't <b>recorded</b> at all, two things break:</p>
+  <span class="label">Example: the 28-day rule</span>
+  <div class="example"><p>Ben walks in on Monday and gets food. The system doesn't know. On Wednesday at 5 pm he books online for Thursday. He gets food twice in four days.</p></div>
+  <span class="label">Example: the stock count</span>
+  <div class="example"><p>The system says 10 quick oats. Walk-ins take 6 on Monday, but nobody tells the system. On Wednesday at 5 pm, 8 students book quick oats. Only 4 are on the shelf, so 4 students get substitutes or have to choose at the counter.</p></div>
+  <span class="label">My suggestion</span>
+  <div class="suggest">
+    <p><b>Keep recording walk-ins, with no limit on how many.</b> The volunteer types the card number and taps the items given. That's about a minute. It keeps the 28-day rule fair for everyone and the stock count right.</p>
+    <p>It also settles old issue 2: if a walk-in already has a booking, the system shows it, and the volunteer cancels the booking and serves them now.</p>
+    <p>If you'd rather not record walk-ins, then someone has to recount the stock before every 5 pm opening, and the 28-day rule only covers online bookings.</p>
+  </div>
+</div>
+
+<div class="card p">
+  <h3>Issue 2: A forgotten "picked up" click</h3>
+  <span class="label">Example</span>
+  <div class="example">
+    <p>Monday at 4:10 it's busy. A volunteer checks Ben's card and hands him his bag, but forgets to press "Picked up". At 6 pm the system marks Ben as a no-show. Three things go wrong:</p>
+    <ul>
+      <li>His items are added back to the stock count, but they've left the building.</li>
+      <li>His 28 days never start.</li>
+      <li>He books again for Thursday and gets food twice in one week.</li>
+    </ul>
+  </div>
+  <span class="label">My suggestion</span>
+  <div class="suggest">
+    <p><b>Make the card check and "picked up" one step.</b> The volunteer types the card number. If it matches, the screen says "Give Ben his bag" and marks it picked up at the same moment. There's no separate button to forget.</p>
+    <p>Before 6 pm, a volunteer checks that the bags left on the shelf match the list of bookings not picked up. That's a 1-minute check that catches mistakes.</p>
+  </div>
+</div>
+
+<div class="card q">
+  <h3>Quick yes or no</h3>
+  <p>These are small, but some of them change the tables, so it's better to settle them before we design.</p>
+  <table>
+    <tr><th style="width:42%">Question</th><th>My suggestion</th></tr>
+    <tr><td><b>Issue 9:</b> each volunteer has their own login, the system logs who created or reset an account, and the student sees "password reset on DATE".</td><td>Yes. It needs a volunteers table and a log table, so we should know now.</td></tr>
+    <tr><td><b>Issue 7:</b> the ID number never appears in web addresses, logs or error messages, with a test that checks it.</td><td>Yes. It's a rule for how we write the code.</td></tr>
+    <tr><td><b>Issue 8:</b> back up the secret key somewhere safe, outside the database.</td><td>Yes. Without it, no card can be matched to an account.</td></tr>
+    <tr><td><b>Issue 6:</b> the coordinator sees totals by week, and any number under 5 shows as "fewer than 5".</td><td>Yes.</td></tr>
+    <tr><td><b>Issue 4:</b> delete accounts with no pickup for a year.</td><td>Yes. Fewer stored IDs means less risk.</td></tr>
+    <tr><td><b>MCP check at pickup.</b></td><td>Drop it. Not everyone has an MCP card, and we can't see other food banks' records.</td></tr>
+    <tr><td><b>Website down on booking night:</b> the coordinator can move that day's booking times.</td><td>Yes. It's just a settings change.</td></tr>
+    <tr><td><b>Issues 14 and 15:</b> privacy review, hosting, accessibility.</td><td>Leave them until we're close to going live.</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>After this: tech and building</h3>
+  <p>Once these are settled, the rules are done. Next we talk through the tech (FastAPI, PostgreSQL and React are already chosen), then design the database tables by placing each rule in a table, a database rule, or the server code. Then we start building.</p>
+</div>
+
+
+<!-- R2 -->
+<h2 id="r2"><span class="num">R2</span>Round 2: your answers, my suggestions, and what's left</h2>
+<p>CONSTRAINTS.md, DECISIONS.md and how-it-works.html now include everything in this table.</p>
+<table>
+  <tr><th style="width:24%">Topic</th><th>Your answer</th></tr>
+  <tr><td>Booking time</td><td>Option B. Monday: Sunday 5 pm → Monday 12 pm. Thursday: Wednesday 5 pm → Thursday 12 pm. Volunteers pack 12–3 pm.</td></tr>
+  <tr><td>Students per slot</td><td>One per 10-minute slot for now (12 a day). See my suggestion below.</td></tr>
+  <tr><td>Cancelling</td><td>Until 12 pm on the pickup day, so the slot can go to someone else.</td></tr>
+  <tr><td>No-show</td><td>Not picked up by 5:30 pm. See my suggestion below.</td></tr>
+  <tr><td>Walk-ins</td><td>Their own line with their own volunteers, side by side with online pickups. No slots.</td></tr>
+  <tr><td>Calendar reminder</td><td>Not needed. Removed.</td></tr>
+  <tr><td>Problems 1, 2 and 4</td><td>Known issues: the 5 pm rush (most of MUN is done by 5 pm), Ben resets his password at the counter, internet down at the counter (plan later).</td></tr>
+</table>
+
+<div class="card">
+  <h3>My suggestion: students per slot</h3>
+  <p>One per 10-minute slot is a good start. Bags are already packed, so a pickup is quick: check the card, hand over the bag, add any extras. That's probably 2–3 minutes.</p>
+  <div class="suggest">
+    <p><b>Keep the 10-minute slots and only change the number per slot.</b> If all 12 slots go quickly every week and the volunteer at the online line is often waiting, raise it to 2 per slot (24 a day). It's one setting, no code.</p>
+    <p>Changing to 15-minute slots with 2 each gives fewer places: 8 slots × 2 = 16, while 12 slots × 2 = 24.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h3>My suggestion: no-show or cancelled?</h3>
+  <p>For the student, both give the same result: the items go back to stock and they can book again.</p>
+  <div class="suggest">
+    <p><b>At 5:30 the system marks it as a no-show by itself</b>, so volunteers don't have to remember. Volunteers put that bag's items back on the shelf. It doesn't count toward the 28 days, so the student can book again.</p>
+    <p><b>Why call it "no-show" and not "cancelled"?</b> So the food bank can see how many slots are wasted.</p>
+  </div>
+  <div class="example"><p><b>Example:</b> every Monday, 4 of the 12 slots are no-shows. That's a third of the slots wasted. With that number, the food bank can decide to make no-shows count toward the 28 days. That's already a setting.</p></div>
+</div>
+
+<div class="card q">
+  <h3>New question A: Do we still need a daily limit, and places kept for walk-ins?</h3>
+  <span class="label">Example</span>
+  <div class="example">
+    <p>Monday has 12 slots with one student each, so there are never more than 12 online bookings. The old rule (40 a day, 10 kept for walk-ins, online stops at 30) never does anything.</p>
+    <p>Walk-ins have their own line and only take what's left on the shelf after the bags are packed. So they can't take food from booked students.</p>
+    <p><b>But:</b> if 45 walk-ins come on Monday and empty the shelf, students booking for Thursday on Wednesday at 5 pm see almost nothing in stock.</p>
+  </div>
+  <span class="label">My suggestion</span>
+  <div class="suggest">
+    <p>Drop the daily limit and the 10 places kept for walk-ins. Add one optional setting, "most walk-ins per day", left empty (no limit) unless the food bank wants one.</p>
+    <p>Bonus: the database gets simpler. A booking only has to lock its slot, not the day as well.</p>
+  </div>
+</div>
+
+<div class="card q">
+  <h3>New question B: How long is the slot held while the student chooses items? <span style="font-weight:400;color:#475569">(question 4, not answered yet)</span></h3>
+  <span class="label">Example</span>
+  <div class="example">
+    <p>Sunday 5:00 pm, there are 12 slots and lots of students. Ana picks 3:40 and starts choosing. If the hold is 10 minutes and she gives up halfway, 3:40 is blocked for 10 minutes at the busiest time. If it's only 3 minutes, she may not finish choosing 13 items and 5 substitutes.</p>
+  </div>
+  <span class="label">My suggestion</span>
+  <div class="suggest"><p>10 minutes, as a setting, with a countdown on screen: "3:40 is held for you: 7 minutes left".</p></div>
+</div>
+
+<div class="card q">
+  <h3>New question C: Can a student cancel and then book again?</h3>
+  <span class="label">Example</span>
+  <div class="example">
+    <p>Ana books at 6 pm on Sunday with oats. At 9 pm she wants pasta instead. She can't change items. But she can cancel (until 12 pm Monday) and book again, because cancellations don't count toward the 28 days.</p>
+    <p>She gives up her 3:40 slot and her items, and takes whatever slots and stock are left.</p>
+  </div>
+  <span class="label">My suggestion</span>
+  <div class="suggest"><p>Allow it. It needs no extra rule, and losing her slot makes it a real choice, not an easy swap.</p></div>
+</div>
+
+<div class="card q">
+  <h3>New question D: Can the coordinator move the booking times if the website goes down? <span style="font-weight:400;color:#475569">(problem 3)</span></h3>
+  <span class="label">Example</span>
+  <div class="example"><p>The server is down on Sunday from 5:10 to 9 pm. Students lose the busiest hours of booking for Monday.</p></div>
+  <span class="label">My suggestion</span>
+  <div class="suggest"><p>Yes. The coordinator can open booking later, or keep it open later, for that one day. It's a settings change, not code.</p></div>
+</div>
+
+
+<!-- 1 -->
+<h2><span class="num">1</span>What I understood from your answers</h2>
+<table>
+  <tr><th style="width:20%">Topic</th><th style="width:40%">What you decided</th><th>What it changes</th></tr>
+  <tr><td>Who it's for</td><td>One person per MUN card. No families or household sizes for now.</td><td>Every student gets the same item limit (13, a sample number). The "household size" step is removed from booking. Families move to "Not in the prototype".</td></tr>
+  <tr><td>Pickup times</td><td>Monday and Thursday, 3:30–5:30 pm only. Closed on Sunday. No evening hours.</td><td>Sunday and 7–8 pm are removed. (See the note below this table.)</td></tr>
+  <tr><td>Slot length</td><td>10 minutes.</td><td>12 slots a day: 3:30, 3:40 … 5:20.</td></tr>
+  <tr><td>Order of steps</td><td>The student books a slot first, then chooses items, then comes to pick up.</td><td>The slot is held while they choose (see <a href="#s3">part 3</a> and question 4).</td></tr>
+  <tr><td>Changing items</td><td>Not allowed. Once booked, the items are locked.</td><td>Rule I7 changes. Showing "this item has run out" online, so students could swap it, isn't needed any more.</td></tr>
+  <tr><td>Packing</td><td>Volunteers pack on the pickup day, before 3 pm.</td><td>Booking must close before packing starts (see <a href="#s4">part 4</a>).</td></tr>
+  <tr><td>Substitutes</td><td>Up to 5 instead of 3. If all of them are out, the volunteer asks the student at the counter. This should be rare.</td><td>Substitute limit 3 → 5. Rule U6 changes: the bag doesn't just go out smaller, the student picks something at the counter. The volunteer records what was given, so the stock count stays right.</td></tr>
+  <tr><td>Telling students about swaps</td><td>The volunteer writes it on a sticky note on the bag, like "Sunflower oil → rice".</td><td>Nothing needs to be shown online.</td></tr>
+  <tr><td>Counting the 28 days (issue 5)</td><td>Yes: calendar days in Newfoundland time, checked against the slot's date.</td><td>Becomes a rule.</td></tr>
+  <tr><td>Snow day</td><td>The coordinator cancels all of that day's bookings, packed or not. Students can book again.</td><td>A packed booking can be cancelled. Cancellations don't count toward the 28 days, so they can book again.</td></tr>
+  <tr><td>Telling students about closures (issue 10)</td><td>Not possible for now. If MUN approves the project, maybe through MUN email.</td><td>Stays a known issue.</td></tr>
+  <tr><td>A volunteer could use a setup code first</td><td>We trust volunteers for now. Later, password resets could use MUN email, if MUN gives access.</td><td>Stays a known issue. Logging which volunteer made each code (issue 9) still helps.</td></tr>
+  <tr><td>Picking up for someone else</td><td>No, as far as you know.</td><td>Stays out of the system.</td></tr>
+  <tr><td>Students from other colleges</td><td>No, MUN students only, as far as you know.</td><td>Only MUN cards are accepted, which is already how rule P1 works.</td></tr>
+  <tr><td>When new stock arrives</td><td>We don't know, which is why booking is kept as close to pickup as possible.</td><td>Still a question for the food bank.</td></tr>
+</table>
+<div class="note">
+  <p><b>Where did Sunday and 7–8 pm come from?</b> They were the sample opening hours in CONSTRAINTS.md from our first session (25 Oct). I copied them onto the page without checking with you. They're wrong, and I'll remove them.</p>
+  <p><b>What did we decide on 27 Oct about booking times?</b> Booking for a pickup day opens at 10 am two days before (Saturday for Monday, Tuesday for Thursday) and closes 3 hours before the slot. Your new answers change this. See <a href="#s4">part 4</a>.</p>
+</div>
+
+<!-- 2 -->
+<h2 id="s2"><span class="num">2</span>Your question: giving setup codes at the counter</h2>
+<p><b>Yes. That's already how it works.</b> Our own website makes the setup code. MUN isn't involved at all. The only MUN thing is the student's MUN card, which the volunteer checks by looking at it.</p>
+<p>The volunteer's screen at the counter would look something like this:</p>
+<div class="screen">
+  <div class="bar">Volunteer · Student accounts</div>
+  <div class="body">
+    <div>MUN ID number from the card: <span class="field">201912345</span></div>
+    <div><span class="btn">Create account</span><span class="btn alt">New setup code</span></div>
+    <hr style="border:0;border-top:1px solid #e2e8f0;margin:14px 0">
+    <div class="small">Give this code to the student:</div>
+    <div class="code">K7P-4QX</div>
+    <div class="small">Works once. Stops working on Fri 6 Nov.</div>
+  </div>
+</div>
+<ul>
+  <li><b>New student:</b> the volunteer presses <b>Create account</b>. The student takes the code and sets their password on their own phone.</li>
+  <li><b>Forgot password:</b> the volunteer presses <b>New setup code</b>. The student sets a new password the same way. I suggest that a new code also cancels any older code that hasn't been used.</li>
+</ul>
+<p>Later, <b>only if</b> MUN gives us access, students could reset their password with their MUN email instead of coming to the counter. That's an extra, not something we depend on.</p>
+
+<!-- 3 -->
+<h2 id="s3"><span class="num">3</span>The part you didn't get, explained with an example</h2>
+<p>Here is one student, Ana, booking for Monday with your order of steps: slot first, then items.</p>
+<ol class="story">
+  <li><b>Sunday 5:02 pm.</b> Ana picks the Monday 3:40 slot. The system <b>holds</b> that place for her for 10 minutes, so nobody else can take it while she chooses.</li>
+  <li><b>5:02–5:08.</b> She chooses her items (like sunflower oil) and up to 5 substitutes. Nothing is taken from stock yet.</li>
+  <li><b>5:08 pm.</b> She presses <b>Book</b>. Now the system does three things: (a) turns her held place into a real booking, (b) takes her items off the stock count, for example sunflower oil 6 → 5, and (c) saves the booking with a booking code.</li>
+</ol>
+
+<div class="card">
+  <h3>"What's a transaction?"</h3>
+  <p>A transaction means the three things in step 3 happen <b>together, or not at all</b>.</p>
+  <div class="example">
+    <p><b>Without it:</b> the server crashes after (a) but before (b). Ana has a booking, but the sunflower oil is still counted as on the shelf. Another student books that "same" bottle. On Monday there's one bottle for two people.</p>
+    <p><b>With it:</b> the crash also undoes (a). Nothing is saved, and Ana just presses Book again.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h3>"Why reserve items only when they press Book?"</h3>
+  <p>In step 2, Ana's sunflower oil isn't taken from stock yet. It's only taken in step 3.</p>
+  <div class="example">
+    <p><b>If we took it while she was choosing:</b> 6 bottles are left. 6 students add oil to their list, then close the app without booking. The oil looks gone, but nobody actually gets it.</p>
+    <p><b>The downside of our way:</b> Ana chooses oil at 5:03, but someone else books the last bottle at 5:06. When Ana presses Book at 5:08, she sees "Sunflower oil just ran out, please choose something else". Nothing else about her booking is lost.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h3>"Pressing Book twice still makes only one booking"</h3>
+  <div class="example"><p>Ana's Wi-Fi is slow, so she taps Book twice. The system must make <b>one</b> booking and take <b>one</b> bottle of oil, not two of each.</p></div>
+</div>
+
+<div class="card">
+  <h3>"Issue 1: hold the slot for 10 minutes"</h3>
+  <p>This is step 1. Your order of steps (slot first, then items) <b>needs</b> this hold.</p>
+  <div class="example">
+    <p><b>Without the hold:</b> 3:40 has one place left. Ana picks it at 5:02 and starts choosing. Ben books 3:40 at 5:05. At 5:08 Ana is told "3:40 is full" and has to start again.</p>
+    <p><b>With the hold:</b> 3:40 is Ana's until 5:12. If she closes the app and never presses Book, the place becomes free again at 5:12.</p>
+  </div>
+</div>
+
+<!-- 4 -->
+<h2 id="s4"><span class="num">4</span>Your question: when should booking be open?</h2>
+<p>On 27 Oct we decided booking opens at 10 am two days before and closes 3 hours before the slot. That no longer fits, because:</p>
+<ul>
+  <li>items can't be changed after booking, and volunteers pack <b>before 3 pm on the pickup day</b>, so booking has to close <b>before packing starts</b>;</li>
+  <li>you want evening times, so students with classes can book.</li>
+</ul>
+<p>Here are your idea and my suggestion, shown for Monday. Thursday works the same way: Wednesday evening → Thursday.</p>
+<div class="diagram">
+  <svg viewBox="0 0 900 235" role="img" aria-label="Option A: booking open Sunday 5 to 7 pm. Option B: booking open from Sunday 5 pm until Monday 10 am. In both, volunteers pack from 10 am to 3 pm and pickup is 3:30 to 5:30 pm.">
+    <rect x="120" y="10" width="300" height="26" fill="#f1f5f9" stroke="#e2e8f0"/>
+    <text x="270" y="28" class="t-b mid" style="font-size:14px">Sunday (food bank closed)</text>
+    <rect x="420" y="10" width="450" height="26" fill="#fff" stroke="#e2e8f0"/>
+    <text x="645" y="28" class="t-b mid" style="font-size:14px">Monday</text>
+    <g stroke="#e2e8f0" stroke-width="1.5">
+      <line x1="245" y1="36" x2="245" y2="185"/><line x1="295" y1="36" x2="295" y2="185"/>
+      <line x1="420" y1="36" x2="420" y2="185"/><line x1="670" y1="36" x2="670" y2="185"/>
+      <line x1="807" y1="36" x2="807" y2="185"/><line x1="857" y1="36" x2="857" y2="185"/>
+    </g>
+    <text x="245" y="54" class="t-s mid">5 pm</text>
+    <text x="295" y="54" class="t-s mid">7 pm</text>
+    <text x="420" y="54" class="t-s mid">midnight</text>
+    <text x="670" y="54" class="t-s mid">10 am</text>
+    <text x="807" y="54" class="t-s mid">3:30</text>
+    <text x="857" y="54" class="t-s mid">5:30</text>
+
+    <text x="8" y="88" class="t-b" style="font-size:14px">Option A</text>
+    <text x="8" y="106" class="t-s">your idea</text>
+    <rect x="245" y="76" width="50" height="30" rx="6" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="270" y="96" class="t-s mid" style="fill:#1e3a8a">book</text>
+    <rect x="670" y="76" width="125" height="30" rx="6" fill="#fef3c7" stroke="#b45309" stroke-width="1.5"/>
+    <text x="732" y="96" class="t-s mid" style="fill:#78350f">volunteers pack</text>
+    <rect x="807" y="76" width="50" height="30" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+    <text x="832" y="96" class="t-s mid" style="fill:#065f46">pickup</text>
+
+    <text x="8" y="148" class="t-b" style="font-size:14px">Option B</text>
+    <text x="8" y="166" class="t-s">my suggestion</text>
+    <rect x="245" y="136" width="425" height="30" rx="6" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="457" y="156" class="t-s mid" style="fill:#1e3a8a">booking open: evening, night and early morning</text>
+    <rect x="670" y="136" width="125" height="30" rx="6" fill="#fef3c7" stroke="#b45309" stroke-width="1.5"/>
+    <text x="732" y="156" class="t-s mid" style="fill:#78350f">volunteers pack</text>
+    <rect x="807" y="136" width="50" height="30" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+    <text x="832" y="156" class="t-s mid" style="fill:#065f46">pickup</text>
+
+    <text x="120" y="215" class="t-s">The 10 am start for packing is a guess. We need the food bank's real time (question 1).</text>
+  </svg>
+</div>
+<div class="suggest">
+  <p><b>My suggestion: Option B.</b> Open at 5 pm the day before, like your idea, but stay open until packing starts the next morning.</p>
+  <ul>
+    <li><b>It costs nothing in stock accuracy.</b> There are no pickups between Sunday 5 pm and Monday morning, so the stock doesn't change. Staying open longer doesn't make the counts any less accurate.</li>
+    <li><b>It helps more students.</b> Someone working or in a lab from 5 to 7 pm can still book at 9 pm or 7 am.</li>
+    <li><b>Volunteers still get every order before they start packing.</b></li>
+  </ul>
+  <p><b>What it doesn't fix:</b> if more students want food than there are places, the places will still be gone a few minutes after 5 pm (problem 1 below).</p>
+</div>
+
+<!-- 5 -->
+<h2 id="s5"><span class="num">5</span>My questions <span class="status handled">Answered, see Round 2</span></h2>
+
+<div class="card q">
+  <h3>Question 1: Option A or Option B? And when do volunteers start packing?</h3>
+  <p>See <a href="#s4">part 4</a>. The packing start time decides when booking closes. It's a setting, so a guess like 10 am is fine for now.</p>
+</div>
+
+<div class="card q">
+  <h3>Question 2: How many students can book the same 10-minute slot?</h3>
+  <span class="label">Example</span>
+  <div class="example">
+    <p>3:30–5:30 gives 12 slots:</p>
+    <div class="slots"><span>3:30</span><span>3:40</span><span>3:50</span><span>4:00</span><span>4:10</span><span>4:20</span><span>4:30</span><span>4:40</span><span>4:50</span><span>5:00</span><span>5:10</span><span>5:20</span></div>
+    <p>1 student per slot → only 12 online bookings a day.<br>
+       2 per slot → 24.<br>
+       3 per slot → 36 places, but online booking stops at 30 (the daily limit of 40, minus 10 kept for walk-ins).</p>
+    <p>Also, 40 people in 2 hours is one person every 3 minutes at the counter.</p>
+  </div>
+  <span class="label">My suggestion</span>
+  <div class="suggest"><p>3 per slot as the sample number, and ask the food bank how many students their counter can serve in 10 minutes.</p></div>
+</div>
+
+<div class="card q">
+  <h3>Question 3: Can a student cancel? Until when?</h3>
+  <span class="label">Example</span>
+  <div class="example">
+    <p>Ana books on Sunday night for Monday 4:10. On Monday at 8 am she gets sick.</p>
+    <p>If she can cancel, her items go back to stock and someone else can have them. If she cancels <b>after</b> her bag is packed, a volunteer has to unpack it.</p>
+    <p><b>A related case:</b> if cancelling is allowed, Ana could cancel and book again with different items. That's a way to change items, which you said shouldn't be allowed.</p>
+  </div>
+  <span class="label">My suggestion</span>
+  <div class="suggest">
+    <p>Allow cancelling until booking closes (before packing starts). After that, there's no cancel button. If she doesn't come, it's a no-show, and there's no penalty.</p>
+    <p>Allow cancel-and-book-again while booking is open. She gives up her slot and her items and takes whatever is left, so nobody uses it as an easy way to swap. It also needs no extra rule.</p>
+  </div>
+</div>
+
+<div class="card q">
+  <h3>Question 4: How long should the slot be held while the student chooses items?</h3>
+  <span class="label">Example</span>
+  <div class="example"><p>See Ana's story in <a href="#s3">part 3</a>. Too short, and slow choosers lose their slot. Too long, and people who closed the app block places for others at 5 pm, the busiest time.</p></div>
+  <span class="label">My suggestion</span>
+  <div class="suggest"><p>10 minutes, as a setting.</p></div>
+</div>
+
+<div class="card q">
+  <h3>Question 5: Do walk-ins take a place in a slot? <span style="font-weight:400;color:#475569">(from last time)</span></h3>
+  <span class="label">Example</span>
+  <div class="example"><p>The 3:40 slot has 3 booked students. 2 walk-ins also arrive at 3:40. Do the walk-ins need a slot place, or do they just wait their turn?</p></div>
+  <span class="label">My suggestion</span>
+  <div class="suggest"><p>Walk-ins don't use slots. They're served in between the booked students and only count toward the day's 40.</p></div>
+</div>
+
+<div class="card q">
+  <h3>Question 6: When does a booking become a no-show?</h3>
+  <span class="label">Example</span>
+  <div class="example">
+    <p>The old rule says 30 minutes after the slot ends. Ben's slot is 5:20–5:30, so he'd become a no-show at 6:00 pm, but the food bank closes at 5:30. The old rule doesn't fit the new hours.</p>
+    <p>Also, what if Ana's slot is 3:40 and she arrives at 5:00?</p>
+  </div>
+  <span class="label">My suggestion</span>
+  <div class="suggest"><p>A student should come in their slot, but late is fine until closing. Anything not picked up by closing time (5:30) becomes a no-show, and its items go back to stock. This also covers a bag that never got packed.</p></div>
+</div>
+
+<!-- 6 -->
+<h2 id="s6"><span class="num">6</span>Problems that could happen</h2>
+<p>These are the places where I think the system could fail or treat someone unfairly. Each one says whether it's <span class="status handled">Handled</span>, a <span class="status known">Known issue</span> we accept for now, or <span class="status decide">Needs a decision</span>.</p>
+
+<div class="card p">
+  <h3>Problem 1: The 5 pm rush <span class="status known">Known issue</span></h3>
+  <div class="example">
+    <p>150 students want food for Monday, and there are 30 online places. At 5:00 pm on Sunday everyone opens the app. By 5:04 every place is gone. A student who has a lab every Sunday at 5 pm never gets a place.</p>
+  </div>
+  <p><b>Why:</b> first come, first served always favours whoever is free at opening time.</p>
+  <p><b>Later ideas:</b> a random draw among everyone who asks during the evening, instead of first come, first served. First, ask the food bank how many students come today. If it's fewer than 30, the rush never happens.</p>
+</div>
+
+<div class="card p">
+  <h3>Problem 2: Forgetting the password on booking night <span class="status known">Known issue</span></h3>
+  <div class="example">
+    <p>Ben forgets his password on Sunday at 5 pm. Passwords are only reset at the counter, and the food bank is closed on Sunday. He can't book for Monday.</p>
+  </div>
+  <p><b>What he can do:</b> walk in on Monday, if a walk-in place is left, and get a new setup code at the counter at the same time.</p>
+  <p><b>Later:</b> a MUN-email reset would fix this, if MUN ever gives access.</p>
+</div>
+
+<div class="card p">
+  <h3>Problem 3: The website is down while booking is open <span class="status decide">Needs a decision</span></h3>
+  <div class="example">
+    <p>The server crashes on Sunday at 5:10 pm and comes back at 9 pm. With Option A (5–7 pm only), nobody can book for Monday at all. With Option B, students lose a few hours but can still book later that night.</p>
+  </div>
+  <p><b>Idea:</b> let the coordinator change that day's closing time if something goes wrong. It's just a setting.</p>
+</div>
+
+<div class="card p">
+  <h3>Problem 4: The internet is down at the counter <span class="status known">Known issue</span></h3>
+  <div class="example">
+    <p>Monday 3:45, the Wi-Fi drops. Volunteers can't check MUN cards against bookings, or the 28-day rule for walk-ins.</p>
+  </div>
+  <p><b>Idea:</b> ask the food bank what they do today. A printed list of the day's booking codes could be a backup, as long as it has no ID numbers on it.</p>
+</div>
+
+<div class="card p">
+  <h3>Problem 5: A snow day after packing <span class="status known">Known issue</span></h3>
+  <div class="example">
+    <p>Monday at 1 pm, MUN closes for a storm. 30 bags are already packed. The coordinator cancels Monday, and the system puts every item back into the stock count.</p>
+    <p><b>Two things to watch:</b> volunteers must really unpack the bags, or the stock on screen won't match the shelf. And those 30 students can book Thursday, but Thursday still has only 30 online places, so many of them won't get one.</p>
+  </div>
+  <p><b>Later idea:</b> give students from a closed day first chance at the next day.</p>
+</div>
+
+<div class="card p">
+  <h3>Problem 6: The stock count is wrong <span class="status handled">Handled</span></h3>
+  <div class="example">
+    <p>The system says 5 sunflower oils, but the shelf has 3. Five students booked oil. Three get oil. The other two get their first substitute that's in stock, with a sticky note on the bag. If all their substitutes are gone too, the volunteer asks them at the counter.</p>
+  </div>
+  <p>The volunteer marks sunflower oil as out of stock, which flags every other booking with oil (rule U7). The coordinator then fixes the count.</p>
+</div>
+
+<div class="card p">
+  <h3>Problem 7: A new student can't book until they've been to the counter <span class="status known">Known issue</span></h3>
+  <div class="example">
+    <p>A student hears about the food bank on Tuesday. They can't book online without an account, and accounts are only made at the counter. The next counter time is Thursday 3:30–5:30.</p>
+  </div>
+  <p><b>What happens:</b> on Thursday they get an account <b>and</b> can take food as a walk-in at the same visit, so they don't lose a week. We accepted this cost on 27 Oct. It's here because the counter is now only open 4 hours a week.</p>
+</div>
+
+<div class="card p">
+  <h3>Problem 8: Unused walk-in places (issue 12) <span class="status handled">Mostly solved by the new times</span></h3>
+  <div class="example">
+    <p>Only 4 walk-ins come on Monday, so 6 of the 10 walk-in places are unused. Booking closed that morning, so those places can't be offered online.</p>
+    <p>But the other way round works on its own: if only 20 people booked online, walk-ins can use the empty online places too, because the day limit is 40 in total.</p>
+  </div>
+  <p>So the only waste is unused walk-in places, and that's fine.</p>
+</div>
+
+<!-- 7 -->
+<h2><span class="num">7</span>Still open from last time</h2>
+<p>We didn't get to these yet. There's no rush. We can take them one at a time after the questions above.</p>
+<ul>
+  <li><b>MCP check at pickup</b> (item A in how-it-works.html, section 20).</li>
+  <li><b>Issues 2, 4, 6, 7, 8, 9, 14, 15</b> (section 20, table C).</li>
+</ul>
+
+<footer>Made 30 Oct 2026 from your answers. Nothing here changes CONSTRAINTS.md or DECISIONS.md until you confirm.</footer>
+</main>
+</body>
+</html>

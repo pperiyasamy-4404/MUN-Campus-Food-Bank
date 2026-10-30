@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Food Bank Booking System: how it works</title>
+<style>
+  :root {
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc;
+    --blue: #2563eb; --blue-bg: #dbeafe;
+    --green: #059669; --green-bg: #d1fae5;
+    --purple: #7c3aed; --purple-bg: #ede9fe;
+    --amber: #b45309; --amber-bg: #fef3c7;
+    --red: #dc2626; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 980px; margin: 0 auto; padding: 36px 20px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; letter-spacing: .02em; }
+  h1 { font-size: 2.1rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 60px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 .num { color: var(--blue); margin-right: 8px; }
+  h3 { font-size: 1.1rem; margin: 28px 0 6px; }
+  h4 { margin: 0 0 8px; font-size: 1rem; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  a { color: var(--blue); }
+
+  .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; vertical-align: 1px; }
+  .open { display: inline-block; font-size: .78em; font-weight: 700; background: var(--amber-bg); color: #92400e; border: 1px solid #fcd34d; padding: 1px 8px; border-radius: 999px; white-space: nowrap; vertical-align: 1px; }
+  .known { display: inline-block; font-size: .78em; font-weight: 700; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 1px 8px; border-radius: 999px; white-space: nowrap; vertical-align: 1px; }
+  .done { display: inline-block; font-size: .78em; font-weight: 700; background: var(--green-bg); color: #065f46; border: 1px solid #6ee7b7; padding: 1px 8px; border-radius: 999px; white-space: nowrap; vertical-align: 1px; }
+
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px 20px; margin: 16px 0; }
+  .note { border-left: 4px solid var(--amber); background: var(--amber-bg); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .why { border-left: 4px solid var(--blue); background: #eff6ff; padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .cost { border-left: 4px solid #64748b; background: var(--slate-bg); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .note p, .why p, .cost p { margin: 4px 0; }
+
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 18px 0; }
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .caption { font-size: .92rem; color: var(--muted); margin: 10px 4px 0; }
+
+  svg .t-b { font: 600 16px system-ui, "Segoe UI", sans-serif; fill: #0f172a; }
+  svg .t-s { font: 13px system-ui, "Segoe UI", sans-serif; fill: #475569; }
+  svg .lbl { font: 13.5px system-ui, "Segoe UI", sans-serif; fill: #0f172a; paint-order: stroke; stroke: #fff; stroke-width: 5px; stroke-linejoin: round; }
+  svg .mono { font-family: ui-monospace, Consolas, monospace; }
+  svg .mid { text-anchor: middle; }
+  svg .end { text-anchor: end; }
+  svg .arrow { fill: none; stroke: #64748b; stroke-width: 2; }
+
+  table { border-collapse: collapse; width: 100%; background: #fff; font-size: .95rem; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+  tr:last-child td { border-bottom: 0; }
+  td.group { background: #f8fafc; font-weight: 700; color: var(--muted); }
+
+  nav.toc { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 20px; margin: 22px 0; }
+  nav.toc ol { columns: 2; column-gap: 32px; margin: 6px 0; }
+  nav.toc li { break-inside: avoid; }
+  @media (max-width: 700px) { nav.toc ol { columns: 1; } }
+
+  .roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 16px 0; }
+  .role { border-radius: 14px; padding: 14px 16px; border: 2px solid; font-size: .95rem; }
+  .role h4 { font-size: 1.1rem; }
+  .role.s { background: var(--blue-bg); border-color: var(--blue); }
+  .role.v { background: var(--green-bg); border-color: var(--green); }
+  .role.c { background: var(--purple-bg); border-color: var(--purple); }
+  .role ul { padding-left: 18px; }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 760px) { .roles, .two { grid-template-columns: 1fr; } }
+
+  .col-title { font-weight: 700; margin: 0 0 8px; }
+  .step { background: #fff; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 8px 13px; font-size: .95rem; }
+  .step.s { border-color: var(--blue); background: var(--blue-bg); }
+  .step.v { border-color: var(--green); background: var(--green-bg); }
+  .step.sys { border-color: #64748b; background: var(--slate-bg); }
+  .step.ok { border-color: var(--green); background: var(--green-bg); font-weight: 600; }
+  .step.bad { border-color: var(--red); background: var(--red-bg); }
+  .step b.n { display: inline-block; min-width: 1.5em; color: var(--blue); }
+  .down { text-align: center; color: #94a3b8; line-height: 1.1; font-size: 1.1rem; margin: 2px 0; }
+  .txn { border: 2px dashed #64748b; border-radius: 14px; padding: 10px 12px; background: #fff; }
+  .txn .title { font-size: .85rem; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+
+  .items { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 14px 0; }
+  .item { border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 12px; background: #fff; }
+  .item .kind { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .variety { display: flex; justify-content: space-between; gap: 8px; padding: 5px 10px; background: var(--slate-bg); border-radius: 8px; margin: 5px 0; font-size: .9rem; }
+  .variety span:last-child { color: var(--muted); white-space: nowrap; }
+  .tag { font-size: .72rem; background: var(--green-bg); color: #065f46; border-radius: 999px; padding: 0 7px; margin-left: 4px; }
+
+  .chip { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--slate-bg); border: 1px solid #cbd5e1; margin: 3px 2px; font-size: .88rem; }
+  .chip.out { background: var(--red-bg); border-color: #fca5a5; text-decoration: line-through; color: #991b1b; }
+  .chip.sub { background: var(--green-bg); border-color: #6ee7b7; color: #065f46; font-weight: 600; }
+  .pack { display: grid; grid-template-columns: 150px 1fr; gap: 8px 14px; align-items: baseline; }
+  .pack .k { font-weight: 600; color: var(--muted); font-size: .88rem; }
+  @media (max-width: 600px) { .pack { grid-template-columns: 1fr; } }
+  .sticky { display: inline-block; background: #fef08a; padding: 8px 16px; transform: rotate(-2deg); box-shadow: 2px 3px 6px rgba(0,0,0,.15); font: 1.05rem "Segoe Print", "Comic Sans MS", cursive; color: #1e293b; margin: 4px 0; }
+
+  .sq { width: 22px; height: 22px; border-radius: 5px; display: inline-block; }
+  .sq.online { background: #60a5fa; }
+  .sq.empty { background: #fff; border: 1.5px dashed #94a3b8; }
+  .slots { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+  .slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .slot .time { font-size: .8rem; color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; font-size: .88rem; color: var(--muted); }
+  .legend span.sq { vertical-align: -5px; margin-right: 6px; }
+
+  footer { margin-top: 60px; color: var(--muted); font-size: .88rem; }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <p class="eyebrow">Campus Food Bank Booking System</p>
+  <h1>How it works, step by step</h1>
+  <p class="lead">This page explains everything we have decided so far, from the beginning. It follows a student from getting an account to picking up their food, and then shows what volunteers and the coordinator do.</p>
+  <p class="lead">Codes like <span class="rule">F1</span> or <span class="rule">P3</span> are the rule numbers in CONSTRAINTS.md. Anything we haven't decided yet is marked <span class="open">Not decided yet</span>. Problems we accept for now are marked <span class="known">Known issue</span>.</p>
+  <p class="lead">Updated 30 Oct 2026 with your answers.</p>
+</header>
+
+<nav class="toc">
+  <strong>Contents</strong>
+  <ol>
+    <li><a href="#s1">What we are building</a></li>
+    <li><a href="#s2">The three kinds of users</a></li>
+    <li><a href="#s3">The big picture</a></li>
+    <li><a href="#s4">Keeping students private</a></li>
+    <li><a href="#s5">Step 1: Getting an account</a></li>
+    <li><a href="#s6">The food: items, varieties, extras</a></li>
+    <li><a href="#s7">When booking is open</a></li>
+    <li><a href="#s8">How many students per slot</a></li>
+    <li><a href="#s9">Step 2: Making a booking</a></li>
+    <li><a href="#s10">The 28-day rule</a></li>
+    <li><a href="#s11">Step 3: Cancelling</a></li>
+    <li><a href="#s12">Step 4: Packing and substitutes</a></li>
+    <li><a href="#s13">Step 5: Pickup at the counter</a></li>
+    <li><a href="#s14">The life of a booking</a></li>
+    <li><a href="#s15">What the coordinator does</a></li>
+    <li><a href="#s16">Data over time, and time zones</a></li>
+    <li><a href="#s17">When two people book at the same moment</a></li>
+    <li><a href="#s18">All the settings</a></li>
+    <li><a href="#s19">Not in the prototype, and questions for the food bank</a></li>
+    <li><a href="#s20">Known issues, and still to decide</a></li>
+    <li><a href="#s21">Questions still open</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="s1"><span class="num">1</span>What we are building</h2>
+<p>MUN's Campus Food Bank gives free food to students. We are building a website where a student can:</p>
+<ul>
+  <li>book a 10-minute time to pick up food (a <b>slot</b>),</li>
+  <li>choose their food from what is in stock, before they come,</li>
+  <li>and collect a bag that volunteers have already packed.</li>
+</ul>
+<p>At the same time, the system has to keep some promises:</p>
+<ul>
+  <li><b>Fair:</b> one pickup every 28 days per person. <span class="rule">F1</span></li>
+  <li><b>Private:</b> no names, emails, phone numbers or MCP numbers, anywhere. <span class="rule">P3</span></li>
+  <li><b>Honest about stock:</b> never promise food that isn't there. <span class="rule">I4</span></li>
+  <li><b>Within limits:</b> no slot ever gets more students than it can take. <span class="rule">S2</span></li>
+</ul>
+<div class="note">
+  <p><b>This is a prototype with sample data.</b> The real rules will be agreed with the Campus Food Bank later. Every number that might change (28 days, 13 items, 5 pm…) is a <b>setting</b> the coordinator can change without touching the code. So switching to the real rules means changing settings and the item list, not rewriting the code.</p>
+  <p><b>Each booking is for one person.</b> Families aren't in the prototype.</p>
+</div>
+
+<!-- 2 -->
+<h2 id="s2"><span class="num">2</span>The three kinds of users</h2>
+<div class="roles">
+  <div class="role s">
+    <h4>Student</h4>
+    <ul>
+      <li>Has an account, made at the counter <span class="rule">R1</span></li>
+      <li>Books a slot, then chooses items</li>
+      <li>Ranks up to 5 substitutes</li>
+      <li>Can cancel until 12 pm on the pickup day</li>
+      <li>Picks up the bag</li>
+    </ul>
+  </div>
+  <div class="role v">
+    <h4>Volunteer</h4>
+    <ul>
+      <li>Sees the packing queue for their shift <span class="rule">R2</span></li>
+      <li>Packs bags, applies substitutes, and writes swaps on a sticky note</li>
+      <li>Hands out booked bags after checking the MUN card, and marks them picked up</li>
+      <li>Serves walk-ins in their own line</li>
+      <li>Records extras given out</li>
+      <li>Updates stock counts before each booking window</li>
+      <li>Creates student accounts and setup codes</li>
+    </ul>
+  </div>
+  <div class="role c">
+    <h4>Coordinator</h4>
+    <ul>
+      <li>Manages items and stock <span class="rule">R3</span></li>
+      <li>Changes the settings</li>
+      <li>Closes days (holiday, snow, Christmas)</li>
+      <li>Creates volunteer accounts, with a setup code</li>
+      <li>Sees weekly totals only, never who picked up</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 3 -->
+<h2 id="s3"><span class="num">3</span>The big picture</h2>
+<p>Everyone uses the same website. Behind it there is a server that checks the rules and a database that stores the data.</p>
+<div class="diagram">
+  <svg viewBox="0 0 900 330" role="img" aria-label="Students, volunteers and the coordinator use the website. The website talks to the server. The server talks to the database and uses a secret key kept outside the database.">
+    <defs><marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#64748b"/></marker></defs>
+    <rect x="10" y="15" width="190" height="80" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="105" y="48" class="t-b mid">Student</text>
+    <text x="105" y="72" class="t-s mid">on their own phone</text>
+    <rect x="10" y="125" width="190" height="80" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+    <text x="105" y="158" class="t-b mid">Volunteer</text>
+    <text x="105" y="182" class="t-s mid">laptop at the counter</text>
+    <rect x="10" y="235" width="190" height="80" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+    <text x="105" y="268" class="t-b mid">Coordinator</text>
+    <text x="105" y="292" class="t-s mid">on a laptop</text>
+
+    <rect x="280" y="105" width="170" height="120" rx="12" fill="#fff" stroke="#334155" stroke-width="2"/>
+    <text x="365" y="145" class="t-b mid">Website</text>
+    <text x="365" y="168" class="t-s mid">React</text>
+    <text x="365" y="196" class="t-s mid">the screens</text>
+
+    <rect x="510" y="105" width="170" height="120" rx="12" fill="#fff" stroke="#334155" stroke-width="2"/>
+    <text x="595" y="145" class="t-b mid">Server</text>
+    <text x="595" y="168" class="t-s mid">FastAPI</text>
+    <text x="595" y="196" class="t-s mid">checks every rule</text>
+
+    <path d="M740,70 v95 a75,15 0 0,0 150,0 v-95" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+    <ellipse cx="815" cy="70" rx="75" ry="15" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+    <text x="815" y="112" class="t-b mid">Database</text>
+    <text x="815" y="134" class="t-s mid">PostgreSQL</text>
+    <text x="815" y="156" class="t-s mid">stores the data</text>
+
+    <rect x="740" y="220" width="150" height="90" rx="12" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+    <text x="815" y="252" class="t-b mid">Secret key</text>
+    <text x="815" y="274" class="t-s mid">kept outside</text>
+    <text x="815" y="292" class="t-s mid">the database</text>
+
+    <path class="arrow" d="M200,55 L276,140" marker-end="url(#m1)"/>
+    <path class="arrow" d="M200,165 L276,165" marker-end="url(#m1)"/>
+    <path class="arrow" d="M200,275 L276,190" marker-end="url(#m1)"/>
+    <path class="arrow" d="M454,165 L506,165" marker-start="url(#m1)" marker-end="url(#m1)"/>
+    <path class="arrow" d="M684,140 L736,110" marker-start="url(#m1)" marker-end="url(#m1)"/>
+    <path class="arrow" d="M684,195 L736,245" marker-end="url(#m1)"/>
+  </svg>
+</div>
+<ul>
+  <li><b>Website (React):</b> the screens. It shows things and sends what the person clicked to the server. It doesn't decide anything, because anyone can change what runs in their own browser.</li>
+  <li><b>Server (FastAPI):</b> every request goes here. It checks the rules (is booking open? has it been 28 days?) and only then changes the database.</li>
+  <li><b>Database (PostgreSQL):</b> keeps all the data. The most important rules are also built into the database itself: slot capacity, stock never below zero, and one upcoming booking per person. These hold even if the server code has a bug.</li>
+  <li><b>Secret key:</b> used to scramble ID numbers (next section). It's kept outside the database, so a stolen copy of the database is useless without it.</li>
+</ul>
+<div class="why"><p><b>Why PostgreSQL?</b> The booking rules need real <b>transactions</b> and <b>row locks</b> (explained in <a href="#s9">section 9</a> and <a href="#s17">section 17</a>). SQLite can't lock single rows.</p></div>
+
+<!-- 4 -->
+<h2 id="s4"><span class="num">4</span>Keeping students private</h2>
+<p><b>One person, one identity: the MUN ID number.</b> <span class="rule">P1</span> Only this one kind of ID is accepted, so nobody can have two identities and get food twice. We don't use the MCP (health card) number: international and out-of-province students don't have one, and it's too sensitive to keep.</p>
+<p><b>The ID number itself is never saved.</b> <span class="rule">P2</span> We save a <b>keyed hash</b> of it instead.</p>
+
+<h3>What is a hash?</h3>
+<p>A hash turns any text into a fixed jumble of letters and numbers. The same input always gives the same jumble, but you can't turn the jumble back into the input. So the system can check "is this the same person as last time?" without keeping the number.</p>
+
+<div class="diagram">
+  <svg viewBox="0 0 900 215" role="img" aria-label="The MUN ID number and the secret key go into HMAC, which gives a keyed hash. Only the keyed hash is saved in the database.">
+    <defs><marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#64748b"/></marker></defs>
+    <rect x="10" y="15" width="210" height="70" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="115" y="43" class="t-s mid">MUN ID number</text>
+    <text x="115" y="68" class="t-b mono mid">201912345</text>
+    <rect x="10" y="130" width="210" height="70" rx="12" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+    <text x="115" y="160" class="t-b mid">Secret key</text>
+    <text x="115" y="183" class="t-s mid">kept outside the database</text>
+    <rect x="300" y="72" width="150" height="76" rx="12" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+    <text x="375" y="105" class="t-b mid">HMAC</text>
+    <text x="375" y="127" class="t-s mid">mixes them</text>
+    <rect x="530" y="72" width="200" height="76" rx="12" fill="#fff" stroke="#334155" stroke-width="2"/>
+    <text x="630" y="105" class="t-b mono mid">a3f9c2…e81</text>
+    <text x="630" y="127" class="t-s mid">the keyed hash</text>
+    <path d="M780,78 v72 a55,12 0 0,0 110,0 v-72" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+    <ellipse cx="835" cy="78" rx="55" ry="12" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+    <text x="835" y="116" class="t-b mid" style="font-size:14px">Database</text>
+    <text x="835" y="137" class="t-s mid">saves only this</text>
+    <path class="arrow" d="M220,55 L296,98" marker-end="url(#m2)"/>
+    <path class="arrow" d="M220,162 L296,124" marker-end="url(#m2)"/>
+    <path class="arrow" d="M450,110 L526,110" marker-end="url(#m2)"/>
+    <path class="arrow" d="M730,110 L776,110" marker-end="url(#m2)"/>
+  </svg>
+  <p class="caption">When a student types their ID number, the server makes the keyed hash again and looks for it in the database. The number itself is thrown away straight after.</p>
+</div>
+
+<div class="why">
+  <p><b>Why not a plain hash?</b> MUN ID numbers have 9 digits, so there are only about a billion of them. A computer can hash all of them very quickly and build a lookup table: jumble → number. With a <b>keyed</b> hash (HMAC), the secret key is mixed in. Without the key, nobody can build that table.</p>
+</div>
+
+<div class="two">
+  <div class="card">
+    <h4>What we save</h4>
+    <ul>
+      <li>The keyed hash of the ID number</li>
+      <li>A hash of the password</li>
+      <li>Bookings: day, slot, items, substitutes, status (for 90 days)</li>
+      <li>Totals, like pickups per week and items given out</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>What we never save <span class="rule">P3</span></h4>
+    <ul>
+      <li>The ID number itself</li>
+      <li>Names</li>
+      <li>Emails or phone numbers</li>
+      <li>MCP numbers</li>
+      <li>Passwords as plain text</li>
+      <li>…and none of these in logs either</li>
+    </ul>
+  </div>
+</div>
+<p><b>Volunteers never see the ID number or its hash on screen.</b> <span class="rule">P4</span> They see a booking code and the items. They do read the number off the card to type it in, but the screen never shows it back.</p>
+<h3>Other privacy and safety rules</h3>
+<ul>
+  <li>The ID number never appears in web addresses, logs or error messages. A test checks this. <span class="rule">P10</span> (FastAPI normally repeats bad input back in its error messages, so we have to switch that off.)</li>
+  <li>The secret key is backed up somewhere safe, outside the database. If it were lost, no card could be matched to its account again. <span class="rule">P11</span></li>
+  <li>The coordinator sees totals by week, and any number under 5 shows as "fewer than 5", so nobody can work out who came on a quiet day. <span class="rule">P12</span></li>
+  <li>Accounts with no pickup for a year are deleted. <span class="rule">P13</span></li>
+  <li>Every volunteer has their own login, and the system logs who created accounts, issued setup codes, recorded walk-ins and marked pickups. <span class="rule">R4</span></li>
+</ul>
+
+<!-- 5 -->
+<h2 id="s5"><span class="num">5</span>Step 1: Getting an account</h2>
+<div class="why">
+  <p><b>Why accounts?</b> If an ID number alone were enough, anyone who knew a student's number could book in their name and block them, fill slots with made-up numbers, or find out whether they use the food bank. A password stops that.</p>
+  <p><b>Why at the counter, and not a sign-up page?</b> Online, someone could sign up with another person's number before they do, and made-up numbers could get accounts. The page would also have to say "this number already has an account", which tells a stranger that this student uses the food bank. At the counter, a volunteer has seen the real MUN card, so every account belongs to a real card holder.</p>
+</div>
+
+<div class="diagram">
+  <svg viewBox="0 0 900 610" role="img" aria-label="Account setup: the student shows their card, the volunteer types the ID, the system creates the account and a setup code, the volunteer gives the code to the student, and later the student sets a password on their own phone.">
+    <defs><marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#334155"/></marker></defs>
+    <line x1="130" y1="56" x2="130" y2="600" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6 6"/>
+    <line x1="450" y1="56" x2="450" y2="600" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6 6"/>
+    <line x1="770" y1="56" x2="770" y2="600" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6 6"/>
+    <rect x="40" y="10" width="180" height="46" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="130" y="39" class="t-b mid">Student</text>
+    <rect x="360" y="10" width="180" height="46" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+    <text x="450" y="39" class="t-b mid">Volunteer</text>
+    <rect x="680" y="10" width="180" height="46" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+    <text x="770" y="39" class="t-b mid">System</text>
+
+    <path d="M130,100 L444,100" stroke="#334155" stroke-width="2" marker-end="url(#m3)"/>
+    <text x="290" y="90" class="lbl mid">1. Shows their MUN card</text>
+
+    <path d="M450,150 L764,150" stroke="#334155" stroke-width="2" marker-end="url(#m3)"/>
+    <text x="610" y="140" class="lbl mid">2. Types the ID number from the card</text>
+
+    <rect x="560" y="172" width="330" height="88" rx="10" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="725" y="198" class="lbl mid" style="stroke:#f1f5f9">3. Makes the keyed hash of the ID,</text>
+    <text x="725" y="220" class="lbl mid" style="stroke:#f1f5f9">creates the account (no password yet),</text>
+    <text x="725" y="242" class="lbl mid" style="stroke:#f1f5f9">and makes a one-time setup code.</text>
+
+    <path d="M770,295 L456,295" stroke="#334155" stroke-width="2" marker-end="url(#m3)"/>
+    <text x="610" y="285" class="lbl mid">4. Shows the setup code, e.g. K7P-4QX</text>
+    <text x="610" y="314" class="t-s mid">works once · stops working after 7 days</text>
+
+    <path d="M450,350 L136,350" stroke="#334155" stroke-width="2" marker-end="url(#m3)"/>
+    <text x="290" y="340" class="lbl mid">5. Gives the code to the student</text>
+
+    <line x1="20" y1="392" x2="880" y2="392" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 5"/>
+    <rect x="200" y="378" width="500" height="28" rx="14" fill="#fff" stroke="#cbd5e1"/>
+    <text x="450" y="397" class="t-s mid">Later, on the student's own phone (right there, or another day)</text>
+
+    <path d="M130,440 L764,440" stroke="#334155" stroke-width="2" marker-end="url(#m3)"/>
+    <text x="450" y="430" class="lbl mid">6. Enters ID number + setup code + a new password</text>
+
+    <rect x="560" y="462" width="330" height="88" rx="10" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="725" y="488" class="lbl mid" style="stroke:#f1f5f9">7. Checks the code: not used, not expired.</text>
+    <text x="725" y="510" class="lbl mid" style="stroke:#f1f5f9">Saves only a hash of the password.</text>
+    <text x="725" y="532" class="lbl mid" style="stroke:#f1f5f9">The setup code is now used up.</text>
+
+    <path d="M770,580 L136,580" stroke="#334155" stroke-width="2" marker-end="url(#m3)"/>
+    <text x="450" y="570" class="lbl mid">8. Done. The student can log in and book.</text>
+  </svg>
+  <p class="caption">Our own website makes the setup code. MUN isn't involved. The volunteer never sees the password. <span class="rule">R1</span> <span class="rule">R2</span></p>
+</div>
+
+<h3>Logging in</h3>
+<p>To book, view or cancel, the student logs in with their ID number and password. <span class="rule">P6</span></p>
+<p>The password is saved only as a hash, never as text. <span class="rule">P8</span> Many students will reuse their MUN password. If our database leaked, plain passwords would expose their MUN accounts too. The setup page asks them not to reuse it.</p>
+<p><b>Wrong passwords:</b> at most 5 tries per 15 minutes for each ID number. After that, the student has to wait. <span class="rule">P9</span> We slow tries down instead of locking the account, because otherwise anyone could lock a student out on purpose just by typing wrong passwords for their number.</p>
+
+<h3>Forgot the password?</h3>
+<p>The student goes to the counter and the volunteer presses "New setup code". The steps are the same as above. There's no email (we don't store one) and no recovery code. A recovery code is one more thing for students to keep, and anyone who found it could take over the account.</p>
+<div class="cost">
+  <p><b>The costs:</b> a first-time student can't book online, so their first visit has to be in person. And a student who forgets their password on booking night can't book until they reach the counter. They can walk in and reset it there. <span class="known">Known issue</span> A MUN-email reset would fix this, if MUN ever gives access.</p>
+</div>
+
+<!-- 6 -->
+<h2 id="s6"><span class="num">6</span>The food: items, varieties, extras</h2>
+<p>An <b>item</b> is a kind of food, like oats. Each item has one or more <b>varieties</b>, like quick oats and steel-cut oats. Stock is counted per variety, because that's what is on the shelf. <span class="rule">I1</span> Every variety has a category and dietary tags: vegetarian, halal, gluten-free, contains nuts. <span class="rule">I2</span></p>
+<div class="items">
+  <div class="item"><div class="kind">Item</div><h4>Oats</h4>
+    <div class="variety"><span>Quick oats</span><span>12 left</span></div>
+    <div class="variety"><span>Steel-cut oats</span><span>3 left</span></div></div>
+  <div class="item"><div class="kind">Item</div><h4>Canned chicken</h4>
+    <div class="variety"><span>Chunk chicken <span class="tag">halal</span></span><span>8 left</span></div>
+    <div class="variety"><span>Chicken in broth</span><span>5 left</span></div></div>
+  <div class="item"><div class="kind">Item</div><h4>Oil</h4>
+    <div class="variety"><span>Sunflower oil</span><span>6 left</span></div>
+    <div class="variety"><span>Vegetable oil</span><span>10 left</span></div></div>
+  <div class="item"><div class="kind">Item</div><h4>Pasta</h4>
+    <div class="variety"><span>Regular pasta</span><span>20 left</span></div>
+    <div class="variety"><span>Pasta <span class="tag">gluten-free</span></span><span>4 left</span></div></div>
+</div>
+<p class="caption">Sample items. The real list comes from the food bank.</p>
+
+<h3>How much can a student take?</h3>
+<p>Each booking is for one person. <span class="rule">I3</span></p>
+<ul>
+  <li><b>Up to 13 items</b> (a sample number). "Up to", not "exactly": students shouldn't be forced to take food they won't use.</li>
+  <li><b>One of each item, counting all its varieties together.</b> So one canned chicken, not one chunk chicken <i>and</i> one chicken in broth, even if there's plenty.</li>
+</ul>
+
+<h3>Extras</h3>
+<p>Extras are things like eggs, bread and chips. They change too often to book online and don't count toward the item limit. <span class="rule">E1</span> The app shows today's extras as "may be available". <span class="rule">E2</span> The student asks for them at pickup and gets at most one of each extra item. <span class="rule">E3</span> The volunteer records what was given, and the pickup screen allows only one of each. <span class="rule">E4</span></p>
+<p>Volunteers or the coordinator update the items and stock counts before each booking window opens, for example to add new donations. Bookings already made keep the items they booked. <span class="rule">I8</span> Since walk-ins are recorded too (<a href="#s13">section 13</a>), the count stays right between updates.</p>
+
+<!-- 7 -->
+<h2 id="s7"><span class="num">7</span>When booking is open</h2>
+<p><b>Pickup:</b> Monday and Thursday, 3:30–5:30 pm, in 10-minute slots. <span class="rule">S1</span> The food bank is closed on the other days.</p>
+<p><b>Booking for a pickup day is open from 5 pm the day before until 12 pm on the day.</b> All of that day's slots open at the same time. <span class="rule">S5</span> Cancelling is allowed until 12 pm too. <span class="rule">S6</span></p>
+<div class="diagram">
+  <svg viewBox="0 0 900 170" role="img" aria-label="Booking for Monday is open from Sunday 5 pm until Monday 12 pm. Volunteers pack from 12 pm to 3 pm. Pickup is 3:30 to 5:30 pm.">
+    <rect x="120" y="10" width="300" height="26" fill="#f1f5f9" stroke="#e2e8f0"/>
+    <text x="270" y="28" class="t-b mid" style="font-size:14px">Sunday (food bank closed)</text>
+    <rect x="420" y="10" width="450" height="26" fill="#fff" stroke="#e2e8f0"/>
+    <text x="645" y="28" class="t-b mid" style="font-size:14px">Monday</text>
+    <g stroke="#e2e8f0" stroke-width="1.5">
+      <line x1="245" y1="36" x2="245" y2="120"/><line x1="420" y1="36" x2="420" y2="120"/>
+      <line x1="720" y1="36" x2="720" y2="120"/><line x1="807" y1="36" x2="807" y2="120"/><line x1="857" y1="36" x2="857" y2="120"/>
+    </g>
+    <text x="245" y="54" class="t-s mid">5 pm</text>
+    <text x="420" y="54" class="t-s mid">midnight</text>
+    <text x="720" y="54" class="t-s mid">12 pm</text>
+    <text x="807" y="54" class="t-s mid">3:30</text>
+    <text x="857" y="54" class="t-s mid">5:30</text>
+    <text x="8" y="84" class="t-b" style="font-size:14px">Monday</text>
+    <text x="8" y="102" class="t-s">pickups</text>
+    <rect x="245" y="72" width="475" height="32" rx="6" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="482" y="93" class="t-s mid" style="fill:#1e3a8a">booking and cancelling open: Sun 5 pm → Mon 12 pm</text>
+    <rect x="720" y="72" width="75" height="32" rx="6" fill="#fef3c7" stroke="#b45309" stroke-width="1.5"/>
+    <text x="757" y="93" class="t-s mid" style="fill:#78350f">packing</text>
+    <rect x="807" y="72" width="50" height="32" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+    <text x="832" y="93" class="t-s mid" style="fill:#065f46">pickup</text>
+    <text x="120" y="150" class="t-s">Thursday is the same, one day later: booking Wednesday 5 pm → Thursday 12 pm, packing 12–3 pm, pickup 3:30–5:30 pm.</text>
+  </svg>
+</div>
+<table>
+  <tr><th>Pickup day</th><th>Booking opens</th><th>Booking and cancelling close</th><th>Packing</th><th>Pickup</th></tr>
+  <tr><td>Monday</td><td>Sunday 5 pm</td><td>Monday 12 pm</td><td>Monday 12–3 pm</td><td>Monday 3:30–5:30 pm</td></tr>
+  <tr><td>Thursday</td><td>Wednesday 5 pm</td><td>Thursday 12 pm</td><td>Thursday 12–3 pm</td><td>Thursday 3:30–5:30 pm</td></tr>
+</table>
+<div class="why">
+  <p><b>Why 5 pm the day before?</b> Students with daytime classes can book in the evening. And booking close to pickup means the stock students see is close to what's really on the shelf.</p>
+  <p><b>Why stay open overnight?</b> No pickups happen between 5 pm and noon the next day, so the stock doesn't change. Staying open costs nothing in accuracy, and students who are busy in the evening can book at 9 pm or 7 am.</p>
+  <p><b>Why close at 12 pm?</b> So volunteers have every order before they start packing.</p>
+</div>
+<div class="cost">
+  <p><b>The cost:</b> slots go to whoever is free at 5 pm. Most of the university is done by then. <span class="known">Known issue</span> We'll look again if MUN gets involved.</p>
+</div>
+
+<!-- 8 -->
+<h2 id="s8"><span class="num">8</span>How many students per slot</h2>
+<p>3:30–5:30 is 12 slots of 10 minutes. For now, <b>one student per slot</b>, so 12 online bookings per pickup day. <span class="rule">S2</span> It's a setting, so it can change without touching the code.</p>
+<div class="card">
+  <h4>Example Monday</h4>
+  <div class="slots" id="slots"></div>
+  <div class="legend"><span><span class="sq online"></span>booked</span><span><span class="sq empty"></span>free</span></div>
+  <p>10 of the 12 slots are booked. 4:30 and 5:20 are still free.</p>
+</div>
+<ul>
+  <li><b>Walk-ins don't use slots.</b> They have their own line with their own volunteers (<a href="#s13">section 13</a>). <span class="rule">W3</span></li>
+  <li><b>If slots fill up quickly every week</b> and the counter has spare time, the number per slot can go up to 2 (24 a day). Bags are already packed, so a pickup only takes a few minutes.</li>
+</ul>
+<p><b>No daily limit.</b> The system only controls online bookings, and the slots already limit those to 12 a day. Walk-ins come as they come. The aim is to move everyone to booking online over time. <span class="done">Decided</span></p>
+
+<!-- 9 -->
+<h2 id="s9"><span class="num">9</span>Step 2: Making a booking</h2>
+<div class="two">
+  <div>
+    <p class="col-title">What the student does</p>
+    <div class="step s"><b class="n">1</b>Logs in with their ID number and password.</div>
+    <div class="down">↓</div>
+    <div class="step s"><b class="n">2</b>Picks a pickup day that's open for booking.</div>
+    <div class="down">↓</div>
+    <div class="step s"><b class="n">3</b>Picks a free 10-minute slot. The system first checks they're allowed to book (28 days, no other booking, didn't cancel for this day), then <b>holds</b> the slot while they choose. One held slot at a time. <span class="rule">S8</span></div>
+    <div class="down">↓</div>
+    <div class="step s"><b class="n">4</b>Chooses items: up to 13, one of each item.</div>
+    <div class="down">↓</div>
+    <div class="step s"><b class="n">5</b>Ranks up to 5 substitutes (see <a href="#s12">section 12</a>).</div>
+    <div class="down">↓</div>
+    <div class="step s"><b class="n">6</b>Presses <b>Book</b>. After this, the items can't be changed. <span class="rule">I7</span></div>
+  </div>
+  <div>
+    <p class="col-title">What the system checks when they press Book</p>
+    <div class="txn">
+      <div class="title">ONE TRANSACTION: ALL OF THIS HAPPENS, OR NONE OF IT</div>
+      <div class="step sys">Is booking open for this day right now (5 pm the day before until 12 pm)? <span class="rule">S5</span></div>
+      <div class="down">↓</div>
+      <div class="step sys">Has it been 28 days since their last pickup? <span class="rule">F1</span></div>
+      <div class="down">↓</div>
+      <div class="step sys">Do they have no other upcoming booking? <span class="rule">F2</span></div>
+      <div class="down">↓</div>
+      <div class="step sys">Lock the slot. Is it still held for them? <span class="rule">S2</span> <span class="rule">S8</span></div>
+      <div class="down">↓</div>
+      <div class="step sys">Is every chosen variety in stock? Take each one off the stock count. <span class="rule">I4</span> <span class="rule">I5</span></div>
+    </div>
+    <div class="down">↓ all yes</div>
+    <div class="step ok">Saved as <b>Booked</b>. The student sees their booking code.</div>
+    <div class="down">or</div>
+    <div class="step bad">If any check fails, <b>nothing</b> is saved and the student sees why.</div>
+  </div>
+</div>
+
+<h3>An example: Ana books for Monday</h3>
+<ul>
+  <li><b>Sunday 5:02 pm.</b> Ana picks the 3:40 slot. It's held for her, so nobody else can take it while she chooses.</li>
+  <li><b>5:02–5:08.</b> She chooses her items (like sunflower oil) and her substitutes. Nothing is taken from stock yet.</li>
+  <li><b>5:08.</b> She presses Book. The system turns her held slot into a booking, takes her items off the stock count (sunflower oil 6 → 5), and saves the booking with a booking code.</li>
+</ul>
+<div class="why">
+  <p><b>What's a transaction?</b> A group of database changes that either all happen or none happen. If the server crashed halfway through Ana's booking, without a transaction she might have a booking while her sunflower oil still looks free to others. With a transaction, the crash undoes everything and she just presses Book again.</p>
+  <p><b>Why are items reserved only when she presses Book?</b> <span class="rule">I5</span> If choosing held stock, students who added oil to their list and then closed the app would make the oil look gone, and nobody would get it. The downside: if someone books the last bottle while Ana is choosing, her Book says "Sunflower oil just ran out, please choose something else". Nothing else about her booking is lost.</p>
+  <p><b>Why hold the slot?</b> Without it, someone could take 3:40 while Ana is still choosing, and she'd have to start again.</p>
+</div>
+<p>Pressing Book twice (a double-tap, or slow Wi-Fi) still makes only one booking and takes one bottle of oil. <span class="rule">B4</span></p>
+<p><b>The hold lasts 10 minutes</b>, with a countdown on screen: "3:40 is held for you: 7 minutes left". If time runs out, the slot is free again straight away, and Ana starts over like everyone else. <span class="rule">S8</span></p>
+
+<!-- 10 -->
+<h2 id="s10"><span class="num">10</span>The 28-day rule</h2>
+<ul>
+  <li>A pickup must be at least 28 days after the person's last pickup. <span class="rule">F1</span></li>
+  <li>A person can have only one upcoming booking at a time. <span class="rule">F2</span></li>
+  <li>Cancellations, whether by the student or the food bank, don't count. <span class="rule">F3</span></li>
+  <li>No-shows don't count either. This is a setting the food bank can change.</li>
+  <li>Walk-ins <b>do</b> count, because they're recorded in the same system. <span class="rule">W1</span> Otherwise someone could walk in one week and book online the next.</li>
+</ul>
+<div class="diagram">
+  <svg viewBox="0 0 900 175" role="img" aria-label="Timeline: picks up on October 1, can pick up again from October 29, booking details deleted on December 30.">
+    <rect x="40" y="70" width="255" height="20" fill="#fee2e2"/>
+    <rect x="295" y="70" width="565" height="20" fill="#d1fae5"/>
+    <line x1="40" y1="80" x2="860" y2="80" stroke="#334155" stroke-width="2"/>
+    <circle cx="40" cy="80" r="8" fill="#059669"/>
+    <circle cx="295" cy="80" r="8" fill="#2563eb"/>
+    <circle cx="860" cy="80" r="8" fill="#475569"/>
+    <text x="30" y="38" class="t-b">Thu 1 Oct</text>
+    <text x="30" y="58" class="t-s">picks up food</text>
+    <text x="295" y="38" class="t-b mid">Thu 29 Oct</text>
+    <text x="295" y="58" class="t-s mid">28 days later: can pick up again</text>
+    <text x="870" y="38" class="t-b end">Wed 30 Dec</text>
+    <text x="870" y="58" class="t-s end">90 days: booking details deleted</text>
+    <text x="167" y="114" class="t-s mid" style="fill:#991b1b">can't pick up again yet</text>
+    <text x="577" y="114" class="t-s mid" style="fill:#065f46">can book again</text>
+    <text x="870" y="150" class="t-s end">After that, only totals stay, like "38 pickups that week". <tspan font-weight="600">P7</tspan></text>
+  </svg>
+</div>
+<p><b>How the days are counted:</b> calendar days in Newfoundland time, from the date of the last pickup to the date of the new slot. The time of day doesn't matter. So after a pickup on Thursday 1 October at 5 pm, a slot on Thursday 29 October at 3:30 pm is allowed, even though it's a little short of 28 × 24 hours. <span class="done">Decided</span></p>
+<div class="why"><p><b>Why don't no-shows count?</b> People miss pickups for many reasons, and a penalty hurts the people who need food most.</p></div>
+
+<!-- 11 -->
+<h2 id="s11"><span class="num">11</span>Step 3: Cancelling</h2>
+<ul>
+  <li><b>No changes:</b> once a booking is made, its items and substitutes can't be changed. <span class="rule">I7</span></li>
+  <li><b>Cancel:</b> the student can cancel until 12 pm on the pickup day. <span class="rule">S6</span> Booking is still open until then, so the slot and the items go straight back for someone else to book. <span class="rule">I6</span></li>
+  <li>A cancelled booking doesn't count toward the 28 days. <span class="rule">F3</span></li>
+  <li><b>No booking again that day:</b> a student who cancels can't book again for that same pickup day. Otherwise cancelling and booking again would be a way to change items. They can book a later pickup day. <span class="rule">S6</span></li>
+  <li>After 12 pm there's no cancel button, because the bags are being packed. If the student doesn't come, it becomes a no-show at 6 pm (<a href="#s14">section 14</a>).</li>
+</ul>
+
+<!-- 12 -->
+<h2 id="s12"><span class="num">12</span>Step 4: Packing and substitutes</h2>
+<p>On the pickup day, from 12 pm (when booking closes) until 3 pm, volunteers pack the bags. <span class="rule">K1</span> They see a <b>packing queue</b>: each booking shows its booking code and items, never the ID number. <span class="rule">R2</span> <span class="rule">P4</span> Every list is final by then, so nothing changes while they pack.</p>
+
+<h3>Why can something run out if it was reserved?</h3>
+<p>The stock count on screen can be wrong: a box was damaged, something expired, or it was counted wrong. So a volunteer may reach for sunflower oil and find none.</p>
+
+<h3>Why substitutes?</h3>
+<p>If something has run out, the volunteer swaps in a substitute while packing, so nobody has to decide at the counter. That saves time for both students and volunteers.</p>
+
+<h3>The rules</h3>
+<ul>
+  <li>The student chooses a <b>variety</b>, like sunflower oil. Any brand or size of sunflower oil counts as sunflower oil. <span class="rule">U1</span></li>
+  <li>A different variety, like peanut oil, is <b>never</b> given in its place unless the student listed it as a substitute. <span class="rule">U1</span> <span class="rule">U5</span> Only the student knows their allergies: someone who picked gluten-free pasta never gets regular pasta.</li>
+  <li>Up to 5 substitutes, ranked in order. A substitute can be any variety that isn't an extra and isn't already in the order. <span class="rule">U2</span></li>
+  <li>Substitutes are <b>not reserved</b>. <span class="rule">U3</span> Holding 5 more items per student would block food that usually isn't needed. The cost: a substitute may also be gone by packing time.</li>
+  <li><b>Refill rule:</b> missing items are refilled from the substitute list in rank order. A substitute is skipped if it's out of stock, or if it would give the student a second of the same item. Refilling stops when the bag is back to its original size. <span class="rule">U4</span></li>
+  <li>If every substitute is gone too, the volunteer asks the student at the counter to choose from what's on the shelf, within the same limits, and records it. This should be rare with 5 substitutes. <span class="rule">U6</span></li>
+  <li>Every swap is written on a <b>sticky note</b> on the bag, so the student sees what changed. <span class="rule">U8</span></li>
+  <li>When a volunteer marks a variety as out of stock, every other booking that reserved it is flagged in the packing queue, so the next volunteer knows before they start. <span class="rule">U7</span></li>
+</ul>
+
+<div class="card">
+  <h4>Example 1: one item is missing</h4>
+  <div class="pack">
+    <span class="k">Booked (5 items)</span>
+    <div><span class="chip">Quick oats</span><span class="chip">Gluten-free pasta</span><span class="chip">Sunflower oil</span><span class="chip">Chunk chicken</span><span class="chip">Black beans</span></div>
+    <span class="k">Substitutes</span>
+    <div><span class="chip">1. Rice</span><span class="chip">2. Vegetable oil</span><span class="chip">3. Lentils</span></div>
+    <span class="k">At packing</span>
+    <div>Sunflower oil is gone. The bag has 4 items, so 1 is missing.</div>
+    <span class="k">Try substitute 1</span>
+    <div>Rice: in stock ✓, no rice in the bag yet ✓ → add it. The bag has 5 again, so stop.</div>
+    <span class="k">The bag</span>
+    <div><span class="chip">Quick oats</span><span class="chip">Gluten-free pasta</span><span class="chip out">Sunflower oil</span><span class="chip sub">Rice</span><span class="chip">Chunk chicken</span><span class="chip">Black beans</span></div>
+    <span class="k">Sticky note</span>
+    <div><span class="sticky">Sunflower oil → rice</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <h4>Example 2: substitutes that get skipped</h4>
+  <div class="pack">
+    <span class="k">Booked (5 items)</span>
+    <div><span class="chip">Quick oats</span><span class="chip">Gluten-free pasta</span><span class="chip">Sunflower oil</span><span class="chip">Chunk chicken</span><span class="chip">Black beans</span></div>
+    <span class="k">Substitutes</span>
+    <div><span class="chip">1. Steel-cut oats</span><span class="chip">2. Rice</span><span class="chip">3. Lentils</span></div>
+    <span class="k">At packing</span>
+    <div>Gluten-free pasta is gone. 1 is missing.</div>
+    <span class="k">Try substitute 1</span>
+    <div>Steel-cut oats: in stock, but the bag already has oats (quick oats). That would be a second oats → <b>skip</b>.</div>
+    <span class="k">Try substitute 2</span>
+    <div>Rice: out of stock → <b>skip</b>.</div>
+    <span class="k">Try substitute 3</span>
+    <div>Lentils: in stock ✓, no lentils yet ✓ → add it. Back to 5, stop.</div>
+    <span class="k">The bag</span>
+    <div><span class="chip">Quick oats</span><span class="chip out">Gluten-free pasta</span><span class="chip sub">Lentils</span><span class="chip">Sunflower oil</span><span class="chip">Chunk chicken</span><span class="chip">Black beans</span></div>
+    <span class="k">Sticky note</span>
+    <div><span class="sticky">Gluten-free pasta → lentils</span></div>
+  </div>
+  <p class="caption">Steel-cut oats would have been used if the <i>quick oats</i> had run out instead. Any substitute can fill any gap.</p>
+</div>
+<div class="why"><p><b>Why this refill rule?</b> Any substitute can fill any gap, so the result doesn't depend on which item went missing first. It's simple for volunteers and easy to test.</p></div>
+
+<!-- 13 -->
+<h2 id="s13"><span class="num">13</span>Step 5: Pickup at the counter</h2>
+<p>From 3:30 to 5:30 there are <b>two lines side by side</b>, each with its own volunteers. <span class="rule">W3</span> One hands out bags that were booked online. The other serves walk-ins. Most students are expected to move to booking online over time.</p>
+<p>Booking online doesn't prove the student is eligible. The check at the counter does. <span class="rule">P5</span></p>
+<div class="two">
+  <div>
+    <p class="col-title">Line 1: a student with a booking</p>
+    <div class="step s"><b class="n">1</b>Arrives in their slot. Late is fine, until 5:30.</div>
+    <div class="down">↓</div>
+    <div class="step v"><b class="n">2</b>Volunteer opens their booking by its booking code.</div>
+    <div class="down">↓</div>
+    <div class="step v"><b class="n">3</b>Volunteer types the number from the student's MUN card.</div>
+    <div class="down">↓</div>
+    <div class="step sys"><b class="n">4</b>System makes the keyed hash and checks it matches the booking. <span class="rule">P5</span></div>
+    <div class="down">↓</div>
+    <div class="step v"><b class="n">5</b>Volunteer hands over the bag (with its sticky note), plus any extras the student asks for (one of each), and records the extras. <span class="rule">E3</span> <span class="rule">E4</span></div>
+    <div class="down">↓</div>
+    <div class="step ok">Volunteer marks it <b>Picked up</b>. Only a volunteer's click counts. <span class="rule">B3</span></div>
+  </div>
+  <div>
+    <p class="col-title">Line 2: a walk-in (no booking, no slot)</p>
+    <div class="step s"><b class="n">1</b>Arrives with no booking. They don't need to log in.</div>
+    <div class="down">↓</div>
+    <div class="step v"><b class="n">2</b>Volunteer types the number from the student's MUN card. <span class="rule">W1</span></div>
+    <div class="down">↓</div>
+    <div class="step sys"><b class="n">3</b>System checks the 28-day rule. <span class="rule">F1</span></div>
+    <div class="down">↓</div>
+    <div class="step v"><b class="n">4</b>Volunteer picks the food from the shelf with the student, then selects the items and extras on the <b>Walk-in</b> screen, so the stock count stays right.</div>
+    <div class="down">↓</div>
+    <div class="step ok">Done. It counts as a pickup, the same as a booking.</div>
+  </div>
+</div>
+<p>Walk-ins take only what's left on the shelf after the bags are packed, so they can't take food from booked students.</p>
+<p><b>A walk-in who already has a booking:</b> the system shows it, and the volunteer cancels the booking and serves them now. Otherwise they could get food twice. <span class="rule">W4</span></p>
+<p><span class="known">Known issue</span> The internet goes down at the counter. We'll plan for this later.</p>
+
+<!-- 14 -->
+<h2 id="s14"><span class="num">14</span>The life of a booking</h2>
+<p>Every booking is in exactly one <b>status</b>. It can only move along the arrows. <span class="rule">B1</span> <span class="rule">B2</span></p>
+<div class="diagram">
+  <svg viewBox="0 0 890 330" role="img" aria-label="Booked goes to packed, packed goes to picked up. Booked goes to cancelled if the student cancels before 12 pm or the day is closed. Packed goes to cancelled if the day is closed. Packed goes to no-show if not picked up by 6 pm.">
+    <defs>
+      <marker id="m4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#334155"/></marker>
+      <marker id="m5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#94a3b8"/></marker>
+    </defs>
+    <rect x="30" y="40" width="170" height="60" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="115" y="66" class="t-b mid">Booked</text>
+    <text x="115" y="87" class="t-s mid">items reserved</text>
+    <rect x="360" y="40" width="170" height="60" rx="12" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+    <text x="445" y="66" class="t-b mid">Packed</text>
+    <text x="445" y="87" class="t-s mid">bag is ready</text>
+    <rect x="690" y="40" width="170" height="60" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="3"/>
+    <text x="775" y="66" class="t-b mid">Picked up</text>
+    <text x="775" y="87" class="t-s mid">counts for 28 days</text>
+    <rect x="195" y="238" width="170" height="78" rx="12" fill="#f1f5f9" stroke="#64748b" stroke-width="3"/>
+    <text x="280" y="263" class="t-b mid">Cancelled</text>
+    <text x="280" y="284" class="t-s mid">items back to stock</text>
+    <text x="280" y="302" class="t-s mid">doesn't count</text>
+    <rect x="525" y="238" width="170" height="78" rx="12" fill="#f1f5f9" stroke="#64748b" stroke-width="3"/>
+    <text x="610" y="263" class="t-b mid">No-show</text>
+    <text x="610" y="284" class="t-s mid">items back to stock</text>
+    <text x="610" y="302" class="t-s mid">doesn't count (setting)</text>
+
+    <path d="M200,70 L354,70" stroke="#334155" stroke-width="2" marker-end="url(#m4)"/>
+    <text x="278" y="60" class="lbl mid">volunteer packs it</text>
+    <path d="M530,70 L684,70" stroke="#334155" stroke-width="2" marker-end="url(#m4)"/>
+    <text x="608" y="60" class="lbl mid">card number matches</text>
+
+    <path d="M115,100 L241,234" stroke="#334155" stroke-width="2" marker-end="url(#m4)"/>
+    <text x="158" y="158" class="lbl end">student cancels</text>
+    <text x="158" y="176" class="lbl end">before 12 pm, or</text>
+    <text x="158" y="194" class="lbl end">the day is closed</text>
+
+    <path d="M415,100 L319,234" stroke="#334155" stroke-width="2" marker-end="url(#m4)"/>
+    <text x="352" y="150" class="lbl end">the day is closed</text>
+    <text x="352" y="168" class="lbl end">(snow day)</text>
+
+    <path d="M475,100 L581,234" stroke="#334155" stroke-width="2" marker-end="url(#m4)"/>
+    <text x="548" y="158" class="lbl">not picked up by</text>
+    <text x="548" y="176" class="lbl">6 pm</text>
+
+    <path d="M762,104 L654,232" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 5" fill="none" marker-start="url(#m5)" marker-end="url(#m5)"/>
+    <text x="732" y="172" class="lbl" style="fill:#475569">volunteer fixes</text>
+    <text x="732" y="190" class="lbl" style="fill:#475569">a mistake (logged)</text>
+  </svg>
+  <p class="caption">The three boxes with thick borders are the end. The only move between them is the dashed line: a volunteer fixing a mistake, which is logged. <span class="rule">B6</span> The system marks no-shows by itself at 6 pm, which gives volunteers half an hour after closing to finish marking bags picked up. A booking that was never packed also becomes a no-show at 6 pm. Any other move is refused, so a cancelled booking can't be marked picked up. <span class="rule">B2</span> <span class="rule">B3</span> <span class="rule">I6</span></p>
+</div>
+<ul>
+  <li><b>Snow day after packing:</b> the bookings are cancelled and the items go back into the stock count, so volunteers unpack the bags to make the shelf match. <span class="rule">S7</span></li>
+  <li><b>No-show:</b> volunteers put that bag's items back on the shelf. Keeping "no-show" separate from "cancelled" lets the food bank see how many slots are wasted.</li>
+</ul>
+
+<!-- 15 -->
+<h2 id="s15"><span class="num">15</span>What the coordinator does</h2>
+<ul>
+  <li><b>Items and stock:</b> updates the item list each week. Bookings already made keep their items. <span class="rule">I8</span></li>
+  <li><b>Settings:</b> changes the numbers (28 days, slot capacity, booking times…) without touching the code.</li>
+  <li><b>Closing a day:</b> for a holiday, bad weather or the Christmas break. Every booking that day is cancelled, even packed ones, and the items go back to stock. Those students can book again, because cancellations don't count. <span class="rule">S7</span> <span class="rule">F3</span>
+    <br><span class="known">Known issue</span> We have no contact details, so we can't tell students their day was closed. MUN email might fix this if MUN approves the project.</li>
+  <li><b>Volunteer accounts:</b> creates them with a username (a first name or nickname) and gives each volunteer a one-time setup code. The volunteer sets their own password with it, the same way students do, so the coordinator never sees it. A volunteer who also uses the food bank has a separate student account. The first coordinator account is made by a setup script when the system is installed. <span class="rule">R3</span> <span class="rule">R4</span></li>
+  <li><b>Moving booking times:</b> if the website is down on booking night, the coordinator can open booking later or keep it open longer for that one day. <span class="rule">S9</span></li>
+  <li><b>Totals only:</b> pickups per week, items given out, no-shows. Never who picked up. Numbers under 5 show as "fewer than 5". <span class="rule">P12</span></li>
+</ul>
+
+<!-- 16 -->
+<h2 id="s16"><span class="num">16</span>Data over time, and time zones</h2>
+<ul>
+  <li><b>90 days:</b> booking details are deleted after the retention period. Only totals are kept. <span class="rule">P7</span> (See the timeline in <a href="#s10">section 10</a>.)</li>
+  <li><b>Time zones:</b> every time is stored in UTC and shown in Newfoundland time. <span class="rule">T1</span> Newfoundland is UTC−3:30 in winter and UTC−2:30 in summer. A UTC time never jumps when the clocks change. We convert only when showing it on screen.</li>
+</ul>
+<p>Accounts with no pickup for a year are deleted. <span class="rule">P13</span></p>
+
+<!-- 17 -->
+<h2 id="s17"><span class="num">17</span>When two people book at the same moment</h2>
+<p>A <b>lock</b> on a database row means "I'm using this, wait until I'm done". Here's what happens when two students tap the free 4:00 slot at the same moment:</p>
+<table>
+  <tr><th style="width:14%">When</th><th>Student A</th><th>Student B</th></tr>
+  <tr><td>5:01:00 pm</td><td>Taps the 4:00 slot (it's free)</td><td>Taps the same slot</td></tr>
+  <tr><td>a moment later</td><td>Locks the 4:00 slot</td><td>Tries to lock it → has to <b>wait</b></td></tr>
+  <tr><td>a moment later</td><td>It's free → <b>held for A</b>. Lock released.</td><td>(still waiting)</td></tr>
+  <tr><td>a moment later</td><td></td><td>Gets the lock, sees it's held → "This slot was just taken. Please pick another."</td></tr>
+</table>
+<p>Without the lock, both would see "free" and both would get 4:00: two students in a one-student slot. The same idea stops two students taking the last tin of chicken: stock can never go below zero. <span class="rule">S2</span> <span class="rule">I4</span></p>
+<div class="why">
+  <p><b>Why lock things in a fixed order?</b> A booking locks several rows: its slot and the stock of each variety. Suppose booking 1 locked oats and then wanted rice, while booking 2 locked rice and then wanted oats. Each would wait for the other forever. That's called a <b>deadlock</b>. If every booking locks rows in the same order, it can't happen. We'll fix the exact order when we design the tables.</p>
+</div>
+
+<!-- 18 -->
+<h2 id="s18"><span class="num">18</span>All the settings</h2>
+<p>These are sample values. The coordinator can change them without changing the code.</p>
+<table>
+  <tr><th>Setting</th><th>Sample value</th></tr>
+  <tr><td>Pickup gap</td><td>28 days</td></tr>
+  <tr><td>Pickup days and hours</td><td>Monday and Thursday, 3:30–5:30 pm</td></tr>
+  <tr><td>Booking opens</td><td>5 pm the day before the pickup day</td></tr>
+  <tr><td>Booking closes (and cancelling)</td><td>12 pm on the pickup day</td></tr>
+  <tr><td>Slot length</td><td>10 minutes</td></tr>
+  <tr><td>Slot capacity</td><td>1 student</td></tr>
+  <tr><td>Slot hold time</td><td>10 minutes</td></tr>
+  <tr><td>Item limit</td><td>13 per booking</td></tr>
+  <tr><td>Max of each item</td><td>1</td></tr>
+  <tr><td>Substitute limit</td><td>5 per booking</td></tr>
+  <tr><td>Extras per student</td><td>1 of each extra item</td></tr>
+  <tr><td>No-show time</td><td>6 pm on the pickup day</td></tr>
+  <tr><td>No-shows count toward the pickup gap</td><td>No</td></tr>
+  <tr><td>Retention period</td><td>90 days</td></tr>
+  <tr><td>Category limits inside the item limit</td><td>None</td></tr>
+  <tr><td>Setup code lifetime</td><td>7 days</td></tr>
+  <tr><td>Wrong password tries</td><td>5 per 15 minutes per ID number</td></tr>
+</table>
+
+<!-- 19 -->
+<h2 id="s19"><span class="num">19</span>Not in the prototype, and questions for the food bank</h2>
+<div class="two">
+  <div class="card">
+    <h4>Not in the prototype</h4>
+    <ul>
+      <li>Checking MCP cards: the food bank does this its own way</li>
+      <li>Families: every booking is for one person</li>
+      <li>Reminders of any kind (email, text or calendar)</li>
+      <li>Picking up for someone else</li>
+      <li>Students from other colleges</li>
+      <li>Other campuses</li>
+      <li>Other languages</li>
+      <li>AI meal suggestions (to decide later)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>To ask the Campus Food Bank</h4>
+    <ul>
+      <li>How is the 4-week rule checked today?</li>
+      <li>We think nobody can pick up for someone else, and only MUN students are served. Is that right?</li>
+      <li>When does new stock arrive each week?</li>
+      <li>When do volunteers pack on pickup days? We assume 12–3 pm.</li>
+      <li>How many students can the counter serve in 10 minutes?</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 20 -->
+<h2 id="s20"><span class="num">20</span>Known issues, and still to decide</h2>
+
+<h3>Known issues we accept for now</h3>
+<ul>
+  <li><b>The 5 pm rush.</b> Slots go to whoever is free when booking opens. Most of the university is done by 5 pm.</li>
+  <li><b>Password resets only at the counter.</b> A student who forgets on booking night has to walk in and reset it there.</li>
+  <li><b>Closures can't reach students.</b> No contact details. Maybe MUN email later.</li>
+  <li><b>A volunteer could use a setup code first.</b> We trust volunteers for now.</li>
+  <li><b>Internet down at the counter.</b> We'll plan for this later.</li>
+  <li><b>First visit in person.</b> A new student needs the counter for an account, but can take food as a walk-in on that visit.</li>
+</ul>
+
+<h3>A. Checking an MCP card at pickup <span class="done">Decided</span></h3>
+<p>The food bank checks MCP cards its own way, to stop people also using other food banks. Our system doesn't store or check them. <span class="rule">P3</span></p>
+
+<h3>B. The 15 issues</h3>
+<table>
+  <tr><th style="width:6%">#</th><th>Issue</th><th style="width:26%">Status</th></tr>
+  <tr><td colspan="3" class="group">Before the tables</td></tr>
+  <tr><td>1</td><td>Hold the chosen slot while the student picks items.</td><td><span class="done">Decided</span> 10 minutes</td></tr>
+  <tr><td>2</td><td>A walk-in who already has an upcoming booking: the volunteer cancels the booking and serves them now. Otherwise they could get food twice.</td><td><span class="done">Decided</span> <span class="rule">W4</span></td></tr>
+  <tr><td>3</td><td>Pack only after the list is final.</td><td><span class="done">Decided</span> Pack 12–3 pm, after booking closes</td></tr>
+  <tr><td>4</td><td>Delete accounts with no pickup for a year, so we don't keep ID hashes of people who have left.</td><td><span class="done">Decided</span> <span class="rule">P13</span></td></tr>
+  <tr><td>5</td><td>Count the 28 days as calendar days in Newfoundland time.</td><td><span class="done">Decided</span></td></tr>
+  <tr><td colspan="3" class="group">Privacy</td></tr>
+  <tr><td>6</td><td>Show totals by week, and any number under 5 as "fewer than 5". With small numbers, someone who knows who came in on Monday could work out who uses the food bank.</td><td><span class="done">Decided</span> <span class="rule">P12</span></td></tr>
+  <tr><td>7</td><td>The ID number never appears in web addresses, logs or error messages. FastAPI's 422 errors repeat back what was typed, so we have to stop that. Add a test that checks it.</td><td><span class="done">Decided</span> <span class="rule">P10</span></td></tr>
+  <tr><td>8</td><td>Back up the secret key. If it's lost, we can't match any card to its account again. It's hard to change later, and whoever holds it could work out ID numbers.</td><td><span class="done">Decided</span> <span class="rule">P11</span></td></tr>
+  <tr><td>9</td><td>Each volunteer has their own login. Log which volunteer created or reset an account. Show the student "password reset on DATE".</td><td><span class="done">Decided</span> <span class="rule">R4</span></td></tr>
+  <tr><td colspan="3" class="group">Day to day</td></tr>
+  <tr><td>10</td><td>Closures can't reach students.</td><td><span class="known">Known issue</span></td></tr>
+  <tr><td>11</td><td>The rush when booking opens.</td><td><span class="known">Known issue</span> (5 pm)</td></tr>
+  <tr><td>12</td><td>Unused walk-in places.</td><td><span class="done">Gone</span> No places are kept for walk-ins</td></tr>
+  <tr><td>13</td><td>Internet down at the counter.</td><td><span class="known">Known issue</span></td></tr>
+  <tr><td colspan="3" class="group">Going live</td></tr>
+  <tr><td>14</td><td>A privacy review, and deciding where the system is hosted (where the data actually lives).</td><td>Before going live</td></tr>
+  <tr><td>15</td><td>Accessibility (screen readers, large text), and students without smartphones.</td><td>Before going live</td></tr>
+</table>
+
+<h3>C. After that: the database tables</h3>
+<p>For each rule above, we decide where it lives: in the shape of a <b>table</b>, as a <b>database rule</b> (like "stock can't go below zero"), or in the <b>server code</b>.</p>
+
+<!-- 21 -->
+<h2 id="s21"><span class="num">21</span>Questions still open</h2>
+<p><b>None. The rules are done.</b> Every round of questions is answered, and the answers are in CONSTRAINTS.md and DECISIONS.md.</p>
+<p>The only open items are the questions for the food bank (<a href="#s19">section 19</a>) and the going-live topics. Next: the tech (tech-and-stack.html), then the database tables.</p>
+
+<footer>Made 30 Oct 2026 from CONSTRAINTS.md and DECISIONS.md.</footer>
+</main>
+
+<script>
+  // Example Monday: 12 ten-minute slots, one student each
+  const times = ['3:30', '3:40', '3:50', '4:00', '4:10', '4:20', '4:30', '4:40', '4:50', '5:00', '5:10', '5:20'];
+  const booked = [1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0];
+  const slots = document.getElementById('slots');
+  times.forEach((t, i) => {
+    const col = document.createElement('div');
+    col.className = 'slot';
+    col.innerHTML = '<span class="time">' + t + '</span>';
+    const s = document.createElement('span');
+    s.className = 'sq ' + (booked[i] ? 'online' : 'empty');
+    col.appendChild(s);
+    slots.appendChild(col);
+  });
+</script>
+</body>
+</html>
