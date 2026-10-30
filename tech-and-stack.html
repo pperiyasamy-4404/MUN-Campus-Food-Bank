@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Campus Food Bank: the tech</title>
+<title>Campus Food Bank: the tech, explained</title>
 <style>
   :root {
     --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc;
     --blue: #2563eb; --blue-bg: #dbeafe;
     --green: #059669; --green-bg: #d1fae5;
     --amber: #b45309; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
     --slate-bg: #f1f5f9;
   }
   * { box-sizing: border-box; }
@@ -19,10 +20,12 @@
   h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
   h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
   h2 .num { color: var(--blue); margin-right: 8px; }
-  h3 { font-size: 1.1rem; margin: 0 0 6px; }
+  h3 { font-size: 1.15rem; margin: 28px 0 6px; }
+  .card h3 { margin-top: 0; }
   p { margin: 10px 0; }
   ul, ol { margin: 8px 0; padding-left: 24px; }
   li { margin: 4px 0; }
+  a { color: var(--blue); }
   .lead { color: var(--muted); font-size: 1.05rem; }
   code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
   .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
@@ -30,7 +33,7 @@
   table { border-collapse: collapse; width: 100%; background: #fff; font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
   th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
   th { background: var(--slate-bg); }
-  td.group { background: #f8fafc; font-weight: 700; color: var(--muted); }
+  table.data { width: auto; font: 14px ui-monospace, Consolas, monospace; }
 
   .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 18px 0; }
   .card.q { border-left: 5px solid var(--blue); }
@@ -38,7 +41,55 @@
   .why p { margin: 4px 0; }
   .suggest { background: #eff6ff; border-radius: 10px; padding: 10px 14px; margin: 6px 0; }
   .suggest p { margin: 4px 0; }
-  .label { display: inline-block; font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 12px 0 2px; }
+  .short { background: var(--green-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .short p { margin: 2px 0; }
+  .warn { background: var(--amber-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .warn p { margin: 4px 0; }
+  .label { display: block; font-size: .78rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--blue); margin: 22px 0 2px; }
+
+  .choice { display: inline-block; font-size: .72em; font-weight: 700; background: var(--blue); color: #fff; padding: 1px 9px; border-radius: 999px; margin-left: 8px; vertical-align: middle; white-space: nowrap; }
+  .you { display: inline-block; font-size: .75em; font-weight: 700; background: var(--amber-bg); color: #92400e; border: 1px solid #fcd34d; padding: 0 8px; border-radius: 999px; margin-left: 6px; white-space: nowrap; }
+
+  pre.code, pre.tree { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 18px; font: 14px/1.55 ui-monospace, Consolas, monospace; overflow-x: auto; margin: 12px 0; }
+  pre .c { color: #94a3b8; }
+  pre .bad { color: #fca5a5; }
+  pre .good { color: #86efac; }
+
+  /* the three parts */
+  .stack { display: flex; align-items: stretch; gap: 8px; margin: 18px 0; }
+  .stack .box { flex: 1; border-radius: 12px; padding: 14px 16px; border: 1.5px solid; }
+  .stack .box .tag { font-size: .75rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+  .stack .box b.big { font-size: 1.2rem; display: block; margin: 2px 0 6px; }
+  .stack .box p { margin: 6px 0; font-size: .95rem; }
+  .stack .box .like { color: var(--muted); font-style: italic; }
+  .stack .box.s { border-color: var(--blue); background: var(--blue-bg); }
+  .stack .box.sys { border-color: #64748b; background: var(--slate-bg); }
+  .stack .box.db { border-color: var(--green); background: var(--green-bg); }
+  .stack .arrow { display: flex; flex-direction: column; justify-content: center; align-items: center; color: #64748b; font-size: 1.5rem; min-width: 40px; }
+  .stack .arrow small { font-size: .7rem; text-align: center; line-height: 1.2; }
+  @media (max-width: 760px) { .stack { flex-direction: column; } .stack .arrow { transform: rotate(90deg); min-height: 36px; } .stack .arrow small { display: none; } }
+
+  /* the race for the last tin */
+  .race { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 14px 0; }
+  @media (max-width: 760px) { .race { grid-template-columns: 1fr; } }
+  .race .side { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .race .side h4 { margin: 0 0 8px; font-size: 1rem; }
+  .race .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 6px 0; }
+  .race .cell { border-radius: 8px; padding: 6px 10px; font-size: .9rem; }
+  .race .ana { background: var(--blue-bg); }
+  .race .ben { background: #ede9fe; }
+  .race .wait { background: var(--slate-bg); color: var(--muted); font-style: italic; }
+  .race .head { font-size: .75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .race .result { border-radius: 8px; padding: 8px 10px; margin-top: 10px; font-size: .92rem; font-weight: 600; }
+  .race .result.bad { background: var(--red-bg); color: var(--red); }
+  .race .result.good { background: var(--green-bg); color: #065f46; }
+
+  /* flows */
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 14px 0; }
+  .flow .chip { background: #fff; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 6px 12px; font-size: .92rem; }
+  .flow .chip.key { border-color: var(--amber); background: var(--amber-bg); }
+  .flow .chip.out { border-color: var(--green); background: var(--green-bg); }
+  .flow .to { color: #94a3b8; }
 
   .step { background: #fff; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 9px 14px; font-size: .96rem; }
   .step.s { border-color: var(--blue); background: var(--blue-bg); }
@@ -47,13 +98,14 @@
   .step.ok { border-color: var(--green); background: var(--green-bg); font-weight: 600; }
   .step b.n { display: inline-block; min-width: 1.5em; color: var(--blue); }
   .down { text-align: center; color: #94a3b8; line-height: 1.1; font-size: 1.1rem; margin: 2px 0; }
-  .you { display: inline-block; font-size: .75em; font-weight: 700; background: var(--amber-bg); color: #92400e; border: 1px solid #fcd34d; padding: 0 8px; border-radius: 999px; margin-left: 6px; white-space: nowrap; }
-
-  pre.tree { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 16px 20px; font: 14px/1.55 ui-monospace, Consolas, monospace; overflow-x: auto; }
-  pre.tree .c { color: #94a3b8; }
 
   .analogy { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   @media (max-width: 760px) { .analogy { grid-template-columns: 1fr; } }
+
+  .toc { columns: 2; column-gap: 32px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 20px 14px 40px; }
+  @media (max-width: 760px) { .toc { columns: 1; } }
+  .gloss dt { font-weight: 700; margin-top: 8px; }
+  .gloss dd { margin: 0 0 0 0; color: var(--ink); }
 
   footer { margin-top: 60px; color: var(--muted); font-size: .88rem; }
 </style>
@@ -63,136 +115,553 @@
 
 <header>
   <p class="eyebrow">Campus Food Bank Booking System · 30 Oct 2026</p>
-  <h1>The tech: what we'll use and how it fits together</h1>
-  <p class="lead">The rules are done. This page explains each tool in simple words, compares it with what you used in Spring Boot, follows one booking through the system, and lists the few tech choices left, each with my suggestion.</p>
-  <p class="lead">Like the rules, nothing here is decided until you say so.</p>
+  <h1>The tech, explained simply</h1>
+  <p class="lead">For each tool, this page shows what it is, a small example from our food bank, why we picked it, and what else we could have used and why we didn't.</p>
+  <p class="lead">Nothing here is final until you say so. Six choices are still yours. They're marked like this <span class="choice">Choice 1</span> and listed again at the end.</p>
 </header>
 
+<div class="card">
+  <h3>A few words used on this page</h3>
+  <dl class="gloss">
+    <dt>Server</dt><dd>A program running on a computer somewhere, which answers messages from phones and laptops.</dd>
+    <dt>Request</dt><dd>One message from the phone to the server, like "show me Monday's slots" or "book this for me".</dd>
+    <dt>Package</dt><dd>Ready-made code that someone else wrote. We install it and use it, so we don't write everything from zero.</dd>
+    <dt>Database</dt><dd>A program that stores data in tables and keeps it safe.</dd>
+    <dt>SQL</dt><dd>The language used to ask a database for things: "give me every booking for Monday".</dd>
+  </dl>
+</div>
+
+<ol class="toc">
+  <li><a href="#big">The big picture: three parts</a></li>
+  <li><a href="#pg">The database: PostgreSQL</a></li>
+  <li><a href="#fastapi">The server: FastAPI</a></li>
+  <li><a href="#pydantic">Checking data: Pydantic</a></li>
+  <li><a href="#sqla">Talking to the database: SQLAlchemy and Alembic</a></li>
+  <li><a href="#react">The screens: React, TypeScript, Vite</a></li>
+  <li><a href="#login">Logging in: sessions</a></li>
+  <li><a href="#secrets">Keeping secrets: argon2 and HMAC</a></li>
+  <li><a href="#tests">Testing: pytest</a></li>
+  <li><a href="#install">PostgreSQL on your laptop</a></li>
+  <li><a href="#repo">One repository</a></li>
+  <li><a href="#jobs">Things that happen by themselves</a></li>
+  <li><a href="#journey">One booking, start to finish</a></li>
+  <li><a href="#summary">Everything in one table</a></li>
+  <li><a href="#choices">Your six choices</a></li>
+  <li><a href="#folders">Folders and build order</a></li>
+</ol>
+
 <!-- 1 -->
-<h2><span class="num">1</span>Already decided (25 Oct)</h2>
-<ul>
-  <li><b>React</b> for the screens, <b>FastAPI</b> (Python) for the server, <b>PostgreSQL</b> for the database.</li>
-  <li><b>Why PostgreSQL:</b> the booking rules need real transactions and row locks. SQLite can't lock single rows.</li>
-  <li><b>Why FastAPI:</b> still blank in DECISIONS.md. Write it in your own words. An interviewer will ask.</li>
-</ul>
-<p>Your laptop already has <b>Python 3.11</b> and <b>Node 24</b>. It doesn't have PostgreSQL or Docker yet (choice 4 below).</p>
+<h2 id="big"><span class="num">1</span>The big picture: three parts</h2>
+<p>Our system has three parts. They work a lot like the food bank itself.</p>
+
+<div class="stack">
+  <div class="box s">
+    <div class="tag">Screens</div>
+    <b class="big">React</b>
+    <p>Runs on Ana's phone or laptop, in the browser.</p>
+    <p class="like">Like the front counter: what the student sees and taps.</p>
+  </div>
+  <div class="arrow">⇄<small>requests and answers</small></div>
+  <div class="box sys">
+    <div class="tag">Server</div>
+    <b class="big">FastAPI</b>
+    <p>Runs on one computer. Every rule lives here.</p>
+    <p class="like">Like the volunteer who knows the rules and checks every request.</p>
+  </div>
+  <div class="arrow">⇄<small>SQL</small></div>
+  <div class="box db">
+    <div class="tag">Database</div>
+    <b class="big">PostgreSQL</b>
+    <p>Stores everything, and refuses anything that breaks the key rules.</p>
+    <p class="like">Like the shelves and the record book.</p>
+  </div>
+</div>
+
+<p><b>Example.</b> Ana taps "Monday 3:40 pm". React sends a request: "hold this slot for me". FastAPI checks the rules: is booking open, and has it been 28 days? PostgreSQL saves the hold. The answer goes back, and Ana sees a 10-minute countdown.</p>
+
+<div class="why">
+  <p><b>Why not put everything on the phone?</b></p>
+  <p>Anything that runs on the student's phone can be changed by the student. Every browser has developer tools, and with them a curious student can switch off a check. If the 28-day check lived only in React, someone could remove it and book every week.</p>
+  <p>So the screens only show things and send requests. The server checks every rule again, and students can't touch the server.</p>
+</div>
+
+<div class="why">
+  <p><b>Why a website and not a phone app?</b></p>
+  <ul>
+    <li>It works on any phone, tablet or laptop, iPhone or Android, with nothing to install.</li>
+    <li>No app stores: no waiting for review, no developer fees, no updates for students to download.</li>
+    <li>Students with a full phone can still use it.</li>
+    <li>We don't lose anything we need. The main extra an app gives is notifications, and we don't send reminders anyway.</li>
+  </ul>
+</div>
 
 <!-- 2 -->
-<h2><span class="num">2</span>Each tool, in one line</h2>
-<table>
-  <tr><th style="width:15%">Tool</th><th>What it does here</th><th style="width:26%">Like this in Spring Boot</th></tr>
-  <tr><td colspan="3" class="group">Screens (the frontend)</td></tr>
-  <tr><td><b>React</b></td><td>Builds the screens on phones and laptops out of small pieces (components).</td><td>Thymeleaf pages, but running in the browser</td></tr>
-  <tr><td><b>TypeScript</b></td><td>JavaScript with types. Catches mistakes like "slot is a number, not text" before the code runs.</td><td>Java's types</td></tr>
-  <tr><td><b>Vite</b></td><td>Runs the React app while you work on it, and packages it at the end.</td><td>Maven or Gradle, for the frontend</td></tr>
-  <tr><td colspan="3" class="group">Server (the backend)</td></tr>
-  <tr><td><b>FastAPI</b></td><td>Each web address, like <code>POST /bookings</code>, is a Python function.</td><td><code>@RestController</code> + <code>@PostMapping</code></td></tr>
-  <tr><td><b>Pydantic</b></td><td>Checks the shape of incoming data: "items is a list of at most 13".</td><td>DTOs with <code>@Valid</code></td></tr>
-  <tr><td><b>SQLAlchemy</b></td><td>Talks to PostgreSQL from Python: tables become Python classes.</td><td>JPA / Hibernate</td></tr>
-  <tr><td><b>Alembic</b></td><td>Saves every change to the tables as a numbered step, so any laptop can build the exact same database.</td><td>Flyway / Liquibase</td></tr>
-  <tr><td><b>argon2</b></td><td>Hashes passwords. It's slow on purpose, so guessing passwords costs an attacker a lot of time. <span class="rule">P8</span></td><td><code>BCryptPasswordEncoder</code></td></tr>
-  <tr><td><b>hmac</b></td><td>Built into Python. Makes the keyed hash of the ID number. <span class="rule">P2</span></td><td><code>javax.crypto.Mac</code></td></tr>
-  <tr><td><b>pytest</b></td><td>Runs the tests.</td><td>JUnit</td></tr>
-  <tr><td colspan="3" class="group">Database</td></tr>
-  <tr><td><b>PostgreSQL</b></td><td>Stores the data and enforces the most important rules itself: slot capacity, stock never below zero, one upcoming booking per person.</td><td>Same (or MySQL)</td></tr>
+<h2 id="pg"><span class="num">2</span>The database: PostgreSQL</h2>
+
+<span class="label">What it is</span>
+<p>A database stores data in <b>tables</b>, like sheets in a spreadsheet. Each table has columns, and each line in it is called a <b>row</b>. PostgreSQL (people say "Postgres") is a free database used by many companies. It runs as its own program, and our server talks to it in SQL.</p>
+
+<span class="label">In our food bank</span>
+<p>A small part of the <code>varieties</code> table might look like this:</p>
+<table class="data">
+  <tr><th>id</th><th>name</th><th>stock</th></tr>
+  <tr><td>7</td><td>Chickpeas (canned)</td><td>1</td></tr>
+  <tr><td>8</td><td>Sunflower oil</td><td>12</td></tr>
+  <tr><td>9</td><td>Quick oats</td><td>0</td></tr>
 </table>
 
+<span class="label">Why we need a real database, not a file</span>
+<p>We could save everything in a file, like a spreadsheet. But at 5 pm on Sunday, many students book at the same moment. With a file, two saves at once can overwrite each other, and a booking quietly disappears. If the computer crashes in the middle of saving, the file can be left half-written. A database is built to handle both.</p>
+
+<span class="label">Why PostgreSQL: three things it gives us</span>
+
+<h3>a. Row locks: the last tin of chickpeas <span class="rule">I4</span></h3>
+<p>There is one tin of chickpeas left. Ana and Ben both press <b>Book</b> at 5:00:01 pm, and both want it.</p>
+
+<div class="race">
+  <div class="side">
+    <h4>Without a lock</h4>
+    <div class="row"><div class="head">Ana's booking</div><div class="head">Ben's booking</div></div>
+    <div class="row"><div class="cell ana">Reads chickpeas: 1 left</div><div class="cell ben">Reads chickpeas: 1 left</div></div>
+    <div class="row"><div class="cell ana">"1 is enough." Saves 0.</div><div class="cell ben">"1 is enough." Saves 0.</div></div>
+    <div class="result bad">Both are promised chickpeas. There is one tin. One student goes home without it, and the count is wrong.</div>
+  </div>
+  <div class="side">
+    <h4>With a row lock</h4>
+    <div class="row"><div class="head">Ana's booking</div><div class="head">Ben's booking</div></div>
+    <div class="row"><div class="cell ana">Locks the chickpeas row. Reads: 1 left</div><div class="cell wait">Wants the same row, so it waits</div></div>
+    <div class="row"><div class="cell ana">Saves 0, finishes, unlocks</div><div class="cell wait">still waiting</div></div>
+    <div class="row"><div class="cell wait">done</div><div class="cell ben">Now reads: 0 left</div></div>
+    <div class="result good">Ana gets the tin. Ben sees "Chickpeas just ran out" and picks something else.</div>
+  </div>
+</div>
+
+<p>The lock is two words added to a normal SQL line:</p>
+<pre class="code">SELECT stock FROM varieties WHERE id = 7 <span class="good">FOR UPDATE</span>;   <span class="c">-- "lock this row until I'm done"</span></pre>
+<p>Only that one row is locked. Someone booking rice and oil, with no chickpeas, doesn't wait at all.</p>
+
+<h3>b. Transactions: all or nothing</h3>
+<p>Ana's booking does several things: it takes her slot, takes each of her 13 items off the stock, and saves the booking. A <b>transaction</b> wraps them together so they either all happen or none do.</p>
+<p><b>Example.</b> The first 8 items go fine, but the 9th, quick oats, has 0 left. Without a transaction, Ana would have a slot and 8 items, and the stock count would be wrong. With a transaction, everything is undone as if she never pressed Book, and she's told the oats ran out.</p>
+
+<h3>c. Database rules: a safety net under our code</h3>
+<p>We write the rules in Python, but code can have bugs. So the most important rules are also written into the database. Then even buggy code can't break them: the database refuses the change.</p>
+<pre class="code"><span class="c">-- Stock can never go below zero (I4)</span>
+stock integer NOT NULL CHECK (stock &gt;= 0)
+
+<span class="c">-- One upcoming booking per student (F2)</span>
+CREATE UNIQUE INDEX one_upcoming_booking
+  ON bookings (student_id)
+  WHERE status IN ('booked', 'packed');</pre>
+<p>The second rule says: among bookings that are still booked or packed, each student can appear only once. Old bookings that were picked up or cancelled don't count. It's called a <b>partial unique index</b>: "unique" because a student can't appear twice, "partial" because it only looks at some rows. <span class="you">you write these</span></p>
+
+<p><b>A bonus: time zones.</b> Newfoundland is half an hour off from most of Canada, which trips up a lot of software. PostgreSQL stores the exact moment of each time and can show it in Newfoundland time, half hour and summer time included. <span class="rule">T1</span></p>
+
+<span class="label">What else we could use, and why not</span>
+<table>
+  <tr><th style="width:17%">Option</th><th style="width:33%">What it is</th><th>Why not for us</th></tr>
+  <tr><td><b>SQLite</b></td><td>A small database that lives in one file. It comes with Python, and it's inside most phone apps and browsers.</td><td>Only one change can happen at a time in the whole database, and it can't lock a single row. At 5 pm everyone would queue behind one lock. It's great for an app on one device, not for a website many people use at once.</td></tr>
+  <tr><td><b>MySQL</b></td><td>Another popular free database, much like PostgreSQL.</td><td>It would mostly work. But "one upcoming booking per student" (the partial index above) isn't possible in MySQL without a workaround.</td></tr>
+  <tr><td><b>MongoDB</b></td><td>Stores data as documents (like JSON) instead of tables. Good when every record has a different shape.</td><td>Our data has a fixed shape and lots of links: a booking belongs to a student and has items, and each item has varieties. That's exactly what tables are for. MongoDB can do transactions now, but rules like "one upcoming booking per student" are simpler with tables.</td></tr>
+  <tr><td><b>A spreadsheet or file</b></td><td>Saving data straight into a file.</td><td>Two saves at once can overwrite each other. No locks, no rules, no all-or-nothing.</td></tr>
+</table>
+
+<div class="short"><p><b>In short:</b> two students can want the last item at the same moment. PostgreSQL lets us lock just that row, undo a half-finished booking, and keep the key rules in the database itself.</p></div>
+
 <!-- 3 -->
-<h2><span class="num">3</span>How one booking travels through the system</h2>
+<h2 id="fastapi"><span class="num">3</span>The server: FastAPI (Python)</h2>
+
+<span class="label">What a server does</span>
+<p>A server waits for requests, checks them, talks to the database, and sends an answer back. All our rules live here.</p>
+
+<span class="label">What FastAPI is</span>
+<p>A Python package for building servers. You write a normal Python function and put a label on it saying which web address it answers.</p>
+
+<span class="label">In our food bank</span>
+<pre class="code">@app.get("/slots")
+def list_slots(day: date):
+    return get_free_slots(day)</pre>
+<p>When Ana's phone asks for <code>/slots?day=2026-11-02</code>, FastAPI:</p>
+<ol>
+  <li>finds this function,</li>
+  <li>checks that <code>2026-11-02</code> really is a date. If the phone sends <code>banana</code>, Ana gets an error and our function never runs,</li>
+  <li>runs the function,</li>
+  <li>turns the result into JSON (plain-text data the phone can read) and sends it back.</li>
+</ol>
+
+<span class="label">Why we use it</span>
+<ul>
+  <li><b>It checks incoming data for us</b>, using Pydantic (part 4). That means fewer if-statements and fewer forgotten checks.</li>
+  <li><b>A free test page.</b> Open <code>/docs</code> in the browser and you get a page listing every web address. You can fill in a form and try each one. We can test booking before a single screen exists.</li>
+  <li><b>Python.</b> It's easy to read, and it's the main language for AI work, if we ever add the AI meal suggestions (on the "not in the prototype" list).</li>
+  <li><b>Small and clear.</b> FastAPI only does the web part. The database part is SQLAlchemy and the data checks are Pydantic. Each piece is separate, so you can see how they fit and explain each one.</li>
+</ul>
+<p><b>About the name:</b> "Fast" is about speed, but speed isn't why we picked it. A few hundred students is tiny for any of these tools.</p>
+
+<span class="label">What else we could use, and why not</span>
+<table>
+  <tr><th style="width:17%">Option</th><th style="width:33%">What it is</th><th>Why not for us</th></tr>
+  <tr><td><b>Flask</b></td><td>An older, simpler Python package for servers.</td><td>It works, but it has no built-in data checking and no test page. We'd add extra packages for both, and FastAPI already has them.</td></tr>
+  <tr><td><b>Django</b></td><td>A big Python package with everything built in: admin pages, accounts, its own database tool.</td><td>Its accounts are built around usernames and emails. Ours are unusual: no names, no emails, a hashed ID number. We'd spend time working around Django instead of building. Its ready-made admin pages are a real plus that we give up.</td></tr>
+  <tr><td><b>Node.js with Express</b></td><td>A server written in JavaScript.</td><td>A fair choice, since the screens and the server would use one language. We picked Python because it's easier to read and it's the main language for AI.</td></tr>
+</table>
+
+<div class="warn"><p><b>In short: that one's yours.</b> "Why FastAPI" is the blank line in DECISIONS.md. Pick the reasons above that matter most to you and write them in your own words.</p></div>
+
+<!-- 4 -->
+<h2 id="pydantic"><span class="num">4</span>Checking the data: Pydantic</h2>
+
+<span class="label">What it is</span>
+<p>A package that describes what a request should look like, and checks every request against that before our code runs. It comes with FastAPI.</p>
+
+<span class="label">In our food bank</span>
+<pre class="code">class BookingRequest(BaseModel):
+    hold_id: int
+    items: list[int]          <span class="c"># the varieties Ana chose</span>
+    substitutes: list[int]    <span class="c"># in rank order</span></pre>
+<p>If the phone sends <code>"hold_id": "abc"</code>, or leaves out <code>items</code>, FastAPI answers with an error (code 422) and our booking code never runs.</p>
+
+<span class="label">Shape versus rules</span>
+<p>Pydantic checks the <b>shape</b>: "items is a list of numbers". Our own code checks the <b>rules</b>: "at most 13 items", "one of each item", "28 days have passed".</p>
+<p>Why not put "at most 13" in Pydantic? Because 13 is a <b>setting</b> the coordinator can change. Pydantic's checks are fixed in the code, but settings live in the database.</p>
+
+<div class="warn"><p><b>A trap we'll handle.</b> When Pydantic refuses something, FastAPI's error repeats the bad input back. If a student mistypes their ID number, that number could end up in an error message or a log. Rule <span class="rule">P10</span> says it never can, so we'll change the error format and write a test for it.</p></div>
+
+<span class="label">What else we could use, and why not</span>
+<p>There isn't a real choice here, because Pydantic comes with FastAPI. The other way is checking by hand with if-statements in every function, and it's easy to forget one.</p>
+
+<div class="short"><p><b>In short:</b> Pydantic stops badly shaped data at the door, so our rules only ever see clean data.</p></div>
+
+<!-- 5 -->
+<h2 id="sqla"><span class="num">5</span>Talking to the database: SQLAlchemy and Alembic</h2>
+
+<h3>SQLAlchemy <span class="choice">Choice 3</span></h3>
+<span class="label">What it is</span>
+<p>A package that lets Python talk to PostgreSQL. Each table becomes a Python class, and each row becomes a Python object.</p>
+
+<span class="label">In our food bank</span>
+<pre class="code">class Variety(Base):
+    __tablename__ = "varieties"
+    id:    Mapped[int] = mapped_column(primary_key=True)
+    name:  Mapped[str]
+    stock: Mapped[int]</pre>
+<p>Then "find Ana's bookings" looks like this in Python, and SQLAlchemy sends the SQL for us:</p>
+<pre class="code">select(Booking).where(Booking.student_id == ana.id)     <span class="c"># what we write</span>
+SELECT * FROM bookings WHERE student_id = 42;           <span class="c"># what it sends</span></pre>
+
+<span class="label">Why we use it</span>
+<ul>
+  <li><b>Less repeated code.</b> Everyday "get this, save that" stays short.</li>
+  <li><b>Safe from SQL injection.</b> If you build SQL by gluing text together, a user can type something that changes the query:
+<pre class="code"><span class="bad"># Never do this</span>
+sql = "SELECT * FROM volunteers WHERE username = '" + name + "'"
+
+<span class="c"># Someone types this as their username:   x' OR '1'='1
+# and the query becomes:</span>
+SELECT * FROM volunteers WHERE username = 'x' OR '1'='1'   <span class="bad">-- matches every volunteer</span></pre>
+  SQLAlchemy always sends the values separately from the query, so whatever a user types is only ever treated as text.</li>
+  <li><b>We can still see and write the SQL</b> when it matters. The booking's lock looks like this:
+<pre class="code">select(Variety).where(Variety.id == 7).with_for_update()
+<span class="c"># sends: SELECT ... FROM varieties WHERE id = 7 FOR UPDATE</span></pre></li>
+</ul>
+
+<span class="label">What else we could use, and why not</span>
+<table>
+  <tr><th style="width:17%">Option</th><th style="width:33%">What it is</th><th>Why not for us</th></tr>
+  <tr><td><b>Plain SQL only</b> (psycopg)</td><td>Write every query yourself as SQL text.</td><td>Full control, but a lot more code, and the injection mistake above is easy to make. We'll still write the important SQL by hand where you should see it.</td></tr>
+  <tr><td><b>SQLModel</b></td><td>Made by the person who made FastAPI, on top of SQLAlchemy. One class is both the table and the request shape.</td><td>Neat for simple apps, but locks and partial indexes need SQLAlchemy underneath anyway, and there are fewer examples to learn from. Also, we <i>want</i> the table and the reply kept apart: the students table has the ID hash, and that must never be sent back in a reply. <span class="rule">P4</span></td></tr>
+</table>
+
+<div class="suggest"><p><b>My suggestion for Choice 3: both, each where it fits.</b> SQLAlchemy for everyday queries. The key rules as real database rules (part 2c). The booking transaction written so you can see the exact SQL and the locks.</p></div>
+
+<h3>Alembic</h3>
+<span class="label">What it is</span>
+<p>A tool that keeps a numbered list of every change we make to the tables. It comes from the same people as SQLAlchemy.</p>
+
+<span class="label">In our food bank</span>
+<pre class="code">0001  create slots, varieties and bookings
+0002  add "held until" to holds
+0003  add the "one upcoming booking" rule</pre>
+<p>Running <code>alembic upgrade head</code> on any computer, whether your laptop, the test database or a real server later, builds exactly the same tables.</p>
+
+<span class="label">Why not change tables by hand?</span>
+<p>You could add a column in pgAdmin with a few clicks. But then your laptop's database and the test database slowly become different, and nobody remembers what changed or when. With Alembic, every change is a file in git, with its own commit.</p>
+
+<div class="short"><p><b>In short:</b> SQLAlchemy is how Python talks to the database, safely. Alembic keeps every change to the tables written down, so every copy of the database matches.</p></div>
+
+<!-- 6 -->
+<h2 id="react"><span class="num">6</span>The screens: React, TypeScript and Vite</h2>
+
+<h3>React</h3>
+<span class="label">What it is</span>
+<p>A JavaScript package for building screens out of small pieces called <b>components</b>. You describe what the screen should look like for the data you have now. When the data changes, React works out what's different and changes only that part of the screen.</p>
+
+<span class="label">In our food bank</span>
+<pre class="code">function SlotButton({ time, isFree }: { time: string; isFree: boolean }) {
+  return &lt;button disabled={!isFree}&gt;{time}&lt;/button&gt;;
+}</pre>
+<p>The Book screen uses <code>SlotButton</code> 12 times, once per slot. When someone takes 3:40, React greys out just that one button.</p>
+
+<span class="label">Why we use it</span>
+<ul>
+  <li><b>Our screens change while you look at them.</b> The 10-minute countdown ticks, "9 of 13 items chosen" goes up, and the packing queue gets a flag when a variety runs out. React is made for screens like this.</li>
+  <li><b>Pieces are reused.</b> The Book screen and the Walk-in screen can share the same item picker.</li>
+  <li><b>It's the most used tool of its kind</b>, so most questions already have an answer online.</li>
+</ul>
+
+<span class="label">What else we could use, and why not</span>
+<table>
+  <tr><th style="width:17%">Option</th><th style="width:33%">What it is</th><th>Why not for us</th></tr>
+  <tr><td><b>Plain HTML and JavaScript</b></td><td>What this page is made of.</td><td>Fine for pages that don't change, like this one. On the Book screen you'd have to update every number, button and list by hand each time something changes. That gets messy fast.</td></tr>
+  <tr><td><b>Pages made by the server</b> (Jinja, maybe with HTMX)</td><td>FastAPI builds each page as HTML and sends the whole page.</td><td>Honestly, this would work for us, and it's simpler because there's one program instead of two. But the countdown and the live item count are clumsier. With React, the server is a clean list of web addresses that we can test on their own.</td></tr>
+  <tr><td><b>Vue, Angular, Svelte</b></td><td>Other tools like React.</td><td>All would work. Vue is close to React. Angular is bigger, with more to learn. Svelte is smaller, with fewer examples online. React has the most help.</td></tr>
+</table>
+
+<h3>TypeScript <span class="choice">Choice 1</span></h3>
+<span class="label">What it is</span>
+<p>JavaScript with <b>types</b>. You say what shape each thing has, and the editor checks that you use it correctly, while you type.</p>
+
+<span class="label">In our food bank</span>
+<pre class="code">type Slot = { id: number; startsAt: string; isFree: boolean };
+
+showTime(slot.startAt);   <span class="bad">// typo: red underline in the editor straight away</span></pre>
+<p>In plain JavaScript, <code>slot.startAt</code> just gives <code>undefined</code>, with no error. The screen shows a blank time, and you only find out by clicking through, or when a student tells you.</p>
+
+<span class="label">Why not plain JavaScript?</span>
+<p>It needs less setup and less typing, but mistakes show up later on screen instead of right away in the editor.</p>
+<div class="suggest"><p><b>My suggestion for Choice 1: TypeScript.</b></p></div>
+
+<h3>Vite</h3>
+<span class="label">What it is</span>
+<p>A tool that runs the React app while you work on it, and packs it into small files for the real website at the end.</p>
+<p><b>Example:</b> you save a change to <code>SlotButton</code> and the browser shows it straight away, without reloading the page.</p>
+
+<span class="label">What else we could use, and why not</span>
+<table>
+  <tr><th style="width:17%">Option</th><th style="width:33%">What it is</th><th>Why not for us</th></tr>
+  <tr><td><b>Create React App</b></td><td>The old standard way to start a React app.</td><td>No longer looked after. The React team retired it in 2025.</td></tr>
+  <tr><td><b>Next.js</b></td><td>React plus its own server.</td><td>We already have a server (FastAPI). Two servers would mean two places where rules could live.</td></tr>
+</table>
+
+<div class="short"><p><b>In short:</b> React builds screens that change while you look at them, TypeScript catches mistakes as you type, and Vite runs it all while we work.</p></div>
+
+<!-- 7 -->
+<h2 id="login"><span class="num">7</span>Logging in: sessions <span class="choice">Choice 2</span></h2>
+
+<div class="analogy">
+  <div class="card">
+    <h3>Session: a coat check</h3>
+    <p>You hand over your coat and get a numbered ticket. The coat stays at the counter. The counter can cancel your ticket at any time.</p>
+  </div>
+  <div class="card">
+    <h3>Token, or JWT: a stamped pass</h3>
+    <p>You get a pass with a stamp. Anyone can check that the stamp is real, and the counter keeps no list. But a pass can't easily be cancelled before it runs out.</p>
+  </div>
+</div>
+
+<span class="label">How a session works, step by step</span>
+<div class="step s"><b class="n">1</b>Ana types her ID number and password. The server checks them.</div>
+<div class="down">↓</div>
+<div class="step sys"><b class="n">2</b>The server saves a <b>session</b>: a row saying "ticket <code>8f3k…9q</code> belongs to this account". The ticket is a long random string that nobody can guess.</div>
+<div class="down">↓</div>
+<div class="step sys"><b class="n">3</b>The server tells the browser to keep the ticket in a <b>cookie</b>, a small note the browser stores for one website.</div>
+<div class="down">↓</div>
+<div class="step s"><b class="n">4</b>From then on, the browser sends the cookie with every request by itself. The server looks up the ticket and knows it's Ana.</div>
+<div class="down">↓</div>
+<div class="step ok"><b class="n">5</b>Logging out, or a password reset at the counter, deletes the row. The ticket stops working at once.</div>
+
+<span class="label">Two settings on the cookie</span>
+<ul>
+  <li><b>HttpOnly:</b> code running on the page can't read the cookie. If a bad script ever got onto the page, it still couldn't steal Ana's ticket.</li>
+  <li><b>SameSite:</b> the browser won't send the cookie when another website starts the request. So a trick page Ana visits can't cancel her booking behind her back.</li>
+</ul>
+
+<span class="label">Why not tokens (JWT)?</span>
+<p><b>Example.</b> Ana's flatmate knows her password, so she gets it reset at the counter.</p>
+<ul>
+  <li><b>With sessions:</b> one delete, and the flatmate is logged out at once.</li>
+  <li><b>With JWT:</b> the flatmate's token keeps working until it runs out. The fix is a list of cancelled tokens that the server checks on every request. That's a list of sessions again, with extra steps.</li>
+</ul>
+<p>JWT is good when many separate servers must check logins without sharing a database. We have one server and one database.</p>
+
+<span class="label">What else we could use, and why not</span>
+<table>
+  <tr><th style="width:17%">Option</th><th style="width:33%">What it is</th><th>Why not for us</th></tr>
+  <tr><td><b>Log in with MUN</b></td><td>Students use their MUN login.</td><td>Needs MUN's permission, which we don't have. It could come later if MUN gets involved.</td></tr>
+  <tr><td><b>Login services</b> (Auth0, Firebase Auth)</td><td>Another company runs the logins for you.</td><td>Student data would sit with another company, and these services are built around email addresses. We store no emails. <span class="rule">P3</span></td></tr>
+</table>
+
+<div class="suggest"><p><b>My suggestion for Choice 2: sessions</b>, with an HttpOnly, SameSite cookie.</p></div>
+
+<!-- 8 -->
+<h2 id="secrets"><span class="num">8</span>Keeping secrets: argon2 and HMAC</h2>
+
+<h3>Passwords: argon2 <span class="rule">P8</span></h3>
+<span class="label">What a hash is</span>
+<p>A <b>hash</b> turns a password into a scramble that can't be turned back. We store only the scramble. To check a login, we scramble what Ana typed and compare.</p>
+<p><b>Why:</b> if the database ever leaks, the thief gets scrambles, not passwords. That matters because many people use the same password everywhere.</p>
+
+<span class="label">Why argon2, and not a normal hash like SHA-256?</span>
+<p>SHA-256 is built to be fast. A gaming graphics card can try billions of SHA-256 guesses a second. argon2 is slow on purpose and needs a lot of memory for every guess. For Ana, logging in takes a fraction of a second. For a thief trying millions of guesses, it takes far, far longer.</p>
+<p><b>Salt:</b> argon2 also mixes a random "salt" into each password before scrambling. Two students who both pick <code>Pasta123</code> get different scrambles, so cracking one doesn't crack the other.</p>
+
+<span class="label">What else we could use</span>
+<p><b>bcrypt</b> is older and still fine. argon2 is newer, and it's the first choice in OWASP's guide, a well-known guide to web security.</p>
+
+<h3>ID numbers: HMAC <span class="rule">P2</span> <span class="you">you write this</span></h3>
+<span class="label">The problem</span>
+<p>When Ana logs in or shows her card, we must find her account from her ID number, without ever storing the number.</p>
+
+<span class="label">Why not a plain hash?</span>
+<p>There are only a billion 9-digit numbers. A laptop can hash all of them in minutes and make a list: scramble → number. With that list, any scramble turns straight back into the ID number. A plain hash barely hides it.</p>
+
+<span class="label">What HMAC does</span>
+<p><b>HMAC</b> is a hash mixed with a secret key. Without the key, nobody can make that list. The key is kept outside the database, so stealing the database alone isn't enough. <span class="rule">P11</span></p>
+<div class="flow">
+  <span class="chip">ID number 202312345</span><span class="to">+</span>
+  <span class="chip key">secret key</span><span class="to">→</span>
+  <span class="chip">HMAC</span><span class="to">→</span>
+  <span class="chip">a91f…</span><span class="to">→</span>
+  <span class="chip out">find the account with a91f…</span>
+</div>
+
+<span class="label">Why not argon2 for the ID too?</span>
+<p>argon2 adds a random salt, so the same ID would give a different scramble every time. That's fine for passwords, because we already know whose account to check. But for the ID, we have to <b>search</b>: "which account has this scramble?" That only works if the same ID always gives the same scramble, which is what HMAC does.</p>
+
+<span class="label">Why not encryption?</span>
+<p>Encryption is made to be undone with the key. We never need the number back, only to check "is this the same card?". So we don't keep a way back.</p>
+
+<div class="short"><p><b>In short:</b> passwords get a slow, salted hash (argon2). ID numbers get a keyed hash (HMAC), so we can still find the account but can't turn it back into the number.</p></div>
+
+<!-- 9 -->
+<h2 id="tests"><span class="num">9</span>Testing: pytest, on a real PostgreSQL <span class="choice">Choice 5</span></h2>
+
+<span class="label">What it is</span>
+<p>pytest runs test functions. Each one sets up a situation and checks the result. If anything breaks later, the test fails and tells us.</p>
+
+<span class="label">In our food bank</span>
+<pre class="code">def test_too_soon_after_last_pickup():
+    ana = make_student(last_pickup=date(2026, 10, 1))    <span class="c"># Thursday 1 Oct</span>
+    with pytest.raises(TooSoon):
+        book(ana, slot_on(date(2026, 10, 26)))           <span class="c"># Monday 26 Oct: only 25 days</span>
+
+def test_allowed_after_28_days():
+    ana = make_student(last_pickup=date(2026, 10, 1))
+    book(ana, slot_on(date(2026, 10, 29)))               <span class="c"># Thursday 29 Oct: 28 days, fine</span></pre>
+
+<span class="label">Why a real PostgreSQL, not SQLite?</span>
+<p>Our most important test: two students try to book the last slot at the same moment, and exactly one may win. That test checks the row lock and the database rules from part 2. SQLite has neither, so the test would pass without testing anything real.</p>
+<p>The tests use their own test database, separate from the one you work with, so they can't mess up your data.</p>
+
+<span class="label">What else we could use, and why not</span>
+<table>
+  <tr><th style="width:17%">Option</th><th style="width:33%">What it is</th><th>Why not for us</th></tr>
+  <tr><td><b>unittest</b></td><td>The test tool built into Python.</td><td>It works, but needs more typing: classes and <code>self.assertEqual(a, b)</code> instead of a plain <code>assert a == b</code>.</td></tr>
+  <tr><td><b>Testing on SQLite</b></td><td>A faster, throwaway database for tests.</td><td>It skips exactly the rules that matter most: locks and database rules.</td></tr>
+  <tr><td><b>A pretend database</b></td><td>Fake the database inside the test.</td><td>Same problem. The real database rules never run.</td></tr>
+</table>
+
+<div class="suggest"><p><b>My suggestion for Choice 5: pytest against a real PostgreSQL test database.</b></p></div>
+
+<!-- 10 -->
+<h2 id="install"><span class="num">10</span>Running PostgreSQL on your laptop <span class="choice">Choice 4</span></h2>
+<p>Your laptop has Python 3.11 and Node 24, but not PostgreSQL yet. There are two ways to get it.</p>
+
+<div class="analogy">
+  <div class="card">
+    <h3>A. The Windows installer</h3>
+    <p>One installer. PostgreSQL then runs in the background whenever the laptop is on.</p>
+    <p>It comes with <b>pgAdmin</b>, a window for looking at your tables and trying SQL.</p>
+  </div>
+  <div class="card">
+    <h3>B. Docker</h3>
+    <p>Docker runs programs inside <b>containers</b>: sealed boxes with everything the program needs already set up. One command starts PostgreSQL in a box. Delete the box and start fresh any time.</p>
+    <p>The same box runs the same way on any computer, which helps later when we put the system online.</p>
+  </div>
+</div>
+
+<span class="label">Why A for now</span>
+<p>On Windows 11 Home, Docker needs WSL 2 (a small Linux inside Windows) set up first. That's one more thing to learn, and to fix if it goes wrong, on top of everything else that's new. We can add Docker when we get to putting the system online.</p>
+<div class="suggest"><p><b>My suggestion for Choice 4: A, the Windows installer.</b></p></div>
+
+<!-- 11 -->
+<h2 id="repo"><span class="num">11</span>One repository <span class="choice">Choice 6</span></h2>
+<p>All the code, in a <code>backend/</code> folder and a <code>frontend/</code> folder, goes in the repository that's already on GitHub, next to the planning docs.</p>
+<p><b>Example.</b> We add "held until" to slot holds. The table change, the server change and the countdown on screen all go into one commit: "Add 10-minute slot holds". One change, one story.</p>
+<p><b>Why not two repositories?</b> The same change would be two commits in two places. They can get out of step, with the screens expecting something the server doesn't have yet. And anyone reading your GitHub would see half the story in each.</p>
+<div class="suggest"><p><b>My suggestion for Choice 6: one repository.</b></p></div>
+
+<!-- 12 -->
+<h2 id="jobs"><span class="num">12</span>Things that happen by themselves</h2>
+<table>
+  <tr><th style="width:38%">What</th><th>How</th></tr>
+  <tr><td>A hold runs out after 10 minutes <span class="rule">S8</span></td><td><b>Nothing needs to run.</b> Each hold stores "held until 5:12 pm". Any hold past its time counts as free.</td></tr>
+  <tr><td>Booking opens at 5 pm and closes at 12 pm <span class="rule">S5</span></td><td><b>Nothing needs to run.</b> The server compares the time now with that day's open and close times.</td></tr>
+  <tr><td>Bookings not picked up become no-shows at 6 pm <span class="rule">B3</span></td><td>A small <b>jobs script</b>.</td></tr>
+  <tr><td>Delete booking details after 90 days, and accounts after a year <span class="rule">P7</span> <span class="rule">P13</span></td><td>The same jobs script.</td></tr>
+</table>
+<p>The jobs script runs every 15 minutes and does whatever is due. On your laptop, Windows Task Scheduler can run it. On a real server, that server's scheduler does.</p>
+
+<span class="label">Why it's built this way</span>
+<ul>
+  <li><b>Why not a timer for every hold?</b> 50 students holding slots would mean 50 timers. If the server restarts, the timers are lost and those slots stay stuck. A stored "held until 5:12 pm" can't be lost.</li>
+  <li><b>Why every 15 minutes, not exactly at 6 pm?</b> If the computer is off at 6 pm, a 6 pm job is simply missed. A job every 15 minutes catches up on its next run.</li>
+  <li><b>Why not a job queue</b> (like Celery with Redis)? Those are extra programs that run all the time, made for systems with thousands of background tasks. We have one small script.</li>
+</ul>
+
+<!-- 13 -->
+<h2 id="journey"><span class="num">13</span>Putting it together: one booking, start to finish</h2>
 <p>Ana presses <b>Book</b> on Sunday at 5:08 pm. Here is every stop on the way, and what each one checks.</p>
 <div class="step s"><b class="n">1</b><b>Ana's phone (React)</b> sends <code>POST /bookings</code> with her held slot, items and substitutes. Her login cookie goes with it automatically.</div>
 <div class="down">↓</div>
 <div class="step sys"><b class="n">2</b><b>FastAPI</b> finds the Python function for <code>POST /bookings</code>.</div>
 <div class="down">↓</div>
-<div class="step sys"><b class="n">3</b><b>Login check:</b> the cookie says this is Ana's account. If she isn't logged in, she sees "please log in". <span class="rule">P6</span></div>
+<div class="step sys"><b class="n">3</b><b>Login check:</b> the cookie's ticket says this is Ana's account. If she isn't logged in, she sees "please log in". <span class="rule">P6</span></div>
 <div class="down">↓</div>
-<div class="step sys"><b class="n">4</b><b>Pydantic</b> checks the shape: items is a list of at most 13, substitutes at most 5. If something's wrong, she gets an error, and the error never repeats her ID number back. <span class="rule">P10</span></div>
+<div class="step sys"><b class="n">4</b><b>Pydantic</b> checks the shape: items and substitutes are lists of numbers. If something's wrong, she gets an error, and the error never repeats her ID number back. <span class="rule">P10</span></div>
 <div class="down">↓</div>
-<div class="step sys"><b class="n">5</b><b>Booking rules (plain Python):</b> is booking open? 28 days? no other booking? didn't cancel for this day? is the hold still hers? <span class="rule">S5</span> <span class="rule">F1</span> <span class="rule">F2</span> <span class="rule">S6</span> <span class="rule">S8</span> <span class="you">you write this</span></div>
+<div class="step sys"><b class="n">5</b><b>Booking rules (plain Python):</b> is booking open? 28 days? no other booking? didn't cancel for this day? is the hold still hers? at most 13 items, one of each? <span class="rule">S5</span> <span class="rule">F1</span> <span class="rule">F2</span> <span class="rule">S6</span> <span class="rule">S8</span> <span class="rule">I3</span> <span class="you">you write this</span></div>
 <div class="down">↓</div>
-<div class="step db"><b class="n">6</b><b>SQLAlchemy → PostgreSQL, one transaction:</b> lock the slot, take each item off the stock count (never below zero), save the booking. If the code missed anything, the database's own rules stop it. <span class="rule">S2</span> <span class="rule">I4</span> <span class="rule">B4</span> <span class="you">you write this</span></div>
+<div class="step db"><b class="n">6</b><b>SQLAlchemy → PostgreSQL, one transaction:</b> lock the slot, take each item off the stock (never below zero), save the booking. If our code missed anything, the database's own rules stop it. <span class="rule">S2</span> <span class="rule">I4</span> <span class="rule">B4</span> <span class="you">you write this</span></div>
 <div class="down">↓</div>
 <div class="step ok"><b class="n">7</b>Back to Ana: "Booked. Your booking code is K3P."</div>
-<div class="why"><p><b>Why check the rules twice</b>, in step 5 and again in step 6? Step 5 gives Ana a clear message ("28 days haven't passed yet"). Step 6 is the safety net: even if step 5 has a bug, or two people press Book at the same moment, the database refuses anything that breaks the key rules.</p></div>
+<div class="why"><p><b>Why check the rules twice</b>, in step 5 and again in step 6? Step 5 gives Ana a clear message, like "28 days haven't passed yet". Step 6 is the safety net: even if step 5 has a bug, or two people press Book at the same moment, the database refuses anything that breaks the key rules.</p></div>
 
-<!-- 4 -->
-<h2><span class="num">4</span>Things that happen without anyone pressing a button</h2>
+<!-- 14 -->
+<h2 id="summary"><span class="num">14</span>Everything in one table</h2>
 <table>
-  <tr><th style="width:36%">What</th><th>How</th></tr>
-  <tr><td>A hold runs out after 10 minutes <span class="rule">S8</span></td><td><b>No timer needed.</b> Each hold stores "held until 5:12". Any hold past its time counts as free. Nothing has to run.</td></tr>
-  <tr><td>Booking opens at 5 pm and closes at 12 pm <span class="rule">S5</span></td><td><b>No timer needed.</b> The server compares the time now with that day's open and close times.</td></tr>
-  <tr><td>Bookings not picked up become no-shows at 6 pm <span class="rule">B3</span></td><td>A small <b>jobs script</b>.</td></tr>
-  <tr><td>Delete booking details after 90 days, and accounts after a year <span class="rule">P7</span> <span class="rule">P13</span></td><td>The same jobs script.</td></tr>
+  <tr><th style="width:14%">Tool</th><th style="width:24%">Its job</th><th style="width:24%">Picked over</th><th>Main reason</th></tr>
+  <tr><td><b>PostgreSQL</b></td><td>Stores data, keeps the key rules</td><td>SQLite, MySQL, MongoDB</td><td>Row locks, all-or-nothing, rules inside the database</td></tr>
+  <tr><td><b>FastAPI</b></td><td>The server</td><td>Flask, Django, Express</td><td>Data checks and a test page built in; Python (your Why line)</td></tr>
+  <tr><td><b>Pydantic</b></td><td>Checks the shape of requests</td><td>if-statements by hand</td><td>Comes with FastAPI; nothing forgotten</td></tr>
+  <tr><td><b>SQLAlchemy</b></td><td>Python talks to the database</td><td>Plain SQL only, SQLModel</td><td>Less code, safe from injection, SQL still visible</td></tr>
+  <tr><td><b>Alembic</b></td><td>Records table changes</td><td>Changing tables by hand</td><td>Same tables everywhere, history in git</td></tr>
+  <tr><td><b>React</b></td><td>The screens</td><td>Plain JS, server pages, Vue</td><td>Screens that change while you look</td></tr>
+  <tr><td><b>TypeScript</b></td><td>Types for the screens' code</td><td>Plain JavaScript</td><td>Mistakes show in the editor, not on screen</td></tr>
+  <tr><td><b>Vite</b></td><td>Runs and packs React</td><td>Create React App, Next.js</td><td>Fast to work with; we already have a server</td></tr>
+  <tr><td><b>Sessions</b></td><td>Logging in</td><td>JWT, MUN login, Auth0</td><td>Logout and reset work at once; no emails</td></tr>
+  <tr><td><b>argon2</b></td><td>Password hashes</td><td>SHA-256, bcrypt</td><td>Slow on purpose, salted</td></tr>
+  <tr><td><b>HMAC</b></td><td>ID number hashes</td><td>Plain hash, argon2, encryption</td><td>Can't be listed without the key; still searchable</td></tr>
+  <tr><td><b>pytest</b></td><td>Tests</td><td>unittest, SQLite, a pretend database</td><td>Tests the real database rules</td></tr>
+  <tr><td><b>Jobs script</b></td><td>No-shows, deletions</td><td>Timers, Celery</td><td>Simple, and catches up if missed</td></tr>
 </table>
-<div class="suggest"><p><b>My suggestion:</b> one jobs script that runs every 15 minutes and does whatever is due. If the laptop was off at 6 pm, the next run catches up. For the prototype, Windows Task Scheduler can run it. On a real server, that server's scheduler does.</p></div>
 
-<!-- 5 -->
-<h2><span class="num">5</span>Logging in: sessions or tokens?</h2>
-<div class="analogy">
-  <div class="card">
-    <h3>Session (a coat check)</h3>
-    <p>You hand over your coat and get a numbered ticket. The coat stays at the counter. The counter can cancel your ticket at any time.</p>
-    <p>In our system: after login, the server saves a session and gives the browser a random ticket in a cookie. To log someone out, the server deletes the session.</p>
-  </div>
-  <div class="card">
-    <h3>Token, or JWT (a signed pass)</h3>
-    <p>You get a pass with a stamp. Anyone can check the stamp is real, and the counter keeps no list. But a pass can't easily be cancelled before it runs out.</p>
-    <p>In our system: a stolen token keeps working until it expires.</p>
-  </div>
-</div>
-<div class="suggest">
-  <p><b>My suggestion: sessions.</b></p>
-  <ul>
-    <li>When a password is reset at the counter, every old login should end straight away. With sessions, that's one delete.</li>
-    <li>There are only a few hundred users, so keeping a list of sessions costs nothing.</li>
-    <li>The cookie is <b>HttpOnly</b>, so code running in the page can't read it, and <b>SameSite</b>, so other websites can't use it.</li>
-  </ul>
-</div>
+<!-- 15 -->
+<h2 id="choices"><span class="num">15</span>Your six choices</h2>
+<p>A simple "yes to all" works if you agree. If any of them doesn't feel right, say which and we'll talk it through.</p>
+<table>
+  <tr><th style="width:12%">Choice</th><th style="width:40%">Question</th><th>My suggestion</th></tr>
+  <tr><td><b>1</b></td><td>TypeScript or plain JavaScript? (<a href="#react">part 6</a>)</td><td>TypeScript</td></tr>
+  <tr><td><b>2</b></td><td>Sessions or tokens for logging in? (<a href="#login">part 7</a>)</td><td>Sessions, with an HttpOnly, SameSite cookie</td></tr>
+  <tr><td><b>3</b></td><td>SQLAlchemy or SQL by hand? (<a href="#sqla">part 5</a>)</td><td>Both, each where it fits</td></tr>
+  <tr><td><b>4</b></td><td>Installer or Docker for PostgreSQL? (<a href="#install">part 10</a>)</td><td>The Windows installer, for now</td></tr>
+  <tr><td><b>5</b></td><td>What do the tests run against? (<a href="#tests">part 9</a>)</td><td>A real PostgreSQL test database</td></tr>
+  <tr><td><b>6</b></td><td>One repository or two? (<a href="#repo">part 11</a>)</td><td>One, with backend/ and frontend/</td></tr>
+</table>
+<p>Also still yours: the two blank "Why" lines in DECISIONS.md, in your own words. One is why FastAPI, the other is why "picked up" is its own step.</p>
 
-<!-- 6 -->
-<h2><span class="num">6</span>The tech choices left</h2>
-
-<div class="card q">
-  <h3>Choice 1: TypeScript or plain JavaScript for React?</h3>
-  <div class="suggest"><p><b>TypeScript.</b> It has types like Java, so many mistakes show up in the editor instead of on a student's phone.</p></div>
-</div>
-
-<div class="card q">
-  <h3>Choice 2: Sessions or tokens for logging in?</h3>
-  <div class="suggest"><p><b>Sessions</b>, as explained in part 5.</p></div>
-</div>
-
-<div class="card q">
-  <h3>Choice 3: SQLAlchemy, or SQL written by hand?</h3>
-  <span class="label">The difference</span>
-  <p>SQLAlchemy writes everyday queries for us ("find Ana's bookings"). Writing SQL by hand gives full control but means much more code.</p>
-  <div class="suggest">
-    <p><b>Both, each where it fits.</b> SQLAlchemy for everyday queries. The key rules as real database rules (UNIQUE, CHECK, and "stock can't go below zero"). The booking transaction uses row locks, written so you can see the exact SQL. You'll understand every line, which is what interviews test.</p>
-  </div>
-</div>
-
-<div class="card q">
-  <h3>Choice 4: How to run PostgreSQL on your laptop</h3>
-  <p>You don't have PostgreSQL or Docker installed yet.</p>
-  <ul>
-    <li><b>A. The PostgreSQL installer for Windows.</b> One installer. It comes with pgAdmin, a tool for looking at your tables.</li>
-    <li><b>B. Docker Desktop</b>, running PostgreSQL in a container. One command starts it, and it's easy to wipe and start fresh. It's also useful later for hosting, but it's one more thing to learn and set up now.</li>
-  </ul>
-  <div class="suggest"><p><b>A for now.</b> Fewer moving parts while we build. We can add Docker when we get to hosting.</p></div>
-</div>
-
-<div class="card q">
-  <h3>Choice 5: What the tests run against</h3>
-  <div class="suggest"><p><b>A real PostgreSQL test database, not SQLite.</b> The most important rules (locks, database rules) only exist in PostgreSQL, so testing on anything else would skip them. One test will have two students race for the last slot at the same moment, and check that only one gets it.</p></div>
-</div>
-
-<div class="card q">
-  <h3>Choice 6: How the code is organised</h3>
-  <div class="suggest"><p><b>One repository with a <code>backend/</code> folder and a <code>frontend/</code> folder.</b> The planning docs stay at the top. One place, one history, which is easy to show an interviewer.</p></div>
-</div>
-
-<!-- 7 -->
-<h2><span class="num">7</span>What the folders would look like</h2>
+<!-- 16 -->
+<h2 id="folders"><span class="num">16</span>Folders, and the order we'd build in</h2>
 <pre class="tree">MUN Project/
 ├── CONSTRAINTS.md, DECISIONS.md, *.html   <span class="c">← the planning docs, as now</span>
 ├── backend/
@@ -213,11 +682,9 @@
         ├── pages/           <span class="c">← one per screen: Book, Packing queue, Walk-in…</span>
         ├── components/      <span class="c">← pieces used on many screens</span>
         └── api/             <span class="c">← the code that talks to the server</span></pre>
-<p>Keeping the rules in <code>services/</code>, apart from the web addresses in <code>routes/</code>, means we can test the rules without a browser. That's the same idea as <code>@Service</code> and <code>@Controller</code> in Spring.</p>
+<p>The rules live in <code>services/</code>, apart from the web addresses in <code>routes/</code>. That way, a test can check the booking rules directly, without going through the web part at all.</p>
 
-<!-- 8 -->
-<h2><span class="num">8</span>The order we'd build in</h2>
-<p>No dates. Each step ends with tests, a short quiz, and a DECISIONS.md entry. The parts marked <span class="you">you write</span> are the core rules. You write them and I review, so you can explain every line.</p>
+<p>The order, with no dates. Each step ends with tests, a short quiz, and a DECISIONS.md entry. The parts marked <span class="you">you write</span> are the core rules. You write them and I review, so you can explain every line.</p>
 <ol>
   <li><b>Set up:</b> PostgreSQL running, the two folders, FastAPI says hello, React says hello.</li>
   <li><b>Tables:</b> we design them together from CONSTRAINTS.md, placing each rule in a table, a database rule, or the code. <span class="you">you write the database rules</span></li>
@@ -230,15 +697,7 @@
   <li><b>Coordinator:</b> settings, closed days, weekly totals.</li>
 </ol>
 
-<!-- 9 -->
-<h2><span class="num">9</span>Before we start</h2>
-<ul>
-  <li><b>Answer choices 1–6</b> above. A simple "yes to all" works if you agree.</li>
-  <li><b>Fill in the two blank "Why" lines</b> in DECISIONS.md, in your own words: why FastAPI, and why "picked up" is its own step.</li>
-  <li><b>Commit the planning docs</b> as a checkpoint before any code. The rules are a good first chapter in the history.</li>
-</ul>
-
-<footer>Made 30 Oct 2026. The rules this builds on are in CONSTRAINTS.md and DECISIONS.md.</footer>
+<footer>Made 30 Oct 2026, rewritten the same day with more detail. The rules this builds on are in CONSTRAINTS.md and DECISIONS.md.</footer>
 </main>
 </body>
 </html>
