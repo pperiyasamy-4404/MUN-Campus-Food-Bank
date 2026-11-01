@@ -117,7 +117,7 @@
   <p class="eyebrow">Campus Food Bank Booking System · 30 Oct 2026</p>
   <h1>The tech, explained simply</h1>
   <p class="lead">For each tool, this page shows what it is, a small example from our food bank, why we picked it, and what else we could have used and why we didn't.</p>
-  <p class="lead">Nothing here is final until you say so. Six choices are still yours. They're marked like this <span class="choice">Choice 1</span> and listed again at the end.</p>
+  <p class="lead">All six choices were agreed on 1 Nov 2026, as suggested. They're marked like this <span class="choice">Choice 1</span>, listed again at the end, and written into DECISIONS.md.</p>
 </header>
 
 <div class="card">
@@ -146,7 +146,7 @@
   <li><a href="#jobs">Things that happen by themselves</a></li>
   <li><a href="#journey">One booking, start to finish</a></li>
   <li><a href="#summary">Everything in one table</a></li>
-  <li><a href="#choices">Your six choices</a></li>
+  <li><a href="#choices">The six choices</a></li>
   <li><a href="#folders">Folders and build order</a></li>
 </ol>
 
@@ -372,7 +372,7 @@ SELECT * FROM volunteers WHERE username = 'x' OR '1'='1'   <span class="bad">-- 
   <tr><td><b>SQLModel</b></td><td>Made by the person who made FastAPI, on top of SQLAlchemy. One class is both the table and the request shape.</td><td>Neat for simple apps, but locks and partial indexes need SQLAlchemy underneath anyway, and there are fewer examples to learn from. Also, we <i>want</i> the table and the reply kept apart: the students table has the ID hash, and that must never be sent back in a reply. <span class="rule">P4</span></td></tr>
 </table>
 
-<div class="suggest"><p><b>My suggestion for Choice 3: both, each where it fits.</b> SQLAlchemy for everyday queries. The key rules as real database rules (part 2c). The booking transaction written so you can see the exact SQL and the locks.</p></div>
+<div class="suggest"><p><b>Decided, Choice 3: both, each where it fits.</b> SQLAlchemy for everyday queries. The key rules as real database rules (part 2c). The booking transaction written so you can see the exact SQL and the locks.</p></div>
 
 <h3>Alembic</h3>
 <span class="label">What it is</span>
@@ -429,7 +429,7 @@ showTime(slot.startAt);   <span class="bad">// typo: red underline in the editor
 
 <span class="label">Why not plain JavaScript?</span>
 <p>It needs less setup and less typing, but mistakes show up later on screen instead of right away in the editor.</p>
-<div class="suggest"><p><b>My suggestion for Choice 1: TypeScript.</b></p></div>
+<div class="suggest"><p><b>Decided, Choice 1: TypeScript.</b></p></div>
 
 <h3>Vite</h3>
 <span class="label">What it is</span>
@@ -491,7 +491,7 @@ showTime(slot.startAt);   <span class="bad">// typo: red underline in the editor
   <tr><td><b>Login services</b> (Auth0, Firebase Auth)</td><td>Another company runs the logins for you.</td><td>Student data would sit with another company, and these services are built around email addresses. We store no emails. <span class="rule">P3</span></td></tr>
 </table>
 
-<div class="suggest"><p><b>My suggestion for Choice 2: sessions</b>, with an HttpOnly, SameSite cookie.</p></div>
+<div class="suggest"><p><b>Decided, Choice 2: sessions</b>, with an HttpOnly, SameSite cookie.</p></div>
 
 <!-- 8 -->
 <h2 id="secrets"><span class="num">8</span>Keeping secrets: argon2 and HMAC</h2>
@@ -561,7 +561,7 @@ def test_allowed_after_28_days():
   <tr><td><b>A pretend database</b></td><td>Fake the database inside the test.</td><td>Same problem. The real database rules never run.</td></tr>
 </table>
 
-<div class="suggest"><p><b>My suggestion for Choice 5: pytest against a real PostgreSQL test database.</b></p></div>
+<div class="suggest"><p><b>Decided, Choice 5: pytest against a real PostgreSQL test database.</b></p></div>
 
 <!-- 10 -->
 <h2 id="install"><span class="num">10</span>Running PostgreSQL on your laptop <span class="choice">Choice 4</span></h2>
@@ -582,14 +582,14 @@ def test_allowed_after_28_days():
 
 <span class="label">Why A for now</span>
 <p>On Windows 11 Home, Docker needs WSL 2 (a small Linux inside Windows) set up first. That's one more thing to learn, and to fix if it goes wrong, on top of everything else that's new. We can add Docker when we get to putting the system online.</p>
-<div class="suggest"><p><b>My suggestion for Choice 4: A, the Windows installer.</b></p></div>
+<div class="suggest"><p><b>Decided, Choice 4: A, the Windows installer.</b></p></div>
 
 <!-- 11 -->
 <h2 id="repo"><span class="num">11</span>One repository <span class="choice">Choice 6</span></h2>
 <p>All the code, in a <code>backend/</code> folder and a <code>frontend/</code> folder, goes in the repository that's already on GitHub, next to the planning docs.</p>
 <p><b>Example.</b> We add "held until" to slot holds. The table change, the server change and the countdown on screen all go into one commit: "Add 10-minute slot holds". One change, one story.</p>
 <p><b>Why not two repositories?</b> The same change would be two commits in two places. They can get out of step, with the screens expecting something the server doesn't have yet. And anyone reading your GitHub would see half the story in each.</p>
-<div class="suggest"><p><b>My suggestion for Choice 6: one repository.</b></p></div>
+<div class="suggest"><p><b>Decided, Choice 6: one repository.</b></p></div>
 
 <!-- 12 -->
 <h2 id="jobs"><span class="num">12</span>Things that happen by themselves</h2>
@@ -647,10 +647,10 @@ def test_allowed_after_28_days():
 </table>
 
 <!-- 15 -->
-<h2 id="choices"><span class="num">15</span>Your six choices</h2>
-<p>A simple "yes to all" works if you agree. If any of them doesn't feel right, say which and we'll talk it through.</p>
+<h2 id="choices"><span class="num">15</span>The six choices</h2>
+<p>All agreed on 1 Nov 2026, as suggested.</p>
 <table>
-  <tr><th style="width:12%">Choice</th><th style="width:40%">Question</th><th>My suggestion</th></tr>
+  <tr><th style="width:12%">Choice</th><th style="width:40%">Question</th><th>Decided</th></tr>
   <tr><td><b>1</b></td><td>TypeScript or plain JavaScript? (<a href="#react">part 6</a>)</td><td>TypeScript</td></tr>
   <tr><td><b>2</b></td><td>Sessions or tokens for logging in? (<a href="#login">part 7</a>)</td><td>Sessions, with an HttpOnly, SameSite cookie</td></tr>
   <tr><td><b>3</b></td><td>SQLAlchemy or SQL by hand? (<a href="#sqla">part 5</a>)</td><td>Both, each where it fits</td></tr>

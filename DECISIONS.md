@@ -161,3 +161,25 @@ They don't change how the system works, only how and where it runs.
 
 **Some problems are accepted as known issues for now.**
 The 5 pm rush, password resets only at the counter, closures that can't reach students, a volunteer being able to use a setup code first, and the internet going down at the counter. Most of them can only be fixed with MUN's help (MUN email or MUN login), or by planning for things we can't predict yet. They're listed in CONSTRAINTS.md.
+
+## 2026-11-01
+
+The six tech choices from tech-and-stack.html, all agreed as suggested.
+
+**TypeScript for the screens, not plain JavaScript.**
+Mistakes like a misspelled field name get a red underline in the editor straight away. In plain JavaScript they only show up later, as a blank on the screen.
+
+**Logins use sessions, kept in an HttpOnly, SameSite cookie, not tokens (JWT).**
+A password reset at the counter has to log the other person out at once. With sessions that's one deleted row. A JWT keeps working until it runs out, unless the server keeps a list of cancelled tokens, which is a list of sessions again. HttpOnly stops code on the page from reading the cookie, and SameSite stops another website from sending requests as the student. Login services (Auth0, Firebase) would put student data with another company and expect email addresses, which we don't store.
+
+**SQLAlchemy for everyday queries, with the key rules as real database rules and the booking SQL written so it can be seen.**
+SQLAlchemy keeps everyday code short and sends values apart from the query, so it's safe from SQL injection. The booking transaction stays visible, so we can see the exact SQL and the row locks. Not SQLModel: locks and partial indexes need SQLAlchemy underneath anyway, and the table and the reply must stay apart so the ID hash is never sent back.
+
+**PostgreSQL from the Windows installer for now, not Docker.**
+On Windows 11 Home, Docker needs WSL 2 set up first, which is one more new thing to learn and fix. Docker can come in when we put the system online.
+
+**Tests use pytest against a real PostgreSQL test database.**
+The most important test is two students booking the last slot at the same moment. That checks the row lock and the database rules, which SQLite and a pretend database don't have, so the test would pass without testing anything real. The test database is separate, so tests can't touch the working data.
+
+**One repository, with backend/ and frontend/ folders.**
+A change that touches the table, the server and the screen goes into one commit. With two repositories the halves can get out of step, and anyone reading the GitHub sees only half the story in each.
