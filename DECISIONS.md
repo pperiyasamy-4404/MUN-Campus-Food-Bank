@@ -6,7 +6,7 @@ Every choice made for this project and why. Newest at the bottom.
 
 **Stack: FastAPI, PostgreSQL and React.**
 PostgreSQL because the booking rules need real transactions and row locks. SQLite can't lock individual rows.
-Why FastAPI: _(add your reason)_
+Why FastAPI: it checks incoming data for us with Pydantic, so there are fewer forgotten checks, and its free /docs page lets us try every web address before any screen exists. It only does the web part, with SQLAlchemy and Pydantic as separate pieces, so each one is easy to see and explain. Not Flask, which has neither the data checks nor the test page built in. Not Django, whose accounts are built around usernames and emails, and ours have neither. And Python, because it's easy to read and it's the main language for AI work.
 
 **Build a prototype with sample items and sample rules first.**
 The real items and rules aren't known yet. Every number that might change is a setting, so switching to the real rules means changing settings and the item list, not code.
@@ -133,7 +133,7 @@ New donations and corrections then show up before students book. Since walk-ins 
 
 **"Picked up" is its own step, done by the volunteer.**
 We considered making the card check and "picked up" one step, so it can't be forgotten, but kept them separate.
-Why: _(add your reason)_
+Why: a matching card only proves who the student is. It doesn't mean they left with the bag. The bag may not be on the shelf (it was never packed), or the student may leave without it. If the card check counted as picked up, the record would show a pickup that never happened: the student's 28 days would start, and the items would stay off the stock count. The click happens when the bag actually leaves the counter, so the record matches what really happened. A forgotten click is covered another way: the no-show time is 6 pm, half an hour after closing, and a volunteer can fix a no-show afterwards (B6).
 
 **Volunteers have their own logins, set up with a setup code like students.**
 The coordinator creates the account and gives a one-time code, and the volunteer sets their own password, so the coordinator never sees it. Separate logins mean every action is logged under the volunteer who did it.
@@ -183,3 +183,6 @@ The most important test is two students booking the last slot at the same moment
 
 **One repository, with backend/ and frontend/ folders.**
 A change that touches the table, the server and the screen goes into one commit. With two repositories the halves can get out of step, and anyone reading the GitHub sees only half the story in each.
+
+**Correction to the 2026-10-25 entry on database rules.**
+That entry lists "the daily limit" as one of the rules the database enforces. The daily limit was removed on 2026-10-30 (rule S3, see "No daily limit, and no places kept for walk-ins"), so the database rules are now slot capacity, stock never below zero, and one upcoming booking per person. The old entry is left as it was, so the history stays as it happened.
