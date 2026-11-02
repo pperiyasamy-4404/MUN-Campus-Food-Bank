@@ -186,3 +186,11 @@ A change that touches the table, the server and the screen goes into one commit.
 
 **Correction to the 2026-10-25 entry on database rules.**
 That entry lists "the daily limit" as one of the rules the database enforces. The daily limit was removed on 2026-10-30 (rule S3, see "No daily limit, and no places kept for walk-ins"), so the database rules are now slot capacity, stock never below zero, and one upcoming booking per person. The old entry is left as it was, so the history stays as it happened.
+
+## 2026-11-02
+
+**PostgreSQL 18, the newest version, installed on the laptop.**
+A new project has no old data to keep, so there's no reason to start on an older version. It runs as a Windows service that starts with the laptop, on the usual port 5432.
+
+**The database password lives outside the repository.**
+The password for the main `postgres` account is a long random one, kept in PostgreSQL's own password file in the Windows user profile (`%APPDATA%\postgresql\pgpass.conf`). `psql` reads it from there, so it's never typed into the terminal, written in the code, or pushed to GitHub.
