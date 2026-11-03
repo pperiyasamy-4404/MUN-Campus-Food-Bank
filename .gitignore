@@ -1,0 +1,7 @@
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+
+# Secrets and settings for one computer only
+.env

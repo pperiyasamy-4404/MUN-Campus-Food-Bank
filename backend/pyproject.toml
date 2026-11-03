@@ -1,0 +1,4 @@
+[tool.pytest.ini_options]
+# Run pytest from backend/ and it can find the app/ folder.
+pythonpath = ["."]
+testpaths = ["tests"]
