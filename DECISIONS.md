@@ -194,3 +194,25 @@ A new project has no old data to keep, so there's no reason to start on an older
 
 **The database password lives outside the repository.**
 The password for the main `postgres` account is a long random one, kept in PostgreSQL's own password file in the Windows user profile (`%APPDATA%\postgresql\pgpass.conf`). `psql` reads it from there, so it's never typed into the terminal, written in the code, or pushed to GitHub.
+
+## 2026-11-03
+
+Step 1 of the build: the backend/ and frontend/ folders, each saying hello.
+
+**Python 3.14 for the server, in its own virtual environment inside backend/.**
+Same reason as PostgreSQL 18: a new project has nothing old to stay compatible with. Python 3.14 gets security fixes until October 2030, while 3.11 stops in October 2027. Every library we plan to use (FastAPI, SQLAlchemy, Alembic, the PostgreSQL driver, password hashing) installed and ran on 3.14 before we switched. The libraries live in `backend/.venv`, not in the laptop's main Python, so this project's versions can't clash with another project's. The venv folder isn't committed. Anyone can rebuild it from `requirements.txt`.
+
+**Exact library versions are written down.**
+`requirements.txt` lists each Python library with its exact version (`fastapi==0.162.0`), and `package-lock.json` does the same for the screens. Another laptop or a server later gets the same versions, so nothing breaks because a library changed underneath us. Upgrades happen on purpose, in their own commit.
+
+**Every server address starts with /api, and the React dev server passes those on to FastAPI.**
+While we work, the browser only talks to one address, `localhost:5173`. Vite answers for the screens itself and hands anything under `/api` to FastAPI on port 8000. Because the browser sees one site, the SameSite login cookie is sent normally, and we need no CORS rules (the settings that let one site call another). If the screens called `localhost:8000` directly instead, the browser would count two sites, which needs CORS and a looser cookie. How the two halves share one address once the system is online gets decided when we put it online.
+
+**The test client uses httpx2, not httpx.**
+FastAPI's test client warned that using httpx with it is deprecated and asked for httpx2. Switching now keeps the test output clean, so a real warning later doesn't get lost.
+
+**The first test runs without the database.**
+It checks that `/api/hello` answers. The separate test database comes with the tables in step 2.
+
+**The Vite template's demo page and README were removed.**
+The hello page asks the server for its hello and shows the answer, which proves the two halves can talk. The template's README described Vite, not this project.
