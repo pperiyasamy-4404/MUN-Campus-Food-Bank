@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Food Bank: the tables, explained</title>
+<style>
+  :root {
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc;
+    --blue: #2563eb; --blue-bg: #dbeafe;
+    --green: #059669; --green-bg: #d1fae5;
+    --amber: #b45309; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 980px; margin: 0 auto; padding: 36px 20px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 .num { color: var(--blue); margin-right: 8px; }
+  h3 { font-size: 1.15rem; margin: 30px 0 6px; }
+  h3 code { font-size: 1em; }
+  .card h3 { margin-top: 0; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--blue); }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
+  .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+
+  table { border-collapse: collapse; width: 100%; background: #fff; font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+  table.data { width: auto; font: 14px ui-monospace, Consolas, monospace; }
+  table.data th, table.data td { padding: 6px 12px; }
+  table.data td.empty { color: #94a3b8; }
+
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 18px 0; }
+  .why { border-left: 4px solid var(--blue); background: #eff6ff; padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .why p { margin: 4px 0; }
+  .suggest { background: #eff6ff; border-radius: 10px; padding: 10px 14px; margin: 6px 0; }
+  .suggest p { margin: 4px 0; }
+  .short { background: var(--green-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .short p { margin: 2px 0; }
+  .warn { background: var(--amber-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .warn p { margin: 4px 0; }
+  .label { display: block; font-size: .78rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--blue); margin: 22px 0 2px; }
+
+  .choice { display: inline-block; font-size: .72em; font-weight: 700; background: var(--blue); color: #fff; padding: 1px 9px; border-radius: 999px; margin-left: 8px; vertical-align: middle; white-space: nowrap; }
+  .you { display: inline-block; font-size: .75em; font-weight: 700; background: var(--amber-bg); color: #92400e; border: 1px solid #fcd34d; padding: 0 8px; border-radius: 999px; margin-left: 6px; white-space: nowrap; }
+
+  pre.code { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 18px; font: 14px/1.55 ui-monospace, Consolas, monospace; overflow-x: auto; margin: 12px 0; }
+  pre .c { color: #94a3b8; }
+
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; margin: 18px 0; }
+  .diagram svg { display: block; width: 100%; height: auto; }
+
+  .three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 14px 0; }
+  @media (max-width: 760px) { .three { grid-template-columns: 1fr; } }
+  .three .card { margin: 0; }
+
+  .step { background: #fff; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 9px 14px; font-size: .96rem; }
+  .step.db { border-color: #475569; background: #e2e8f0; }
+  .step.ok { border-color: var(--green); background: var(--green-bg); font-weight: 600; }
+  .step b.n { display: inline-block; min-width: 1.5em; color: var(--blue); }
+  .down { text-align: center; color: #94a3b8; line-height: 1.1; font-size: 1.1rem; margin: 2px 0; }
+
+  /* where each rule lives */
+  .k { display: inline-block; font-size: .72rem; font-weight: 700; padding: 0 7px; border-radius: 999px; margin: 1px 4px 1px 0; white-space: nowrap; border: 1px solid; }
+  .k.shape { background: var(--slate-bg); color: #334155; border-color: #cbd5e1; }
+  .k.db { background: var(--green-bg); color: #065f46; border-color: #6ee7b7; }
+  .k.code { background: var(--blue-bg); color: #1e40af; border-color: #93c5fd; }
+  .k.out { background: #fff; color: var(--muted); border-color: #cbd5e1; }
+  .k.later { background: var(--amber-bg); color: #92400e; border-color: #fcd34d; }
+
+  .toc { columns: 2; column-gap: 32px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 20px 14px 40px; }
+  @media (max-width: 760px) { .toc { columns: 1; } }
+  .gloss dt { font-weight: 700; margin-top: 8px; }
+  .gloss dd { margin: 0; }
+
+  footer { margin-top: 60px; color: var(--muted); font-size: .88rem; }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <p class="eyebrow">Campus Food Bank Booking System · Step 2 · 3 Nov 2026</p>
+  <h1>The tables, explained simply</h1>
+  <p class="lead">This page is the plan for the database: which tables there are, what goes in each one, and where every rule from CONSTRAINTS.md is kept. Nothing on it is built yet.</p>
+  <p class="lead">Nine choices are marked like this <span class="choice">Choice A</span> and listed again in <a href="#choices">part 11</a>. All nine were agreed on 3 Nov 2026, as suggested.</p>
+  <p class="lead">Built the same evening: the tables and their rules are in <code>backend/app/models/</code>, and every rule has a test in <code>backend/tests/test_database_rules.py</code> that tries to break it. <a href="#built">Part 12</a> lists what exists now.</p>
+</header>
+
+<div class="card">
+  <h3>A few words used on this page</h3>
+  <dl class="gloss">
+    <dt>Table, row, column</dt><dd>A table is like one sheet in a spreadsheet. Each column holds one kind of fact (like <code>stock</code>), and each row is one thing (like one variety of oats).</dd>
+    <dt>Primary key</dt><dd>The column that names each row, so no two rows are the same. Usually a number called <code>id</code>: 1, 2, 3…</dd>
+    <dt>Link (foreign key)</dt><dd>A column that points to a row in another table. <code>bookings.student_id = 41</code> means "this booking belongs to student 41". The database refuses a link to a row that doesn't exist.</dd>
+    <dt>Empty (NULL)</dt><dd>A column with nothing in it. In the examples below it's shown as —.</dd>
+    <dt>Database rule (constraint)</dt><dd>A rule written into the table itself. The database refuses any change that breaks it.</dd>
+    <dt>CHECK</dt><dd>A database rule about one row, like "stock is 0 or more".</dd>
+    <dt>UNIQUE</dt><dd>A database rule that no two rows can have the same value, like "no two students have the same ID hash".</dd>
+    <dt>Partial unique index</dt><dd>UNIQUE, but only among some rows, like "among bookings that are still booked or packed, each student appears once".</dd>
+    <dt>Migration</dt><dd>A numbered file, made by Alembic, that creates or changes tables. Running it builds the same tables on any computer.</dd>
+  </dl>
+</div>
+
+<ol class="toc">
+  <li><a href="#map">The whole map</a></li>
+  <li><a href="#where">Three places a rule can live</a></li>
+  <li><a href="#people">People and logins</a></li>
+  <li><a href="#food">Food</a></li>
+  <li><a href="#days">Days and slots</a></li>
+  <li><a href="#booking">Holds and bookings</a></li>
+  <li><a href="#time">Times, numbers and words</a></li>
+  <li><a href="#later">Tables that come later</a></li>
+  <li><a href="#every">Every rule, and where it lives</a></li>
+  <li><a href="#yours">The database rules</a></li>
+  <li><a href="#choices">The nine choices</a></li>
+  <li><a href="#built">What was built</a></li>
+</ol>
+
+<!-- 1 -->
+<h2 id="map"><span class="num">1</span>The whole map</h2>
+<p>Here are the 19 tables in four groups. An arrow means "each row here points to one row there". For example, each booking points to one student, and each slot points to one pickup day.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 960 572" role="img" aria-label="Diagram of the 19 tables and how they link to each other">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <style>
+    .panel-label { font: 700 12px system-ui, sans-serif; letter-spacing: .06em; fill: #475569; }
+    .box { fill: #fff; stroke: #94a3b8; stroke-width: 1.2; }
+    .name { font: 700 14px ui-monospace, Consolas, monospace; fill: #0f172a; }
+    .desc { font: 12px system-ui, sans-serif; fill: #475569; }
+    .note { font: 11px system-ui, sans-serif; fill: #475569; }
+    .link { stroke: #64748b; stroke-width: 1.5; fill: none; }
+    .either { stroke-dasharray: 5 4; }
+  </style>
+
+  <!-- panels -->
+  <rect x="8" y="8" width="322" height="344" rx="14" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text class="panel-label" x="24" y="34">PEOPLE AND LOGINS</text>
+  <rect x="340" y="8" width="300" height="552" rx="14" fill="#fffbeb" stroke="#fde68a"/>
+  <text class="panel-label" x="356" y="34">HOLDS AND BOOKINGS</text>
+  <rect x="650" y="8" width="302" height="242" rx="14" fill="#ecfdf5" stroke="#a7f3d0"/>
+  <text class="panel-label" x="666" y="34">DAYS AND SLOTS</text>
+  <rect x="650" y="262" width="302" height="298" rx="14" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text class="panel-label" x="666" y="288">FOOD</text>
+
+  <!-- people -->
+  <rect class="box" x="24" y="52" width="136" height="48" rx="8"/>
+  <text class="name" x="36" y="73">staff</text><text class="desc" x="36" y="90">staff logins</text>
+  <rect class="box" x="180" y="52" width="136" height="48" rx="8"/>
+  <text class="name" x="192" y="73">students</text><text class="desc" x="192" y="90">one per MUN card</text>
+  <rect class="box" x="24" y="170" width="136" height="48" rx="8"/>
+  <text class="name" x="36" y="191">sessions</text><text class="desc" x="36" y="208">who is logged in</text>
+  <rect class="box" x="180" y="170" width="136" height="48" rx="8"/>
+  <text class="name" x="192" y="191">setup_codes</text><text class="desc" x="192" y="208">one-time codes</text>
+  <text class="note" x="24" y="240">Dashed: each session and setup code belongs</text>
+  <text class="note" x="24" y="254">to a student or a staff member, never both.</text>
+  <rect class="box" x="24" y="276" width="136" height="48" rx="8"/>
+  <text class="name" x="36" y="297">audit_log</text><text class="desc" x="36" y="314">who did what</text>
+  <rect class="box" x="180" y="276" width="136" height="48" rx="8"/>
+  <text class="name" x="192" y="297">login_failures</text><text class="desc" x="192" y="314">wrong passwords</text>
+  <text class="note" x="192" y="342">no link, on purpose</text>
+
+  <line class="link" x1="180" y1="76" x2="160" y2="76" marker-end="url(#arr)"/>
+  <line class="link" x1="92" y1="170" x2="92" y2="100" marker-end="url(#arr)"/>
+  <line class="link either" x1="140" y1="170" x2="200" y2="100" marker-end="url(#arr)"/>
+  <line class="link" x1="248" y1="170" x2="248" y2="100" marker-end="url(#arr)"/>
+  <line class="link either" x1="200" y1="170" x2="140" y2="100" marker-end="url(#arr)"/>
+  <polyline class="link" points="24,300 14,300 14,82 24,82" marker-end="url(#arr)"/>
+
+  <!-- legend -->
+  <text class="panel-label" x="24" y="388">HOW TO READ IT</text>
+  <line class="link" x1="24" y1="412" x2="74" y2="412" marker-end="url(#arr)"/>
+  <text class="note" x="84" y="416">points to one row there</text>
+  <line class="link either" x1="24" y1="438" x2="74" y2="438" marker-end="url(#arr)"/>
+  <text class="note" x="84" y="442">points to one or the other</text>
+  <text class="note" x="24" y="474">All 19 tables are built in this step.</text>
+  <text class="note" x="24" y="490">Packing, counter and totals tables come</text>
+  <text class="note" x="24" y="506">later, in their own steps (part 8).</text>
+
+  <!-- booking -->
+  <rect class="box" x="380" y="52" width="180" height="48" rx="8"/>
+  <text class="name" x="392" y="73">holds</text><text class="desc" x="392" y="90">a slot, for 10 minutes</text>
+  <rect class="box" x="380" y="190" width="180" height="48" rx="8"/>
+  <text class="name" x="392" y="211">bookings</text><text class="desc" x="392" y="228">one per pickup</text>
+  <rect class="box" x="380" y="330" width="180" height="48" rx="8"/>
+  <text class="name" x="392" y="351">booking_items</text><text class="desc" x="392" y="368">what they chose</text>
+  <rect class="box" x="380" y="430" width="180" height="48" rx="8"/>
+  <text class="name" x="392" y="451">booking_substitutes</text><text class="desc" x="392" y="468">ranked swaps</text>
+
+  <line class="link" x1="380" y1="76" x2="316" y2="76" marker-end="url(#arr)"/>
+  <line class="link" x1="380" y1="210" x2="316" y2="96" marker-end="url(#arr)"/>
+  <line class="link" x1="470" y1="330" x2="470" y2="238" marker-end="url(#arr)"/>
+  <polyline class="link" points="380,454 362,454 362,226 380,226" marker-end="url(#arr)"/>
+
+  <!-- days -->
+  <rect class="box" x="668" y="52" width="140" height="48" rx="8"/>
+  <text class="name" x="680" y="73">pickup_days</text><text class="desc" x="680" y="90">one per date</text>
+  <rect class="box" x="668" y="150" width="140" height="48" rx="8"/>
+  <text class="name" x="680" y="171">slots</text><text class="desc" x="680" y="188">10-minute slots</text>
+  <rect class="box" x="822" y="52" width="118" height="48" rx="8"/>
+  <text class="name" x="834" y="73">settings</text><text class="desc" x="834" y="90">the numbers</text>
+  <rect class="box" x="822" y="150" width="118" height="48" rx="8"/>
+  <text class="name" x="834" y="171">pickup_hours</text><text class="desc" x="834" y="188">Mon, Thu hours</text>
+  <text class="note" x="822" y="220">no links: used to make</text>
+  <text class="note" x="822" y="234">the days and slots</text>
+
+  <line class="link" x1="738" y1="150" x2="738" y2="100" marker-end="url(#arr)"/>
+  <line class="link" x1="560" y1="76" x2="668" y2="168" marker-end="url(#arr)"/>
+  <line class="link" x1="560" y1="214" x2="668" y2="182" marker-end="url(#arr)"/>
+
+  <!-- food -->
+  <rect class="box" x="668" y="306" width="140" height="48" rx="8"/>
+  <text class="name" x="680" y="327">varieties</text><text class="desc" x="680" y="344">with stock</text>
+  <rect class="box" x="822" y="306" width="118" height="48" rx="8"/>
+  <text class="name" x="834" y="327">variety_tags</text><text class="desc" x="834" y="344">links the two</text>
+  <rect class="box" x="668" y="400" width="140" height="48" rx="8"/>
+  <text class="name" x="680" y="421">items</text><text class="desc" x="680" y="438">oats, pasta…</text>
+  <rect class="box" x="822" y="400" width="118" height="48" rx="8"/>
+  <text class="name" x="834" y="421">tags</text><text class="desc" x="834" y="438">dietary tags</text>
+  <rect class="box" x="668" y="494" width="140" height="48" rx="8"/>
+  <text class="name" x="680" y="515">categories</text><text class="desc" x="680" y="532">breakfast, protein…</text>
+
+  <line class="link" x1="822" y1="330" x2="808" y2="330" marker-end="url(#arr)"/>
+  <line class="link" x1="881" y1="354" x2="881" y2="400" marker-end="url(#arr)"/>
+  <line class="link" x1="738" y1="354" x2="738" y2="400" marker-end="url(#arr)"/>
+  <line class="link" x1="738" y1="448" x2="738" y2="494" marker-end="url(#arr)"/>
+  <line class="link" x1="560" y1="354" x2="668" y2="334" marker-end="url(#arr)"/>
+  <line class="link" x1="560" y1="454" x2="668" y2="346" marker-end="url(#arr)"/>
+</svg>
+</div>
+
+<p>A booking also stores its pickup day, as well as its slot. That arrow is left off the map to keep it readable. <a href="#booking">Part 6</a> explains why it's there.</p>
+
+<!-- 2 -->
+<h2 id="where"><span class="num">2</span>Three places a rule can live</h2>
+<p>Every rule in CONSTRAINTS.md ends up in one or more of these places.</p>
+
+<div class="three">
+  <div class="card">
+    <h3><span class="k shape">table shape</span></h3>
+    <p>Which columns exist. If there's no column for something, it can't be stored.</p>
+    <p><b>Example.</b> <code>students</code> has no name column, so no code can ever save a student's name. <span class="rule">P3</span></p>
+  </div>
+  <div class="card">
+    <h3><span class="k db">database rule</span></h3>
+    <p>Written into the table. The database refuses any change that breaks it, even from buggy code, even when two people press Book at the same moment.</p>
+    <p><b>Example.</b> <code>stock</code> can't go below 0. <span class="rule">I4</span></p>
+  </div>
+  <div class="card">
+    <h3><span class="k code">code</span></h3>
+    <p>The rules in Python. They give clear messages, and they can use dates, settings and many rows at once.</p>
+    <p><b>Example.</b> The 28-day gap needs the last pickup date, today's date in Newfoundland, and the pickup gap setting. <span class="rule">F1</span></p>
+  </div>
+</div>
+
+<span class="label">What a database rule can see</span>
+<p>Not much, and that's on purpose. A CHECK sees one row at a time. A UNIQUE rule compares a column across all rows. A link checks that the row it points to exists. That's all.</p>
+<p>So "at most 13 items per booking" can't be a database rule. It means counting rows in another table and comparing with a setting. That goes in the code.</p>
+
+<span class="label">Why not put more in the database?</span>
+<p>PostgreSQL can run whole programs inside the database, called <b>triggers</b>. But then rules hide in the database where nobody looks, they're harder to read and test, and their error messages are poor.</p>
+<span class="label">Why not put everything in the code?</span>
+<p>Code can have bugs, and two requests can arrive at the same moment. The rules that must never break need a guard that works even then.</p>
+
+<div class="short"><p><b>Our rule of thumb:</b> the code checks everything first and explains the problem to the student. The database guards the few rules that must never break, as a safety net under the code.</p></div>
+
+<!-- 3 -->
+<h2 id="people"><span class="num">3</span>People and logins</h2>
+
+<h3><code>staff</code>: volunteers and the coordinator</h3>
+<table class="data">
+  <tr><th>id</th><th>username</th><th>role</th><th>password_hash</th><th>created_by</th><th>disabled_at</th></tr>
+  <tr><td>1</td><td>maya</td><td>coordinator</td><td>$argon2id$…</td><td class="empty">—</td><td class="empty">—</td></tr>
+  <tr><td>2</td><td>sam</td><td>volunteer</td><td>$argon2id$…</td><td>1</td><td class="empty">—</td></tr>
+  <tr><td>3</td><td>jo</td><td>volunteer</td><td class="empty">—</td><td>1</td><td class="empty">—</td></tr>
+</table>
+<p>Jo's password is empty until Jo uses the setup code. Maya has no <code>created_by</code>, because the setup script made the first coordinator. <span class="rule">R3</span></p>
+<p><b>Why <code>disabled_at</code> instead of deleting:</b> when Sam stops volunteering, the log should still say "Sam marked this pickup". Deleting Sam's row would break those links.</p>
+<p><b>Database rules:</b> the role is <code>volunteer</code> or <code>coordinator</code>. Usernames are unique, ignoring capitals, so "Sam" and "sam" can't both exist and every log line names one person. <span class="rule">R4</span></p>
+<p class="suggest">Students and staff are in two separate tables. <span class="choice">Choice A</span></p>
+
+<h3><code>students</code>: one row per MUN card</h3>
+<table class="data">
+  <tr><th>id</th><th>id_hash</th><th>password_hash</th><th>last_pickup_on</th><th>password_reset_at</th><th>created_by</th></tr>
+  <tr><td>41</td><td>a91f…(64 characters)</td><td>$argon2id$…</td><td>2026-10-12</td><td class="empty">—</td><td>2</td></tr>
+</table>
+<p>Student 41 came to the counter on Monday 12 October. Sam (staff 2) made the account, and the student took food as a walk-in that day. There's no column for a name, email, phone number, or the ID number itself. The safest data is data we never keep. <span class="rule">P2</span> <span class="rule">P3</span></p>
+<p><b>Why <code>last_pickup_on</code> lives here:</b> booking details are deleted after 90 days <span class="rule">P7</span>, but "no pickup for a year" <span class="rule">P13</span> needs the last pickup date even after that. The 28-day check reads it too, so it doesn't have to search old bookings. <span class="rule">F1</span></p>
+<p><b><code>password_reset_at</code></b> lets the student see "password reset on 4 Nov". <span class="rule">R4</span></p>
+<p><b>Database rules:</b> <code>id_hash</code> is unique, so one card means one account <span class="rule">P1</span>. And <code>id_hash</code> must be exactly 64 characters of 0–9 and a–f, which is what an HMAC looks like. If some code ever tried to save a raw 9-digit ID number by mistake, the database would refuse it. <span class="rule">P2</span></p>
+
+<h3><code>sessions</code>: who is logged in</h3>
+<table class="data">
+  <tr><th>token_hash</th><th>student_id</th><th>staff_id</th><th>expires_at</th></tr>
+  <tr><td>5c0e…</td><td>41</td><td class="empty">—</td><td>Sun 8 Nov, 9:30 pm</td></tr>
+  <tr><td>9b7a…</td><td class="empty">—</td><td>2</td><td>Mon 9 Nov, 6:30 pm</td></tr>
+</table>
+<p>These are the coat-check tickets from the tech page. The cookie holds the ticket, and this table holds a <b>hash</b> of it. If the database ever leaked, the thief still couldn't use the tickets to log in as anyone. How long a login lasts gets decided in step 3.</p>
+<p>A password reset deletes that account's rows here, so the old login stops working at once. That's the reason we picked sessions over tokens.</p>
+<p><b>Database rule:</b> exactly one of <code>student_id</code> and <code>staff_id</code> is filled.</p>
+
+<h3><code>setup_codes</code>: one-time codes from the counter</h3>
+<table class="data">
+  <tr><th>student_id</th><th>staff_id</th><th>code_hash</th><th>expires_at</th></tr>
+  <tr><td>41</td><td class="empty">—</td><td>3e2d…</td><td>Mon 19 Oct, 3:45 pm</td></tr>
+</table>
+<p>A code is deleted the moment it's used, so it works once. Issuing a new code deletes the old one. It expires after 7 days. <code>audit_log</code> keeps the record of who issued it. <span class="rule">R1</span> <span class="rule">R4</span></p>
+<p><b>Database rules:</b> exactly one of <code>student_id</code> and <code>staff_id</code> is filled, and each account has at most one code.</p>
+
+<h3><code>login_failures</code>: wrong-password tries</h3>
+<table class="data">
+  <tr><th>who_hash</th><th>failed_at</th></tr>
+  <tr><td>a91f…</td><td>Sun 8 Nov, 5:01 pm</td></tr>
+</table>
+<p>Each wrong password adds a row. Before checking a password, the code counts the rows from the last 15 minutes, and after 5 it slows down. <span class="rule">P9</span></p>
+<p><b>Why no link to <code>students</code>:</b> tries against a number with no account must be slowed down too. Otherwise the speed of the answer would tell someone which numbers have accounts. So <code>who_hash</code> is the HMAC of whatever number was typed, account or not. The jobs script deletes old rows.</p>
+
+<h3><code>audit_log</code>: who did what</h3>
+<table class="data">
+  <tr><th>at</th><th>staff_id</th><th>action</th><th>student_id</th><th>booking_id</th></tr>
+  <tr><td>Mon 12 Oct, 3:45 pm</td><td>2</td><td>created_student</td><td>41</td><td class="empty">—</td></tr>
+  <tr><td>Mon 12 Oct, 3:45 pm</td><td>2</td><td>issued_setup_code</td><td>41</td><td class="empty">—</td></tr>
+  <tr><td>Mon 9 Nov, 6:20 pm</td><td>3</td><td>fixed_no_show_to_picked_up</td><td>41</td><td>88</td></tr>
+</table>
+<p>Every action the rules ask us to log gets a row: accounts created, setup codes issued, walk-ins, pickups and fixes. <span class="rule">R4</span> <span class="rule">B6</span></p>
+<p class="suggest">The log is deleted after the retention period, like booking details. <span class="choice">Choice G</span></p>
+
+<!-- 4 -->
+<h2 id="food"><span class="num">4</span>Food</h2>
+
+<h3><code>categories</code>, <code>items</code> and <code>varieties</code></h3>
+<div class="three">
+<div>
+<table class="data">
+  <tr><th colspan="2">categories</th></tr>
+  <tr><th>id</th><th>name</th></tr>
+  <tr><td>1</td><td>Breakfast</td></tr>
+  <tr><td>2</td><td>Protein</td></tr>
+  <tr><td>3</td><td>Bakery</td></tr>
+</table>
+</div>
+<div>
+<table class="data">
+  <tr><th colspan="4">items</th></tr>
+  <tr><th>id</th><th>name</th><th>category</th><th>is_extra</th></tr>
+  <tr><td>3</td><td>Oats</td><td>1</td><td>no</td></tr>
+  <tr><td>5</td><td>Canned chicken</td><td>2</td><td>no</td></tr>
+  <tr><td>9</td><td>Bread</td><td>3</td><td>yes</td></tr>
+</table>
+</div>
+<div>
+<table class="data">
+  <tr><th colspan="4">varieties</th></tr>
+  <tr><th>id</th><th>item</th><th>name</th><th>stock</th></tr>
+  <tr><td>11</td><td>3</td><td>Quick oats</td><td>14</td></tr>
+  <tr><td>12</td><td>3</td><td>Steel-cut oats</td><td>0</td></tr>
+  <tr><td>20</td><td>5</td><td>Chunk chicken</td><td>6</td></tr>
+</table>
+</div>
+</div>
+<p>An item is a kind of food, and its varieties are what's on the shelf. Stock is counted per variety. <span class="rule">I1</span></p>
+<p><b>Why the category is on the item:</b> rule I2 says every variety has a category. Each variety gets it from its item, so quick oats and steel-cut oats are both Breakfast and can never disagree. <span class="rule">I2</span></p>
+<p><b><code>is_extra</code></b> marks extras like bread, which aren't booked online. <span class="rule">E1</span></p>
+<p><b>What <code>stock</code> means:</b> how many more students can book this variety. Booking takes one off <span class="rule">I5</span>, cancelling or a no-show puts it back <span class="rule">I6</span>, and volunteers set the count before each booking window <span class="rule">I8</span>. A variety the food bank no longer gets is hidden with an <code>active</code> column, not deleted, because old bookings still point to it.</p>
+<p><b>Database rules:</b> stock never goes below zero <span class="rule">I4</span>. Names are unique: no two items called Oats, no two categories or tags with the same name, and no two varieties with the same name under one item.</p>
+
+<h3><code>tags</code> and <code>variety_tags</code></h3>
+<div class="three">
+<div>
+<table class="data">
+  <tr><th colspan="2">tags</th></tr>
+  <tr><th>id</th><th>name</th></tr>
+  <tr><td>1</td><td>Vegetarian</td></tr>
+  <tr><td>2</td><td>Halal</td></tr>
+  <tr><td>3</td><td>Gluten-free</td></tr>
+  <tr><td>4</td><td>Contains nuts</td></tr>
+</table>
+</div>
+<div>
+<table class="data">
+  <tr><th colspan="2">variety_tags</th></tr>
+  <tr><th>variety_id</th><th>tag_id</th></tr>
+  <tr><td>11</td><td>1</td></tr>
+  <tr><td>12</td><td>1</td></tr>
+  <tr><td>20</td><td>2</td></tr>
+</table>
+</div>
+<div class="card">
+<p>Each row in <code>variety_tags</code> says "this variety has this tag". Both oats (11 and 12) are vegetarian, and chunk chicken (20) is halal. One variety can have many tags, and one tag can be on many varieties. <span class="rule">I2</span></p>
+</div>
+</div>
+<p><b>Database rule:</b> each pair appears once, because the pair is the primary key.</p>
+<p class="suggest">Tags are in their own table, so the coordinator can add one like "vegan" without a code change. <span class="choice">Choice E</span></p>
+
+<!-- 5 -->
+<h2 id="days"><span class="num">5</span>Days and slots</h2>
+
+<h3><code>settings</code>: the numbers, in one row</h3>
+<p>One row holds every sample setting from CONSTRAINTS.md. Here it is turned on its side:</p>
+<table class="data">
+  <tr><th>column</th><th>sample</th><th>column</th><th>sample</th></tr>
+  <tr><td>pickup_gap_days</td><td>28</td><td>booking_opens_days_before</td><td>1</td></tr>
+  <tr><td>slot_minutes</td><td>10</td><td>booking_opens_time</td><td>17:00</td></tr>
+  <tr><td>slot_capacity</td><td>1</td><td>booking_closes_time</td><td>12:00</td></tr>
+  <tr><td>hold_minutes</td><td>10</td><td>no_show_time</td><td>18:00</td></tr>
+  <tr><td>item_limit</td><td>13</td><td>no_shows_count</td><td>false</td></tr>
+  <tr><td>max_per_item</td><td>1</td><td>retention_days</td><td>90</td></tr>
+  <tr><td>substitute_limit</td><td>5</td><td>setup_code_days</td><td>7</td></tr>
+  <tr><td>login_tries</td><td>5</td><td>login_window_minutes</td><td>15</td></tr>
+</table>
+<p><b>Why one row with real columns,</b> not a list of name/value pairs: each setting keeps its own type and its own rule. In a name/value list, everything is text, and "13" and "thirteen" would both fit.</p>
+<p><b>Database rules:</b> the table holds only one row. The numbers make sense (a slot holds at least 1 student, the item limit is at least 1, and so on). And the retention period is at least the pickup gap, so we never delete a pickup the 28-day rule still needs.</p>
+
+<h3><code>pickup_hours</code>: the weekly pattern</h3>
+<table class="data">
+  <tr><th>weekday</th><th>starts_at</th><th>ends_at</th></tr>
+  <tr><td>1 (Monday)</td><td>15:30</td><td>17:30</td></tr>
+  <tr><td>4 (Thursday)</td><td>15:30</td><td>17:30</td></tr>
+</table>
+<p><b>Database rules:</b> the weekday is 1 to 7, each day appears at most once, and the hours end after they start. <span class="rule">S1</span></p>
+
+<h3><code>pickup_days</code>: one row per real date</h3>
+<table class="data">
+  <tr><th>id</th><th>pickup_date</th><th>booking_opens_at</th><th>booking_closes_at</th><th>no_show_at</th><th>closed_at</th></tr>
+  <tr><td>30</td><td>Mon 9 Nov</td><td>Sun 8 Nov, 5 pm</td><td>Mon 9 Nov, 12 pm</td><td>Mon 9 Nov, 6 pm</td><td class="empty">—</td></tr>
+  <tr><td>31</td><td>Thu 12 Nov</td><td>Wed 11 Nov, 5 pm</td><td>Thu 12 Nov, 12 pm</td><td>Thu 12 Nov, 6 pm</td><td class="empty">—</td></tr>
+</table>
+<p>When a pickup day is made, the times are worked out from the settings and saved on the day's own row.</p>
+<ul>
+  <li>To move one day's booking times <span class="rule">S9</span>, change that one row.</li>
+  <li>To close a day for a storm <span class="rule">S7</span>, set <code>closed_at</code> and <code>closed_reason</code> on that row.</li>
+  <li>Changing the settings later never moves a day students can already see.</li>
+</ul>
+<p><code>make_pickup_day</code> in <code>backend/app/services/pickup_days.py</code> makes a day and its slots. For now the sample data script calls it. In step 8 the jobs script will call it, to make days ahead of time.</p>
+<p><b>Database rules:</b> one row per date, and booking opens before it closes, which comes before the no-show time. <span class="rule">S5</span></p>
+<p class="suggest">Each pickup day is its own row, with its own times. <span class="choice">Choice D</span></p>
+
+<h3><code>slots</code>: twelve per pickup day</h3>
+<table class="data">
+  <tr><th>id</th><th>pickup_day_id</th><th>starts_at</th><th>capacity</th><th>booked_count</th></tr>
+  <tr><td>301</td><td>30</td><td>Mon 9 Nov, 3:30 pm</td><td>1</td><td>1</td></tr>
+  <tr><td>302</td><td>30</td><td>Mon 9 Nov, 3:40 pm</td><td>1</td><td>0</td></tr>
+  <tr><td>…</td><td></td><td>… up to 5:20 pm</td><td></td><td></td></tr>
+</table>
+<p><code>booked_count</code> is like stock, turned upside down. Stock counts what's <b>left</b> and can't go below 0. <code>booked_count</code> counts what's <b>taken</b> and can't go above <code>capacity</code>. Booking adds 1, and cancelling takes 1 away. <span class="rule">S2</span></p>
+<p><b>Example.</b> Slot 301 has 1 booking. If two students press Book on it at the same moment, the database rule lets only one of them in. The same rule also stops a mistake from the other side: if the coordinator lowers a slot's capacity to 1 while it already has 2 bookings, the database refuses the change.</p>
+<p><b>Database rules:</b> capacity is at least 1, <code>booked_count</code> stays between 0 and capacity, and a day can't have two slots that start at the same time. <span class="rule">S2</span></p>
+<p class="suggest">The slot keeps a count, guarded by a database rule. <span class="choice">Choice B</span></p>
+
+<!-- 6 -->
+<h2 id="booking"><span class="num">6</span>Holds and bookings</h2>
+
+<h3><code>holds</code>: a slot, kept for 10 minutes</h3>
+<table class="data">
+  <tr><th>student_id</th><th>slot_id</th><th>held_until</th></tr>
+  <tr><td>41</td><td>302</td><td>Sun 8 Nov, 5:12 pm</td></tr>
+</table>
+<p>Student 41 picked the 3:40 slot at 5:02 pm, so it's theirs until 5:12. A hold past its time counts as free, so nothing has to delete it on time (tech page, part 12). <span class="rule">S8</span></p>
+<p><b><code>student_id</code> is the primary key,</b> so a student can have at most one row here, which means one hold at a time. Picking another slot replaces the row. <span class="rule">S8</span></p>
+<p><b>Holds aren't in <code>booked_count</code>.</b> Before giving a hold, the code locks the slot and checks that there's room for it: the bookings, plus other students' holds that haven't run out. If that code had a bug, the worst case is that a student loses their hold when they press Book. The slot is still never overbooked, because the database rule on <code>booked_count</code> catches it.</p>
+<p><b>Database rule:</b> one hold per student, from the primary key.</p>
+<p class="suggest">Holds are in their own small table. <span class="choice">Choice C</span></p>
+
+<h3><code>bookings</code></h3>
+<table class="data">
+  <tr><th>id</th><th>student_id</th><th>pickup_day_id</th><th>slot_id</th><th>code</th><th>status</th><th>booked_at</th></tr>
+  <tr><td>88</td><td>41</td><td>30</td><td>302</td><td>K3P</td><td>booked</td><td>Sun 8 Nov, 5:08 pm</td></tr>
+</table>
+<p>It also has columns for what happens later: <code>packed_at</code>, <code>picked_up_at</code>, <code>picked_up_by</code> (a volunteer) <span class="rule">B3</span>, <code>cancelled_at</code> with a <code>cancel_reason</code> (<code>student</code>, <code>day_closed</code> or <code>walk_in</code>) <span class="rule">S7</span> <span class="rule">W4</span>, and <code>no_show_at</code>.</p>
+<p><b>Status</b> is one of <code>booked</code>, <code>packed</code>, <code>picked_up</code>, <code>cancelled</code> or <code>no_show</code> <span class="rule">B1</span>. <b>Which moves are allowed</b>, like "packed → picked up, but never cancelled → picked up", is checked in the code. A CHECK only sees the new row, not what the status was before. <span class="rule">B2</span></p>
+<p><b><code>code</code></b> (K3P) is what volunteers see and say out loud, instead of anything about the student. <span class="rule">P4</span></p>
+<p><b>Why the booking stores its day, when the slot already knows it:</b> the rule "a student who cancels can't book again for that same day" <span class="rule">S6</span> needs the day in the booking row, so a UNIQUE rule can see it. A link on the pair (slot, day) checks that the pair really exists in <code>slots</code>, so the day can never be wrong.</p>
+<p><b>Database rules:</b></p>
+<ul>
+  <li>The status is one of the five. <span class="rule">B1</span></li>
+  <li>One upcoming booking per student: among bookings that are booked or packed, each student appears once. This also makes a double click on Book harmless, because the second booking is refused. <span class="rule">F2</span> <span class="rule">B4</span></li>
+  <li>One booking per student per pickup day, of any status, so cancelling and booking again can't be used to change items. <span class="rule">S6</span> <span class="rule">I7</span></li>
+  <li>A booking code is unique within its day. <span class="rule">P4</span></li>
+  <li>The booking's day matches its slot's day.</li>
+  <li>The status always matches the times saved with it. A picked-up booking has a pickup time <b>and</b> the volunteer who clicked <span class="rule">B3</span>. A cancelled one has a time and a reason. A no-show has a time.</li>
+</ul>
+<p class="suggest">"One booking per student per pickup day" is a database rule, not only a code check. <span class="choice">Choice F</span></p>
+
+<h3><code>booking_items</code> and <code>booking_substitutes</code></h3>
+<div class="three">
+<div>
+<table class="data">
+  <tr><th colspan="3">booking_items</th></tr>
+  <tr><th>booking_id</th><th>variety_id</th><th>quantity</th></tr>
+  <tr><td>88</td><td>11</td><td>1</td></tr>
+  <tr><td>88</td><td>20</td><td>1</td></tr>
+</table>
+</div>
+<div>
+<table class="data">
+  <tr><th colspan="3">booking_substitutes</th></tr>
+  <tr><th>booking_id</th><th>rank</th><th>variety_id</th></tr>
+  <tr><td>88</td><td>1</td><td>31</td></tr>
+  <tr><td>88</td><td>2</td><td>25</td></tr>
+</table>
+</div>
+<div class="card">
+<p>Booking 88 is for quick oats and chunk chicken. If something is missing, try rice (31) first, then vegetable oil (25).</p>
+</div>
+</div>
+<p><b>What the code checks</b>, because the checks need settings or other tables: at most 13 items, at most one of each item counting all its varieties <span class="rule">I3</span>, at most 5 substitutes, and that no substitute is an extra or already in the order <span class="rule">U2</span>. Substitutes don't touch stock <span class="rule">U3</span>.</p>
+<p><b>Database rules:</b> each variety appears once per booking, and its quantity is at least 1. Each substitute rank appears once and starts from 1, and the same variety can't be listed as a substitute twice.</p>
+
+<h3>What pressing Book changes, in one transaction</h3>
+<p>Here's student 41 pressing Book at 5:08 pm. If any step is refused, everything is undone, as if they never pressed it.</p>
+<div class="step"><b class="n">1</b>Lock slot 302. Check the hold is still theirs and hasn't run out.</div>
+<div class="down">↓</div>
+<div class="step"><b class="n">2</b>Delete the hold.</div>
+<div class="down">↓</div>
+<div class="step db"><b class="n">3</b>Slot 302: <code>booked_count</code> 0 → 1. <i>The database checks it's still within capacity.</i></div>
+<div class="down">↓</div>
+<div class="step db"><b class="n">4</b>Save booking 88. <i>The database checks: one upcoming booking, one booking that day, the code is unique, and the day matches the slot.</i></div>
+<div class="down">↓</div>
+<div class="step db"><b class="n">5</b>For each item, in variety order: save it and take 1 off its stock. <i>The database checks that stock stays 0 or more.</i></div>
+<div class="down">↓</div>
+<div class="step"><b class="n">6</b>Save the substitutes.</div>
+<div class="down">↓</div>
+<div class="step ok">Booked. Code K3P.</div>
+<div class="why"><p><b>Why "in variety order" in step 5:</b> if one booking takes oats then chicken while another takes chicken then oats, each can end up waiting for the row the other has locked, forever. That's called a <b>deadlock</b>. If every booking takes them in the same order (lowest id first), it can't happen. This is the same idea as the 25 Oct decision about lock order. You'll write this transaction in step 5.</p></div>
+
+<!-- 7 -->
+<h2 id="time"><span class="num">7</span>Times, numbers and words</h2>
+
+<span class="label">Three kinds of time</span> <span class="rule">T1</span>
+<table>
+  <tr><th style="width:24%">Kind</th><th style="width:30%">Example</th><th>Why</th></tr>
+  <tr><td><b>A moment</b>: <code>timestamptz</code></td><td><code>booked_at</code>, <code>held_until</code>, <code>booking_opens_at</code></td><td>Saved as one exact moment (in UTC) and shown in Newfoundland time. Summer time and the half hour are handled for us.</td></tr>
+  <tr><td><b>A calendar date</b>: <code>date</code></td><td><code>pickup_date</code>, <code>last_pickup_on</code></td><td>The 28-day rule counts calendar days in Newfoundland <span class="rule">F1</span>, so a pickup at 5 pm and a slot at 3:30 pm four weeks later are 28 days apart.</td></tr>
+  <tr><td><b>A clock time</b>: <code>time</code></td><td>The settings: 17:00, 12:00, 18:00</td><td>Means "this time on a Newfoundland clock". It's turned into a moment when a pickup day is made, so each day gets the right summer or winter time.</td></tr>
+</table>
+<p><b>Why not save plain clock times everywhere?</b> On 1 November the clocks went back, and 1:30 am happened twice. A plain clock time can't say which one it means. A moment can.</p>
+
+<span class="label">ids are plain numbers</span>
+<p>The database hands them out: 1, 2, 3. <b>Why not long random ids (UUIDs)?</b> Plain numbers are easier to read in pgAdmin while we learn. Nothing secret depends on them, because the server checks on every request that the booking belongs to whoever is asking. Students see the booking code, never the id.</p>
+
+<span class="label">Statuses are text with a CHECK</span>
+<p>Like <code>status IN ('booked', 'packed', …)</code>. <b>Why not PostgreSQL's own list type (an enum)?</b> Adding a value to an enum has some catches, and taking one away isn't possible at all. Changing a CHECK is one line in a migration.</p>
+
+<span class="label">Names</span>
+<p>Lowercase with underscores (<code>booking_items</code>). Tables are plural, and a link column is the table's name in the singular plus <code>_id</code> (<code>student_id</code>).</p>
+
+<!-- 8 -->
+<h2 id="later"><span class="num">8</span>Tables that come later</h2>
+<table>
+  <tr><th style="width:26%">Step</th><th style="width:42%">What gets added</th><th>Rules it holds</th></tr>
+  <tr><td>6. Packing</td><td>A "missing" mark on booking items and a "used" mark on substitutes. The sticky note text comes from these.</td><td><span class="rule">U4</span> <span class="rule">U7</span> <span class="rule">U8</span></td></tr>
+  <tr><td>7. The counter</td><td>Walk-ins and what they were given. Extras given out. What a student chose at the counter when the substitutes ran out.</td><td><span class="rule">W1</span> <span class="rule">E3</span> <span class="rule">E4</span> <span class="rule">U6</span>. "One of each extra item" will be a database rule.</td></tr>
+  <tr><td>8–9. Jobs and coordinator</td><td>Weekly totals, saved before the details are deleted.</td><td><span class="rule">P7</span> <span class="rule">P12</span></td></tr>
+</table>
+<p class="suggest">Build now what steps 3 to 5 use, and add these in their own steps. <span class="choice">Choice H</span></p>
+
+<!-- 9 -->
+<h2 id="every"><span class="num">9</span>Every rule, and where it lives</h2>
+<p><span class="k shape">table shape</span> <span class="k db">database rule</span> <span class="k code">code</span> <span class="k later">later table</span> <span class="k out">outside the system</span></p>
+<table>
+  <tr><th style="width:9%">Rule</th><th style="width:30%">Where</th><th>How</th></tr>
+  <tr><td><span class="rule">P1</span></td><td><span class="k db">database rule</span></td><td><code>students.id_hash</code> is unique.</td></tr>
+  <tr><td><span class="rule">P2</span></td><td><span class="k shape">table shape</span><span class="k db">database rule</span><span class="k code">code</span></td><td>No ID number column. <code>id_hash</code> must look like a hash. The HMAC function, in step 3. The key lives outside the database.</td></tr>
+  <tr><td><span class="rule">P3</span></td><td><span class="k shape">table shape</span><span class="k code">code</span></td><td>No columns for names or contact details. Staff have a username only. A test checks the logs.</td></tr>
+  <tr><td><span class="rule">P4</span></td><td><span class="k code">code</span></td><td>Replies to staff never include <code>id_hash</code>. Volunteers see <code>bookings.code</code>.</td></tr>
+  <tr><td><span class="rule">P5</span></td><td><span class="k code">code</span></td><td>At the counter: the HMAC of the typed number must equal the booking's student's <code>id_hash</code>.</td></tr>
+  <tr><td><span class="rule">P6</span></td><td><span class="k shape">table shape</span><span class="k code">code</span></td><td><code>sessions</code>, and the login code.</td></tr>
+  <tr><td><span class="rule">P7</span></td><td><span class="k code">code</span><span class="k later">later table</span></td><td>The jobs script deletes bookings and log rows after 90 days. Weekly totals are kept.</td></tr>
+  <tr><td><span class="rule">P8</span></td><td><span class="k shape">table shape</span><span class="k code">code</span></td><td>Only <code>password_hash</code> is stored, made with argon2.</td></tr>
+  <tr><td><span class="rule">P9</span></td><td><span class="k shape">table shape</span><span class="k code">code</span></td><td><code>login_failures</code>, counted before each password check.</td></tr>
+  <tr><td><span class="rule">P10</span></td><td><span class="k code">code</span></td><td>A test checks web addresses, logs and errors.</td></tr>
+  <tr><td><span class="rule">P11</span></td><td><span class="k out">outside</span></td><td>The key backup.</td></tr>
+  <tr><td><span class="rule">P12</span></td><td><span class="k code">code</span></td><td>The coordinator's screen.</td></tr>
+  <tr><td><span class="rule">P13</span></td><td><span class="k shape">table shape</span><span class="k code">code</span></td><td><code>students.last_pickup_on</code>, used by the jobs script.</td></tr>
+  <tr><td><span class="rule">F1</span></td><td><span class="k code">code</span></td><td><code>last_pickup_on</code> plus the pickup gap setting, in calendar days. Written in step 5.</td></tr>
+  <tr><td><span class="rule">F2</span></td><td><span class="k db">database rule</span><span class="k code">code</span></td><td>The partial unique index on bookings, plus a clear message from the code.</td></tr>
+  <tr><td><span class="rule">F3</span></td><td><span class="k code">code</span></td><td>Only a pickup changes <code>last_pickup_on</code>.</td></tr>
+  <tr><td><span class="rule">S1</span></td><td><span class="k code">code</span></td><td>Slots are made only from <code>pickup_hours</code>.</td></tr>
+  <tr><td><span class="rule">S2</span></td><td><span class="k db">database rule</span></td><td><code>booked_count</code> between 0 and capacity, on a locked slot row.</td></tr>
+  <tr><td><span class="rule">S5</span></td><td><span class="k shape">table shape</span><span class="k code">code</span></td><td>Each day's <code>booking_opens_at</code> and <code>booking_closes_at</code>, compared with the time now.</td></tr>
+  <tr><td><span class="rule">S6</span></td><td><span class="k db">database rule</span><span class="k code">code</span></td><td>One booking per student per day. The code checks the cancel deadline.</td></tr>
+  <tr><td><span class="rule">S7</span></td><td><span class="k shape">table shape</span><span class="k code">code</span></td><td><code>pickup_days.closed_at</code>. The code cancels the day's bookings with reason <code>day_closed</code> and puts the stock back.</td></tr>
+  <tr><td><span class="rule">S8</span></td><td><span class="k db">database rule</span><span class="k code">code</span></td><td>One hold per student (primary key). The checks before a hold are in code.</td></tr>
+  <tr><td><span class="rule">S9</span></td><td><span class="k shape">table shape</span></td><td>Each pickup day has its own times.</td></tr>
+  <tr><td><span class="rule">I1</span> <span class="rule">I2</span></td><td><span class="k shape">table shape</span></td><td>Items, varieties, categories, tags.</td></tr>
+  <tr><td><span class="rule">I3</span></td><td><span class="k code">code</span><span class="k db">database rule</span></td><td>The limits are settings, so they're in code. The database makes sure each variety appears once per booking.</td></tr>
+  <tr><td><span class="rule">I4</span></td><td><span class="k db">database rule</span></td><td><code>stock</code> is 0 or more.</td></tr>
+  <tr><td><span class="rule">I5</span> <span class="rule">I6</span></td><td><span class="k code">code</span></td><td>The Book transaction, cancelling, and the no-show job.</td></tr>
+  <tr><td><span class="rule">I7</span></td><td><span class="k code">code</span><span class="k db">database rule</span></td><td>There's no web address for changing a booking's items. "One booking per day" stops cancel-and-rebook.</td></tr>
+  <tr><td><span class="rule">I8</span></td><td><span class="k code">code</span></td><td>The stock screens.</td></tr>
+  <tr><td><span class="rule">E1</span> <span class="rule">E2</span></td><td><span class="k shape">table shape</span><span class="k code">code</span></td><td><code>items.is_extra</code>. The screens show extras as "may be available".</td></tr>
+  <tr><td><span class="rule">E3</span> <span class="rule">E4</span></td><td><span class="k later">later table</span></td><td>Extras given out, one per extra item (step 7).</td></tr>
+  <tr><td><span class="rule">U1</span></td><td><span class="k shape">table shape</span></td><td>Students choose a variety, not a brand.</td></tr>
+  <tr><td><span class="rule">U2</span></td><td><span class="k db">database rule</span><span class="k code">code</span></td><td>Rank and variety are each unique per booking. The limit, "no extras" and "not already in the order" are in code.</td></tr>
+  <tr><td><span class="rule">U3</span> <span class="rule">U5</span></td><td><span class="k code">code</span></td><td>Substitutes don't touch stock. Only the student's own list is used.</td></tr>
+  <tr><td><span class="rule">U4</span></td><td><span class="k code">code</span></td><td>The refill rule, in step 6.</td></tr>
+  <tr><td><span class="rule">U6</span> <span class="rule">U7</span></td><td><span class="k later">later table</span><span class="k code">code</span></td><td>Counter choices, and out-of-stock flags (steps 6–7).</td></tr>
+  <tr><td><span class="rule">U8</span></td><td><span class="k out">outside</span></td><td>The sticky note. The system shows what to write on it.</td></tr>
+  <tr><td><span class="rule">K1</span></td><td><span class="k code">code</span></td><td>The packing queue opens after booking closes.</td></tr>
+  <tr><td><span class="rule">W1</span></td><td><span class="k later">later table</span></td><td>Walk-ins (step 7).</td></tr>
+  <tr><td><span class="rule">W3</span></td><td><span class="k out">outside</span></td><td>Their own line at the counter.</td></tr>
+  <tr><td><span class="rule">W4</span></td><td><span class="k code">code</span></td><td>Cancel with reason <code>walk_in</code>, then serve.</td></tr>
+  <tr><td><span class="rule">B1</span></td><td><span class="k db">database rule</span></td><td>The status is one of five.</td></tr>
+  <tr><td><span class="rule">B2</span></td><td><span class="k code">code</span></td><td>One function that knows the allowed moves, with a test for every move.</td></tr>
+  <tr><td><span class="rule">B3</span></td><td><span class="k shape">table shape</span><span class="k code">code</span></td><td><code>picked_up_by</code> is a volunteer. The jobs script marks no-shows.</td></tr>
+  <tr><td><span class="rule">B4</span></td><td><span class="k db">database rule</span></td><td>The one-upcoming-booking rule refuses a second booking.</td></tr>
+  <tr><td><span class="rule">B6</span></td><td><span class="k shape">table shape</span><span class="k code">code</span></td><td>A row in <code>audit_log</code> for every fix.</td></tr>
+  <tr><td><span class="rule">R1</span></td><td><span class="k shape">table shape</span><span class="k code">code</span></td><td><code>setup_codes</code>, deleted when used.</td></tr>
+  <tr><td><span class="rule">R2</span> <span class="rule">R3</span></td><td><span class="k db">database rule</span><span class="k code">code</span></td><td><code>staff.role</code> is checked by the database. The code checks who may do what.</td></tr>
+  <tr><td><span class="rule">R4</span></td><td><span class="k shape">table shape</span></td><td><code>audit_log</code>, <code>created_by</code>, <code>password_reset_at</code>.</td></tr>
+  <tr><td><span class="rule">T1</span></td><td><span class="k shape">table shape</span></td><td><code>timestamptz</code>, <code>date</code> and <code>time</code> columns.</td></tr>
+</table>
+
+<!-- 10 -->
+<h2 id="yours"><span class="num">10</span>The database rules</h2>
+<p>They're written in the table classes in <code>backend/app/models/</code>, each with a name like <code>ck_slots_not_over_capacity</code>, so an error says exactly which rule refused a change. The last column says which kind of rule it is.</p>
+<table>
+  <tr><th style="width:4%">#</th><th style="width:20%">Table</th><th>The rule, in words</th><th style="width:26%">Kind</th></tr>
+  <tr><td>1</td><td><code>settings</code></td><td>Only one row. Every number makes sense. Retention is at least the pickup gap.</td><td>CHECK</td></tr>
+  <tr><td>2</td><td><code>pickup_hours</code></td><td>Weekday 1 to 7, once each. The hours end after they start.</td><td>CHECK, primary key</td></tr>
+  <tr><td>3</td><td><code>pickup_days</code></td><td>One row per date. Opens before closes, closes before no-show time. <span class="rule">S5</span></td><td>UNIQUE, CHECK</td></tr>
+  <tr><td>4</td><td><code>slots</code></td><td>Capacity at least 1. <code>booked_count</code> from 0 to capacity. No two slots start at the same time on one day. <span class="rule">S2</span></td><td>CHECK, UNIQUE</td></tr>
+  <tr><td>5</td><td><code>staff</code></td><td>Role is volunteer or coordinator. Usernames unique, ignoring capitals. <span class="rule">R3</span></td><td>CHECK, a unique index on the lowercase username</td></tr>
+  <tr><td>6</td><td><code>students</code></td><td><code>id_hash</code> unique, and exactly 64 characters of 0–9 and a–f. <span class="rule">P1</span> <span class="rule">P2</span></td><td>UNIQUE, CHECK with a pattern</td></tr>
+  <tr><td>7</td><td><code>sessions</code></td><td>Exactly one of <code>student_id</code> and <code>staff_id</code>.</td><td>CHECK</td></tr>
+  <tr><td>8</td><td><code>setup_codes</code></td><td>Exactly one of <code>student_id</code> and <code>staff_id</code>. At most one code per account. <span class="rule">R1</span></td><td>CHECK, UNIQUE</td></tr>
+  <tr><td>9</td><td>Food tables</td><td>Stock 0 or more <span class="rule">I4</span>. Names unique. Variety names unique within an item. Each variety–tag pair once.</td><td>CHECK, UNIQUE, primary key</td></tr>
+  <tr><td>10</td><td><code>holds</code></td><td>One hold per student. <span class="rule">S8</span></td><td>primary key</td></tr>
+  <tr><td>11</td><td><code>bookings</code></td><td>Status one of five <span class="rule">B1</span>. One upcoming booking per student <span class="rule">F2</span>. One booking per student per day <span class="rule">S6</span>. Code unique within a day <span class="rule">P4</span>. Day matches the slot's day.</td><td>CHECK, partial unique index, UNIQUE, a link on two columns</td></tr>
+  <tr><td></td><td><code>bookings</code></td><td>The status matches its times. Picked up always names the volunteer <span class="rule">B3</span>. A cancellation has a reason, from a fixed list.</td><td>CHECK</td></tr>
+  <tr><td>12</td><td><code>booking_items</code></td><td>Each variety once per booking. Quantity at least 1. <span class="rule">I3</span></td><td>primary key, CHECK</td></tr>
+  <tr><td>13</td><td><code>booking_substitutes</code></td><td>Each rank once, from 1. Each variety once. <span class="rule">U2</span></td><td>primary key, CHECK, UNIQUE</td></tr>
+</table>
+<p>Each rule has a test that tries to break it, like saving stock of −1, and checks the database refuses <b>because of that rule</b>, by its name. So a test can't pass just because some other rule happened to fire. <span class="choice">Choice I</span></p>
+
+<!-- 11 -->
+<h2 id="choices"><span class="num">11</span>The nine choices</h2>
+<div class="suggest"><p><b>All nine agreed on 3 Nov 2026, as suggested.</b> Choice I changed on the same day: Claude writes the rules as well as the tests (see the note in that card).</p></div>
+
+<div class="card">
+<h3>A. Students and staff in two tables, not one "accounts" table</h3>
+<p><b>Why:</b> they have different columns. A student has an <code>id_hash</code>, and staff have a username and a role. A booking can only point to a student, so it can never point to a volunteer by mistake. A list of volunteers can never include an <code>id_hash</code> <span class="rule">P4</span>. And deleting accounts after a year only ever touches students.</p>
+<p><b>Why not one table:</b> every row would have empty columns, and we'd need extra rules like "a student has an <code>id_hash</code> and no username".</p>
+<p><b>The cost:</b> sessions and setup codes need two link columns, with the rule "exactly one is filled".</p>
+</div>
+
+<div class="card">
+<h3>B. Slot capacity as a count on the slot, guarded by a database rule</h3>
+<p><b>Why:</b> the rule sits on the row the booking locks anyway, so the database itself refuses a second booking in a one-student slot. It works the same way as stock.</p>
+<p><b>Why not count the bookings each time:</b> it works in code, but a database rule can't count rows, so there'd be no safety net. <b>Why not a trigger:</b> it would be hidden code inside the database.</p>
+<p><b>The cost:</b> the count must change in the same transaction as the booking: plus 1 at Book, minus 1 at cancel. In step 5, a test will check that the count always matches the bookings.</p>
+</div>
+
+<div class="card">
+<h3>C. Holds in their own small table, one row per student</h3>
+<p><b>Why:</b> a hold has no items, no code and no status. Making <code>student_id</code> the primary key gives "one hold at a time" <span class="rule">S8</span> for free. And <code>bookings</code> only ever holds real bookings, which keeps the totals simple.</p>
+<p><b>Why not a "held" status on bookings:</b> half-made bookings would sit in the bookings table, and every list and every total would have to skip them.</p>
+</div>
+
+<div class="card">
+<h3>D. Each pickup day is its own row, with its own times</h3>
+<p><b>Why:</b> moving one day's times <span class="rule">S9</span> or closing a day <span class="rule">S7</span> changes one row. Changing the settings never moves a day students can already see.</p>
+<p><b>Why not work the times out from the settings each time:</b> S9 would need a separate list of exceptions, and changing a setting would silently move days that are already open.</p>
+</div>
+
+<div class="card">
+<h3>E. Dietary tags in their own table</h3>
+<p><b>Why:</b> the coordinator can add a tag, like vegan or dairy-free, without a code change.</p>
+<p><b>Why not four yes/no columns on varieties:</b> simpler at first, but every new tag would need a code change and a migration.</p>
+</div>
+
+<div class="card">
+<h3>F. "One booking per student per pickup day" as a database rule</h3>
+<p><b>Why:</b> rule S6 exists to stop "cancel and book again to change my items" <span class="rule">I7</span>. With a database rule, even buggy code can't let that happen.</p>
+<p><b>The cost:</b> the booking stores its day as well as its slot, and a link on the pair (slot, day) keeps them matching.</p>
+<p><b>Why not only a code check:</b> the code checks it anyway, to give a clear message. This is the safety net under it.</p>
+</div>
+
+<div class="card">
+<h3>G. The activity log is deleted after the retention period, like booking details</h3>
+<p><b>Why:</b> log rows say which student was served on which day, which is a booking detail <span class="rule">P7</span>. Keeping them longer would keep a history we promised to delete.</p>
+<p><b>The cost:</b> after 90 days, we can't see who fixed a no-show. Fixes should happen before the next booking window anyway <span class="rule">B6</span>.</p>
+</div>
+
+<div class="card">
+<h3>H. Build now the tables that steps 3 to 5 use, and add the others in their own steps</h3>
+<p><b>Why:</b> we'll understand packing and the counter better once we're writing them. Adding a table later is a normal, small Alembic step, and each later commit tells one story, like "Add walk-ins".</p>
+<p><b>Why not every table now:</b> we'd be guessing at details, and we'd probably change them later anyway.</p>
+</div>
+
+<div class="card">
+<h3>I. Every rule has a test that tries to break it</h3>
+<p><b>Why:</b> the tests stay in the repository as proof that the rules work, and anyone can read a rule next to the test that breaks it. Each test checks the name of the rule that refused, so it fails for the right reason only.</p>
+<p><b>Changed on 3 Nov:</b> the plan was that you write the rules until my tests pass. You asked Claude to write the rules too, and to learn how they work afterwards. To be sure the tests really test something, two deliberately wrong tests were run once (wrong rule name, and no refusal at all). Both failed, as they should.</p>
+</div>
+
+<!-- 12 -->
+<h2 id="built"><span class="num">12</span>What was built</h2>
+<table>
+  <tr><th style="width:34%">What</th><th>Where</th></tr>
+  <tr><td>The app's own database login, with no admin powers, and two databases: one to work in, one for tests</td><td><code>foodbank_app</code>, <code>campus_food_bank</code>, <code>campus_food_bank_test</code>. The password is only in <code>backend/.env</code>, which git ignores.</td></tr>
+  <tr><td>The 19 tables and their rules</td><td><code>backend/app/models/</code>: <code>people.py</code>, <code>food.py</code>, <code>days.py</code>, <code>bookings.py</code></td></tr>
+  <tr><td>The first migration</td><td><code>backend/migrations/versions/</code>. Run <code>alembic upgrade head</code> to build the tables on any computer.</td></tr>
+  <tr><td>Making a pickup day and its slots</td><td><code>backend/app/services/pickup_days.py</code></td></tr>
+  <tr><td>Sample settings, food and four pickup days</td><td><code>python -m app.sample_data</code>, into an empty working database</td></tr>
+  <tr><td>81 tests: every rule, two students taking the last place at once, pickup days in winter, summer and on the day the clocks change, and the migration</td><td><code>backend/tests/</code>. The test database is emptied and rebuilt from the migration on every run.</td></tr>
+</table>
+<p><b>Next:</b> step 3, accounts and login. That covers setup codes, the ID hash (HMAC), passwords with argon2, and sessions.</p>
+
+<footer>Made 3 Nov 2026 for step 2 of the build, and updated the same evening once it was built. The rules come from CONSTRAINTS.md, and the reasons from DECISIONS.md.</footer>
+</main>
+</body>
+</html>
