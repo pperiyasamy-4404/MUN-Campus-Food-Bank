@@ -216,3 +216,53 @@ It checks that `/api/hello` answers. The separate test database comes with the t
 
 **The Vite template's demo page and README were removed.**
 The hello page asks the server for its hello and shows the answer, which proves the two halves can talk. The template's README described Vite, not this project.
+
+Step 2: the tables. The nine choices from tables.html, all agreed as suggested.
+
+**Claude writes the database rules too, not only the tests.**
+The plan was that Prakash writes the rules until Claude's tests pass. Prakash chose to have Claude write everything and to learn how it works afterwards. To keep it learnable, every rule has a readable name, a comment saying which rule from CONSTRAINTS.md it guards, and a test that tries to break it.
+
+**Students and staff are two tables, not one accounts table. (A)**
+They have different columns: students have an ID hash, staff have a username and a role. A booking can only point to a student, a list of volunteers can never show an ID hash, and deleting accounts after a year only touches students. The cost is that sessions and setup codes have two link columns, with a rule that exactly one is filled.
+
+**Each slot keeps a count of its bookings, and a database rule keeps it within capacity. (B)**
+The rule sits on the row a booking locks anyway, so the database itself refuses an extra booking, even when two students press Book at the same moment. A test shows this with two real connections. Counting the bookings each time would work in code, but a database rule can't count rows, so there would be no safety net.
+
+**Holds are their own table, with the student as the primary key. (C)**
+A hold has no items, code or status, so it doesn't belong in bookings. The primary key gives "one hold at a time" for free. Holds aren't in the slot's count. The code checks room for a hold with the slot locked, and if that ever had a bug, the worst case is a lost hold, never an overbooked slot.
+
+**Each pickup day is its own row, with its own booking times. (D)**
+The times are worked out from the settings when the day is made, then kept. Moving one day's times or closing one day changes one row, and changing the settings never moves a day students can already see.
+
+**Dietary tags are their own table. (E)**
+The coordinator can add a tag like vegan without a code change.
+
+**"One booking per student per pickup day" is a database rule. (F)**
+Rule S6 exists to stop cancelling and booking again as a way to change items. With a database rule, even buggy code can't allow it. Each booking stores its day as well as its slot, and a link on the pair (slot, day) keeps the two matching.
+
+**The activity log is deleted after the retention period, like booking details. (G)**
+Its rows say which student was served on which day, which is a booking detail we promised to delete.
+
+**Only the tables steps 3 to 5 need are built now. (H)**
+Packing, the counter and weekly totals get their tables in their own steps, once we know their details.
+
+**Every rule has a test that tries to break it, and checks which rule refused. (I)**
+Each rule has a name, like ck_slots_not_over_capacity. A test that only checked "something refused" could pass because some other rule fired, such as a missing value. Two deliberately wrong tests were run once to prove the tests can fail.
+
+**The status of a booking always matches the times saved with it.**
+Not in the original plan, added while building. A picked-up booking must have a pickup time and the volunteer who clicked (B3). A cancelled one needs a time and a reason, and a no-show a time. This stops half-finished updates from leaving a booking in a state nobody can explain.
+
+**Names are unique ignoring capitals.**
+"Sam" and "sam" would be the same volunteer, and "Oats" and "oats" the same item. Each is a unique index on the lowercase name.
+
+**A raw ID number can never be saved, by a database rule.**
+The ID hash must be exactly 64 characters of 0–9 and a–f, which is what an HMAC looks like. If some code ever passed the 9-digit number by mistake, the database refuses it (P2). Session tickets and wrong-password records follow the same rule.
+
+**The app has its own database login, with no admin powers.**
+It owns the working database and the test database, and can't create databases or change other people's. Its password is only in backend/.env, which is never committed. The postgres admin account is only used for setting up.
+
+**The test database is emptied and rebuilt from the migrations on every test run.**
+That way the tests always check the tables the migration really makes. Another test checks the migrations still match the table classes, and that they can be undone and run again. Each test's changes are undone afterwards, so tests can't affect each other.
+
+**Pickup days and their slots are made by one function, written now.**
+It was planned for the jobs script in step 8, but the sample data needs it already. It turns each Newfoundland clock time into an exact moment for that date, so the half hour and summer time are right. Tests check a winter day, a summer day, and the day the clocks go back. Windows has no time-zone list of its own, so the tzdata package provides it.
