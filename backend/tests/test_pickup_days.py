@@ -3,19 +3,9 @@ from datetime import UTC, date, datetime, time, timedelta
 import pytest
 from sqlalchemy import select
 
-from app.models import PickupHours, Settings, Slot
-from app.sample_data import SAMPLE_PICKUP_HOURS
-from app.services.pickup_days import NEWFOUNDLAND, make_pickup_day
-from tests.helpers import add, make_settings
-
-
-@pytest.fixture
-def db_with_sample_week(db):
-    """The sample settings, with pickups on Monday and Thursday, 3:30 to 5:30 pm."""
-    make_settings(db)
-    for weekday, starts_at, ends_at in SAMPLE_PICKUP_HOURS:
-        add(db, PickupHours(weekday=weekday, starts_at=starts_at, ends_at=ends_at))
-    return db
+from app.models import Settings, Slot
+from app.services.pickup_days import NEWFOUNDLAND, booking_status, make_pickup_day
+from tests.helpers import make_day
 
 
 def utc(year, month, day, hour, minute=0):
@@ -81,3 +71,27 @@ def test_changing_the_settings_does_not_move_a_day_already_made(db_with_sample_w
     db.flush()
     db.refresh(day)
     assert day.booking_opens_at == utc(2026, 11, 8, 20, 30)
+
+
+# Booking opens and closes on the dot (S5). make_day uses the sample times:
+# opens Sunday 8 Nov 5 pm (20:30 UTC), closes Monday 9 Nov 12 pm (15:30 UTC).
+@pytest.mark.parametrize(
+    ("moment", "status"),
+    [
+        (utc(2026, 11, 8, 20, 29), "not_open_yet"),
+        (utc(2026, 11, 8, 20, 30), "open"),
+        (utc(2026, 11, 9, 15, 29), "open"),
+        (utc(2026, 11, 9, 15, 30), "booking_over"),
+        (utc(2026, 11, 9, 22, 0), "booking_over"),
+    ],
+)
+def test_booking_status_follows_the_day_times(db, moment, status):
+    assert booking_status(make_day(db), moment) == status
+
+
+def test_a_closed_day_is_closed_even_while_booking_would_be_open(db):
+    day = make_day(db)
+    day.closed_at = utc(2026, 11, 7, 12)
+    day.closed_reason = "Snow storm"
+
+    assert booking_status(day, utc(2026, 11, 9, 12)) == "day_closed"

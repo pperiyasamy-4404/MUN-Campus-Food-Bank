@@ -1,4 +1,5 @@
 from datetime import date, datetime, time, timedelta
+from typing import Literal
 from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import Session
@@ -6,6 +7,8 @@ from sqlalchemy.orm import Session
 from app.models import PickupDay, PickupHours, Settings, Slot
 
 NEWFOUNDLAND = ZoneInfo("America/St_Johns")
+
+BookingStatus = Literal["not_open_yet", "open", "booking_over", "day_closed"]
 
 
 def newfoundland_moment(on: date, clock: time) -> datetime:
@@ -49,3 +52,19 @@ def make_pickup_day(db: Session, pickup_date: date) -> PickupDay:
         starts_at += slot_length
     db.flush()
     return day
+
+
+def booking_status(day: PickupDay, now: datetime) -> BookingStatus:
+    """Where a pickup day's booking is at this moment (S5, S7).
+
+    Booking opens exactly at the open time and is over exactly at the close time:
+    with the sample settings, 5:00 pm the day before is open, 12:00 pm is over.
+    A day the coordinator closed stays closed, whatever the time.
+    """
+    if day.closed_at is not None:
+        return "day_closed"
+    if now < day.booking_opens_at:
+        return "not_open_yet"
+    if now < day.booking_closes_at:
+        return "open"
+    return "booking_over"

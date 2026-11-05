@@ -7,6 +7,8 @@ from datetime import UTC, date, datetime, time, timedelta
 import pytest
 from sqlalchemy.exc import IntegrityError
 
+from app.deps import get_now
+from app.main import app
 from app.models import Booking, Category, Item, PickupDay, Settings, Slot, Staff, Student, Variety
 from app.sample_data import SAMPLE_SETTINGS
 
@@ -26,6 +28,11 @@ def refused_by(db, rule: str):
             db.flush()
     refused_rule = refusal.value.orig.diag.constraint_name
     assert refused_rule == rule, f"refused by {refused_rule}, not {rule}"
+
+
+def stop_the_clock_at(moment: datetime) -> None:
+    """Make the server think it is this moment. The client fixture puts the real clock back."""
+    app.dependency_overrides[get_now] = lambda: moment
 
 
 def new_hash() -> str:

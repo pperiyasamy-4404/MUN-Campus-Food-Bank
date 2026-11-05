@@ -2,9 +2,15 @@ import pytest
 from alembic import command
 from alembic.config import Config as AlembicConfig
 from sqlalchemy import create_engine, text
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.config import BACKEND_DIR, config
+from app.deps import get_db
+from app.main import app
+from app.models import PickupHours
+from app.sample_data import SAMPLE_PICKUP_HOURS
+from tests.helpers import add, make_settings
 
 
 @pytest.fixture(scope="session")
@@ -38,3 +44,24 @@ def db(engine):
         yield session
         session.close()
         outer.rollback()
+
+
+@pytest.fixture
+def db_with_sample_week(db):
+    """The sample settings, with pickups on Monday and Thursday, 3:30 to 5:30 pm."""
+    make_settings(db)
+    for weekday, starts_at, ends_at in SAMPLE_PICKUP_HOURS:
+        add(db, PickupHours(weekday=weekday, starts_at=starts_at, ends_at=ends_at))
+    return db
+
+
+@pytest.fixture
+def client(db):
+    """Asks the server questions, the way the browser does.
+
+    The server uses this test's database session, so it sees the rows the test
+    made, and they are undone afterwards like any other test change.
+    """
+    app.dependency_overrides[get_db] = lambda: db
+    yield TestClient(app)
+    app.dependency_overrides.clear()
