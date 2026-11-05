@@ -266,3 +266,37 @@ That way the tests always check the tables the migration really makes. Another t
 
 **Pickup days and their slots are made by one function, written now.**
 It was planned for the jobs script in step 8, but the sample data needs it already. It turns each Newfoundland clock time into an exact moment for that date, so the half hour and summer time are right. Tests check a winter day, a summer day, and the day the clocks go back. Windows has no time-zone list of its own, so the tzdata package provides it.
+
+## 2026-11-04
+
+A read-only page between step 2 and step 3: the pickup days, their slots and the food, straight from the database. The user chose it over going straight to accounts, to see the tables working first. How it works is in database-page.html.
+
+**Two read-only addresses: `/api/pickup-days` and `/api/food`.**
+The server sends plain data and React decides how it looks, so the booking screens in step 5 can use the same addresses. `/api/hello` and its test are gone: they only proved the two halves could talk, and these do that now.
+
+**Every answer has a response model, listing exactly what goes out.**
+A slot row has six columns, and only its start time and places left reach the browser. From step 3 on, this is what keeps a student's ID hash from ever leaving the server by accident (P10): a field has to be written down on purpose to be sent. Sending whole rows would send every column.
+
+**Routes ask for their database session and the current time, instead of making them.**
+`db: DB` and `now: Now` come from app/deps.py. Tests hand the route the test's own session, and can stop the clock at an exact moment, such as 5:00 pm on the Sunday booking opens. Reading the clock inside the route would make those tests depend on when they're run.
+
+**Times go out in Newfoundland time with their offset, and the page shows them in Newfoundland time.**
+The server sends `2026-11-09T15:30:00-03:30`, and the page formats it with the America/St_Johns time zone, so a laptop set to another time zone still shows 3:30 p.m. (T1). Dates with no time of day are formatted in UTC: formatted in Newfoundland time, midnight UTC is the evening before, and Monday would show as Sunday.
+
+**"Today" is today in Newfoundland.**
+Past pickup days are left out. At 11 pm on Thursday it's already Friday in UTC, so the server turns the moment into a Newfoundland date before comparing. A test checks exactly that.
+
+**The server works out each day's booking status, with a function step 5 will reuse.**
+Not open yet, open, over, or day closed. Booking is open from the open time exactly up to, but not including, the close time (S5): 5:00 pm Sunday is open, 12:00 pm Monday is over. The browser's clock can be wrong, and the server is what will refuse late bookings anyway, so one clock decides.
+
+**Extras are sent with no count.**
+Rule E2 says extras only show as "may be available", so the server sends `null` instead of the number, and the browser never has it. Hidden varieties are left out, and so is an item or category left with nothing to show. Bookable food with 0 left still shows, as "Out of stock".
+
+**Each list is built from two database questions, not one per row.**
+One question for all the varieties (or slots), one for all their tags, then Python groups them. Asking once per variety would be 18 questions for the sample food and grow with every variety added.
+
+**No data-fetching library on the React side yet.**
+A small `useServerData` function asks once and says loading, ready or failed. TypeScript only lets the page use the data when it's ready. A library like TanStack Query earns its place once screens change data and need refreshing, not for two read-only lists.
+
+**Open question: exact stock counts or just "available"?**
+The rules don't say what students see. This page shows "6 left" because it's for us. Exact counts help students choose but may cause a rush for the last one. A question for the food bank, and a one-line change either way.

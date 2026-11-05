@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Food Bank: the first page that reads the database, explained</title>
+<style>
+  :root {
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc;
+    --blue: #2563eb; --blue-bg: #dbeafe;
+    --green: #059669; --green-bg: #d1fae5;
+    --amber: #b45309; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 980px; margin: 0 auto; padding: 36px 20px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 .num { color: var(--blue); margin-right: 8px; }
+  h3 { font-size: 1.15rem; margin: 30px 0 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--blue); }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
+  .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+  table { border-collapse: collapse; width: 100%; background: #fff; font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 18px 0; }
+  .why { border-left: 4px solid var(--blue); background: #eff6ff; padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .why p { margin: 4px 0; }
+  .short { background: var(--green-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .short p { margin: 2px 0; }
+  .warn { background: var(--amber-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .warn p { margin: 4px 0; }
+  .label { display: block; font-size: .78rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--blue); margin: 22px 0 2px; }
+  pre.code { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 18px; font: 14px/1.55 ui-monospace, Consolas, monospace; overflow-x: auto; margin: 12px 0; }
+  pre .c { color: #94a3b8; }
+  pre .bad { color: #fca5a5; }
+  pre .good { color: #86efac; }
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; margin: 18px 0; }
+  .diagram svg { display: block; width: 100%; height: auto; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+  @media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+  .two .card { margin: 0; }
+  .toc { columns: 2; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 20px 14px 40px; }
+  @media (max-width: 760px) { .toc { columns: 1; } }
+</style>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Campus Food Bank · Between step 2 and step 3 · 4 November 2026</p>
+<h1>The first page that reads the database</h1>
+<p class="lead">Until today the app only said hello. Now the page shows the real pickup days, their 10-minute slots and the food, straight from PostgreSQL. Nothing can be booked yet. This page explains how it works, piece by piece, and why each piece is built the way it is.</p>
+
+<ol class="toc">
+  <li><a href="#journey">The journey of one request</a></li>
+  <li><a href="#addresses">The two new addresses</a></li>
+  <li><a href="#deps">Dependencies: <code>db</code> and <code>now</code></a></li>
+  <li><a href="#models">Response models: the shape of the answer</a></li>
+  <li><a href="#times">Times: Newfoundland, always</a></li>
+  <li><a href="#status">Booking status, on the dot</a></li>
+  <li><a href="#food">The food list: two questions, not forty</a></li>
+  <li><a href="#react">The React side</a></li>
+  <li><a href="#tests">The tests</a></li>
+  <li><a href="#later">Not done yet, and one open question</a></li>
+  <li><a href="#run">How to run it</a></li>
+</ol>
+
+<!-- 1 -->
+<h2 id="journey"><span class="num">1</span>The journey of one request</h2>
+<p>When the page opens, React asks the server for the pickup days. Here is every stop that question makes, there and back.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 940 300" role="img" aria-label="Browser to Vite to FastAPI to PostgreSQL and back">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+  </defs>
+  <g font-family="system-ui, Segoe UI, sans-serif" font-size="15" text-anchor="middle">
+    <rect x="10" y="40" width="190" height="90" rx="12" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="105" y="72" font-weight="700">Browser</text>
+    <text x="105" y="95" font-size="13">React page</text>
+    <text x="105" y="114" font-size="13">PickupDayList.tsx</text>
+
+    <rect x="250" y="40" width="190" height="90" rx="12" fill="#f1f5f9" stroke="#64748b"/>
+    <text x="345" y="72" font-weight="700">Vite dev server</text>
+    <text x="345" y="95" font-size="13">port 5173</text>
+    <text x="345" y="114" font-size="13">passes /api on</text>
+
+    <rect x="490" y="40" width="190" height="90" rx="12" fill="#d1fae5" stroke="#059669"/>
+    <text x="585" y="72" font-weight="700">FastAPI route</text>
+    <text x="585" y="95" font-size="13">port 8000</text>
+    <text x="585" y="114" font-size="13">routes/pickup_days.py</text>
+
+    <rect x="730" y="40" width="190" height="90" rx="12" fill="#e2e8f0" stroke="#475569"/>
+    <text x="825" y="72" font-weight="700">PostgreSQL</text>
+    <text x="825" y="95" font-size="13">campus_food_bank</text>
+    <text x="825" y="114" font-size="13">pickup_days, slots</text>
+
+    <line x1="200" y1="70" x2="246" y2="70" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="440" y1="70" x2="486" y2="70" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="680" y1="70" x2="726" y2="70" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="730" y1="105" x2="684" y2="105" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="490" y1="105" x2="444" y2="105" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="250" y1="105" x2="204" y2="105" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+
+    <text x="105" y="170" font-size="13" fill="#475569">1. fetch('/api/pickup-days')</text>
+    <text x="345" y="170" font-size="13" fill="#475569">2. same question, to :8000</text>
+    <text x="585" y="170" font-size="13" fill="#475569">3. asks 2 SQL questions</text>
+    <text x="825" y="170" font-size="13" fill="#475569">4. sends back rows</text>
+    <text x="585" y="196" font-size="13" fill="#475569">5. turns rows into JSON,</text>
+    <text x="585" y="214" font-size="13" fill="#475569">times in Newfoundland time</text>
+    <text x="105" y="196" font-size="13" fill="#475569">6. draws a card per day,</text>
+    <text x="105" y="214" font-size="13" fill="#475569">a tile per slot</text>
+    <rect x="10" y="240" width="910" height="44" rx="10" fill="#fef3c7"/>
+    <text x="465" y="268" font-size="14">The browser only ever talks to port 5173. That's why the login cookie in step 3 will just work, with no CORS set-up.</text>
+  </g>
+</svg>
+</div>
+
+<!-- 2 -->
+<h2 id="addresses"><span class="num">2</span>The two new addresses</h2>
+<p>An <b>address</b> (also called an endpoint) is a URL the server answers. We have two, and both only read. Nothing in them can change the database.</p>
+
+<div class="two">
+<div class="card">
+<h3 style="margin-top:0"><code>GET /api/pickup-days</code></h3>
+<p>Today's pickup day, if there is one, and every one after it. Each day comes with its slots.</p>
+<pre class="code">[{
+  "pickup_date": "2026-11-09",
+  "booking_opens_at": "2026-11-08T17:00:00-03:30",
+  "booking_closes_at": "2026-11-09T12:00:00-03:30",
+  "booking_status": "not_open_yet",
+  "closed_reason": null,
+  "slots": [
+    {"starts_at": "2026-11-09T15:30:00-03:30",
+     "places_left": 1},
+    <span class="c">... 11 more</span>
+  ]
+}]</pre>
+</div>
+<div class="card">
+<h3 style="margin-top:0"><code>GET /api/food</code></h3>
+<p>The food on the list, A to Z, in two parts: food you book, and extras.</p>
+<pre class="code">{
+  "bookable": [{
+    "name": "Breakfast",
+    "items": [{
+      "name": "Oats",
+      "varieties": [
+        {"name": "Quick oats", "stock": 14,
+         "tags": ["Vegetarian"]}
+      ]}]}],
+  "extras": [{
+    "name": "Bakery", "items": [{
+      "name": "Bread", "varieties": [
+        {"name": "White bread", <b style="color:#fcd34d">"stock": null</b>,
+         "tags": ["Vegetarian"]}]}]}]
+}</pre>
+</div>
+</div>
+
+<div class="short">
+<p><b>Short version:</b> the server sends plain data (JSON). React decides how it looks. So later a phone app, or the volunteer screen, could use the same addresses.</p>
+</div>
+
+<p>The old <code>/api/hello</code> address is gone, with its test. It was only there to prove the two halves could talk, and these two addresses prove that now.</p>
+
+<!-- 3 -->
+<h2 id="deps"><span class="num">3</span>Dependencies: <code>db</code> and <code>now</code></h2>
+<p>Look at how the pickup-days route starts:</p>
+<pre class="code">@router.get("/pickup-days")
+def upcoming_pickup_days(db: DB, now: Now) -> list[PickupDayOut]:</pre>
+<p>The route doesn't open a database session or read the clock itself. It <b>asks</b> for them, and FastAPI hands them over. A thing a route asks for like this is called a <b>dependency</b>. Both live in <code>app/deps.py</code>:</p>
+<pre class="code">def get_db():
+    <span class="c">"""One database session per request, closed when the answer has been sent."""</span>
+    with SessionLocal() as db:
+        yield db
+
+def get_now():
+    return datetime.now(UTC)
+
+DB = Annotated[Session, Depends(get_db)]    <span class="c"># "a Session, made by get_db"</span>
+Now = Annotated[datetime, Depends(get_now)]</pre>
+
+<div class="why">
+<p><b>Why:</b> a test can swap them. The test client says "use this test's session instead", so the route reads the rows the test just made, and they're undone afterwards. And a test can stop the clock at, say, Sunday 8 November at 5:00 pm, to check that booking opens exactly then.</p>
+<p><b>Why not make the session inside the route?</b> Then every test would hit the working database, and the sample data would get mixed up with test data.</p>
+<p><b>Why not call <code>datetime.now()</code> inside?</b> Then a test about "booking opens at 5 pm on Sunday" could only pass if you ran it at 5 pm on a Sunday.</p>
+</div>
+
+<!-- 4 -->
+<h2 id="models"><span class="num">4</span>Response models: the shape of the answer</h2>
+<p>Each route says exactly what its answer looks like, as a small class:</p>
+<pre class="code">class SlotOut(BaseModel):
+    starts_at: datetime
+    places_left: int</pre>
+<p>The route builds <code>SlotOut</code> objects, and FastAPI turns them into JSON. Only the fields listed here go out. A slot row in the database also has <code>id</code>, <code>pickup_day_id</code>, <code>capacity</code> and <code>booked_count</code>, and none of those reach the browser.</p>
+
+<div class="why">
+<p><b>Why:</b> nothing leaves the server by accident. This matters a lot from step 3 on: a student row has an <code>id_hash</code>, and rule <span class="rule">P10</span> says the ID must never show up anywhere. If routes sent whole rows, one forgotten column would leak it. With response models, a field has to be written down on purpose to go out.</p>
+<p><b>Bonus:</b> FastAPI builds a page from these classes. Start the server and open <code>http://localhost:8000/docs</code> to see both addresses and try them.</p>
+<p><b>Why not send the database rows directly?</b> They'd send every column, and their shape would change whenever a table changes, breaking the page.</p>
+</div>
+
+<p>The TypeScript side has the same shapes, in <code>frontend/src/api.ts</code>. They're written by hand for now, so if one side changes, the other must change too.</p>
+
+<!-- 5 -->
+<h2 id="times"><span class="num">5</span>Times: Newfoundland, always</h2>
+<p>Rule <span class="rule">T1</span>: times are stored in UTC and shown in Newfoundland time. Here's the whole trip of one slot's start time:</p>
+<table>
+  <tr><th>Where</th><th>What it looks like</th></tr>
+  <tr><td>In the database (one exact moment)</td><td><code>2026-11-09 19:00 UTC</code></td></tr>
+  <tr><td>Sent by the server</td><td><code>2026-11-09T15:30:00-03:30</code>: the same moment, written in Newfoundland time. The <code>-03:30</code> says how far from UTC it is.</td></tr>
+  <tr><td>Shown on the page</td><td><b>3:30 p.m.</b></td></tr>
+</table>
+<p>The page uses the browser's built-in date formatter, told to use <code>America/St_Johns</code>. So a student whose laptop is still set to Toronto time still sees 3:30 p.m., not 2:00 p.m.</p>
+
+<h3>The trap with dates that have no time</h3>
+<p>A pickup date like <code>"2026-11-09"</code> has no time of day. To format it, JavaScript has to pick one, and it picks midnight UTC. Midnight UTC is 8:30 pm the evening before in St. John's, so:</p>
+<pre class="code"><span class="bad">Shown in Newfoundland time:  Sunday, November 8     ← wrong day!</span>
+<span class="good">Shown in UTC:                Monday, November 9     ← right</span></pre>
+<p>So dates are shown in UTC and moments in Newfoundland time. Both lines above were really printed while building this, to be sure.</p>
+
+<h3>What "today" means</h3>
+<p>The server leaves out days that are over. But at 11 pm on Thursday in St. John's, it's already Friday in UTC. If "today" came from UTC, Thursday would vanish from the list an hour and a half early. So the server turns the moment into a Newfoundland date first:</p>
+<pre class="code">today = now.astimezone(NEWFOUNDLAND).date()</pre>
+
+<!-- 6 -->
+<h2 id="status"><span class="num">6</span>Booking status, on the dot</h2>
+<p>Each day gets one of four statuses, worked out from the clock. The function is <code>booking_status</code> in <code>app/services/pickup_days.py</code>, so step 5 (booking) can use the very same rule.</p>
+<table>
+  <tr><th>Moment (for Monday 9 November)</th><th>Status</th><th>On the page</th></tr>
+  <tr><td>Sunday 4:59 pm</td><td><code>not_open_yet</code></td><td>Booking not open yet</td></tr>
+  <tr><td>Sunday 5:00 pm exactly</td><td><code>open</code></td><td>Booking open</td></tr>
+  <tr><td>Monday 11:59 am</td><td><code>open</code></td><td>Booking open</td></tr>
+  <tr><td>Monday 12:00 pm exactly</td><td><code>booking_over</code></td><td>Booking over</td></tr>
+  <tr><td>Any time, if the coordinator closed the day</td><td><code>day_closed</code></td><td>Day closed, with the reason</td></tr>
+</table>
+<div class="why">
+<p><b>Why the server works it out, not the browser:</b> the browser's clock can be wrong, and the server is what will refuse a booking after 12 pm anyway. One clock decides.</p>
+<p><b>Why "on the dot" matters:</b> rule <span class="rule">S5</span> says booking opens <i>at</i> 5 pm. A test checks 4:59 and 5:00, and 11:59 and 12:00, so nobody can "fix" it to <code>&lt;=</code> by mistake.</p>
+</div>
+
+<!-- 7 -->
+<h2 id="food"><span class="num">7</span>The food list: two questions, not forty</h2>
+<p>The sample data has 17 varieties, and most have tags. The simple way to build the list asks the database once for the varieties, then once more <i>for each variety</i> to get its tags: 18 questions. With 40 varieties it's 41. This is a well-known slow pattern, called the <b>N+1 problem</b>.</p>
+<p>Instead the route asks two questions: one for every variety with its item and category, already sorted A to Z, and one for every tag of those varieties. Then Python sorts them into groups. Same for slots: one question for all the days' slots, not one per day.</p>
+
+<h3>Three rules the list follows</h3>
+<ul>
+  <li><b>Hidden varieties are left out.</b> When the food bank stops getting something, it's hidden (<code>active = false</code>), not deleted, because old bookings still point to it. An item whose varieties are all hidden disappears, and so does an empty category.</li>
+  <li><b>Extras have no count.</b> Rule <span class="rule">E2</span> says extras show only as "may be available". The server sends <code>"stock": null</code> for them, so the browser never even gets the number.</li>
+  <li><b>Out of stock still shows.</b> Bookable food with 0 left is listed as "Out of stock", so students can see it exists and may come back.</li>
+</ul>
+
+<!-- 8 -->
+<h2 id="react"><span class="num">8</span>The React side</h2>
+<table>
+  <tr><th>File</th><th>What it does</th></tr>
+  <tr><td><code>api.ts</code></td><td>The shapes the server sends, and <code>useServerData</code>: "ask the server for this once, and tell me if it's loading, ready or failed".</td></tr>
+  <tr><td><code>time.ts</code></td><td>The three formatters: <code>3:30 p.m.</code>, <code>Sunday, November 8 at 5:00 p.m.</code> and <code>Monday, November 9</code>.</td></tr>
+  <tr><td><code>PickupDayList.tsx</code></td><td>A card per day, with its status badge and a tile per slot.</td></tr>
+  <tr><td><code>FoodList.tsx</code></td><td>A card per category, then items, then varieties with their tags and stock.</td></tr>
+  <tr><td><code>App.tsx</code></td><td>Puts the two lists on the page.</td></tr>
+</table>
+<p>The loading state has three cases, written as a TypeScript type:</p>
+<pre class="code">type ServerData&lt;T&gt; =
+  | { state: 'loading' }
+  | { state: 'ready'; data: T }
+  | { state: 'failed' }</pre>
+<div class="why">
+<p><b>Why this shape:</b> TypeScript won't let the page touch <code>data</code> unless the state is <code>'ready'</code>. So "the page crashed because the data wasn't there yet" can't happen.</p>
+<p><b>Why not a data-fetching library</b> (like TanStack Query)? It adds caching and refetching, which is useful later when screens change data. For two read-only lists, 30 lines we can read is better than a library we'd have to learn first.</p>
+</div>
+<p>The page follows the computer's light or dark setting, using the CSS <code>light-dark()</code> function for each colour.</p>
+
+<!-- 9 -->
+<h2 id="tests"><span class="num">9</span>The tests</h2>
+<p>19 new tests, and the hello test gone: 99 in all. The test client asks the server questions just like the browser does, but in memory, with the test database.</p>
+<table>
+  <tr><th>File</th><th>Checks</th></tr>
+  <tr><td><code>test_pickup_days_api.py</code></td><td>Times come out in Newfoundland time, in winter (<code>-03:30</code>) and summer (<code>-02:30</code>). Past days are left out, today is kept. Today means today in Newfoundland, even at 11 pm. A booked slot has fewer places. A closed day says why. No days gives an empty list.</td></tr>
+  <tr><td><code>test_food_api.py</code></td><td>A to Z order. Hidden varieties and empty categories left out. Stock shown even at 0. Extras apart, with no count. An empty shelf.</td></tr>
+  <tr><td><code>test_pickup_days.py</code></td><td>Booking status at 4:59, 5:00, 11:59, 12:00 and in the evening, and a closed day.</td></tr>
+</table>
+<p>Two small helpers make these possible: the <code>client</code> fixture in <code>conftest.py</code> (the server uses the test's session) and <code>stop_the_clock_at(moment)</code> in <code>helpers.py</code>.</p>
+<div class="warn">
+<p><b>Do the tests really catch mistakes?</b> Two bugs were put in on purpose, then taken out: "today" taken from UTC, and booking still open at 12:00 exactly. The suite failed on both, with the right test each time.</p>
+</div>
+
+<!-- 10 -->
+<h2 id="later"><span class="num">10</span>Not done yet, and one open question</h2>
+<ul>
+  <li><b>Places left ignores holds.</b> It counts bookings only. Holds (a slot kept for 10 minutes while a student chooses, <span class="rule">S8</span>) come with booking in step 5, and then "places left" will take them off too.</li>
+  <li><b>Anyone can open this page.</b> It shows no personal data, only dates, times and food. Once accounts exist (step 3), we decide which screens need a login.</li>
+  <li><b>This is a look-around page, not a student screen.</b> The real booking screens come in step 5 and will reuse these two addresses.</li>
+</ul>
+<div class="warn">
+<p><b>Open question:</b> should students see exact counts like "6 left", or just "available" and "out of stock"? The rules don't say. Exact counts help students choose, but they may make people rush for the last one. This page shows exact counts for now, because it's for us. It's a question for the food bank, and a one-line change either way.</p>
+</div>
+
+<!-- 11 -->
+<h2 id="run"><span class="num">11</span>How to run it</h2>
+<p>Two terminals, same as before. The folder name has a space, so keep the quotes.</p>
+<pre class="code"><span class="c"># terminal 1: the server</span>
+cd "D:\MUN Project\backend"
+.venv\Scripts\python -m uvicorn app.main:app --reload
+
+<span class="c"># terminal 2: the page</span>
+cd "D:\MUN Project\frontend"
+npm run dev</pre>
+<p>Then open <code>http://localhost:5173</code>. To try the addresses on their own, open <code>http://localhost:8000/docs</code>.</p>
+<p>To run the tests: <code>.venv\Scripts\python -m pytest</code> from <code>backend</code>.</p>
+
+</main>
+</body>
+</html>

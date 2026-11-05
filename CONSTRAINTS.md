@@ -158,3 +158,4 @@ Problems we know about and accept for now.
 - When do volunteers pack on pickup days? We assume 12–3 pm.
 - How many students can the counter serve in 10 minutes?
 - If a walk-in hasn't reached 28 days but needs food urgently, do you ever make an exception? If so, the Walk-in screen needs a logged override.
+- When booking, should students see exact counts ("6 left") or only "available" and "out of stock"?
