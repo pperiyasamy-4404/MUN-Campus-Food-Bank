@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Food Bank: booking, explained</title>
+<style>
+  :root {
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc;
+    --blue: #2563eb; --blue-bg: #dbeafe;
+    --green: #059669; --green-bg: #d1fae5;
+    --amber: #b45309; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 980px; margin: 0 auto; padding: 36px 20px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 .num { color: var(--blue); margin-right: 8px; }
+  h3 { font-size: 1.15rem; margin: 30px 0 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--blue); }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
+  .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+  table { border-collapse: collapse; width: 100%; background: #fff; font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+  .why { border-left: 4px solid var(--blue); background: #eff6ff; padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .why p { margin: 4px 0; }
+  .short { background: var(--green-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .short p { margin: 2px 0; }
+  pre.code { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 18px; font: 14px/1.55 ui-monospace, Consolas, monospace; overflow-x: auto; margin: 12px 0; }
+  pre .c { color: #94a3b8; }
+  pre .bad { color: #fca5a5; }
+  pre .good { color: #86efac; }
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; margin: 18px 0; }
+  .diagram svg { display: block; width: 100%; height: auto; }
+  .toc { columns: 2; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 20px 14px 40px; }
+  @media (max-width: 760px) { .toc { columns: 1; } }
+  .steps { counter-reset: step; list-style: none; padding: 0; }
+  .steps li { counter-increment: step; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px 8px 46px; margin: 6px 0; position: relative; }
+  .steps li::before { content: counter(step); position: absolute; left: 12px; top: 8px; width: 24px; height: 24px; border-radius: 50%; background: var(--blue); color: #fff; font-weight: 700; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Campus Food Bank · Step 5, slots, holds and booking · 6 November 2026</p>
+<h1>Booking</h1>
+<p class="lead">Students can now book. They choose a time, which is kept for them for 10 minutes. They choose their food and up to 5 substitutes, and press Book. They get a code like <b>K3P</b> to say at the counter, and they can cancel until booking closes. This is the heart of the system, so this page goes slowly.</p>
+
+<ol class="toc">
+  <li><a href="#stages">Three stages, one page</a></li>
+  <li><a href="#rules">Who may book which day</a></li>
+  <li><a href="#hold">Holding a time</a></li>
+  <li><a href="#book">Pressing Book: one transaction</a></li>
+  <li><a href="#locks">Locks, and the order they're taken in</a></li>
+  <li><a href="#food">The food rules</a></li>
+  <li><a href="#cancel">Cancelling</a></li>
+  <li><a href="#answers">The answers the page gets</a></li>
+  <li><a href="#tests">The tests</a></li>
+  <li><a href="#later">Left for later steps</a></li>
+  <li><a href="#run">How to try it</a></li>
+</ol>
+
+<h2 id="stages"><span class="num">1</span>Three stages, one page</h2>
+<div class="diagram">
+<svg viewBox="0 0 940 230" role="img" aria-label="Choose a time, choose food, booked">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+  </defs>
+  <g font-family="system-ui, Segoe UI, sans-serif" font-size="15" text-anchor="middle">
+    <rect x="20" y="30" width="250" height="120" rx="12" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="145" y="62" font-weight="700">1. Choose a time</text>
+    <text x="145" y="88" font-size="13">The open days, each time</text>
+    <text x="145" y="107" font-size="13">"Free" or "Taken"</text>
+    <text x="145" y="130" font-size="13" fill="#475569">POST /api/holds</text>
+
+    <rect x="345" y="30" width="250" height="120" rx="12" fill="#d1fae5" stroke="#059669"/>
+    <text x="470" y="62" font-weight="700">2. Choose food</text>
+    <text x="470" y="88" font-size="13">A 10-minute countdown,</text>
+    <text x="470" y="107" font-size="13">up to 13 things, 5 substitutes</text>
+    <text x="470" y="130" font-size="13" fill="#475569">POST /api/bookings</text>
+
+    <rect x="670" y="30" width="250" height="120" rx="12" fill="#fef3c7" stroke="#b45309"/>
+    <text x="795" y="62" font-weight="700">3. Your booking</text>
+    <text x="795" y="88" font-size="13">The code to say at the counter,</text>
+    <text x="795" y="107" font-size="13">the food, and Cancel</text>
+    <text x="795" y="130" font-size="13" fill="#475569">POST /api/my-booking/cancel</text>
+
+    <line x1="270" y1="90" x2="341" y2="90" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="595" y1="90" x2="666" y2="90" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <path d="M470,150 C470,200 145,200 145,154" fill="none" stroke="#b91c1c" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a)"/>
+    <text x="300" y="210" font-size="13" fill="#b91c1c">time ran out, or "Choose a different time"</text>
+  </g>
+</svg>
+</div>
+<p>Which stage a student sees comes from the server: <code>GET /api/my-booking</code> says whether they have a booking, a hold, or neither. So a reload, or opening the page on another device, never loses their place.</p>
+
+<h2 id="rules"><span class="num">2</span>Who may book which day</h2>
+<p>One function, <code>why_not</code> in <code>app/services/booking.py</code>, answers "why can't this student book this day right now?" in words, or says nothing if they can. It runs before the hold, and again when they press Book, in case something changed while they chose <span class="rule">S8</span>.</p>
+<table>
+  <tr><th>Check</th><th>Rule</th><th>What the student reads</th></tr>
+  <tr><td>Is booking open for that day?</td><td><span class="rule">S5</span> <span class="rule">S7</span></td><td>"Booking for Monday, November 9 opens Sunday, November 8 at 5:00 p.m."</td></tr>
+  <tr><td>Did they cancel this day already?</td><td><span class="rule">S6</span></td><td>"You cancelled your booking for Monday, November 9, so it can't be booked again. You can book a later day."</td></tr>
+  <tr><td>Do they have another upcoming booking?</td><td><span class="rule">F2</span></td><td>"You already have a booking, for Thursday, November 12. You can book again after it."</td></tr>
+  <tr><td>Is it at least 28 days since their last pickup?</td><td><span class="rule">F1</span></td><td>"Your next pickup can be on Tuesday, November 10 or later."</td></tr>
+</table>
+<h3>The pickup gap, in calendar days</h3>
+<p>The last pickup is the latest of: the date on the student's account (which will also cover walk-ins, in step 7), a picked-up booking, and a no-show if the setting says no-shows count. Cancellations never count <span class="rule">F3</span>. Then it adds 28 days:</p>
+<pre class="code">last pickup  Monday 12 October  + 28 days  =  Monday 9 November   <span class="good">← allowed</span>
+last pickup  Tuesday 13 October + 28 days  =  Tuesday 10 November  <span class="bad">← Monday 9 is one day early</span></pre>
+<p>Calendar days, not hours: a pickup at 5 pm and one at 3:30 pm four weeks later are 28 days apart, as rule F1's own example says.</p>
+
+<h2 id="hold"><span class="num">3</span>Holding a time</h2>
+<p>A <b>hold</b> keeps a time for one student for 10 minutes while they choose food <span class="rule">S8</span>. It's a row in the <code>holds</code> table: the student, the slot, and <code>held_until</code>.</p>
+<ul>
+  <li><b>One per student.</b> The student is the table's primary key, so a second hold replaces the first. Nobody can block several times at 5 pm by opening tabs.</li>
+  <li><b>Holding the same time again adds no time.</b> Otherwise a student could keep a time forever.</li>
+  <li><b>Others see it as taken.</b> "Places left" on every page counts bookings and holds that haven't run out.</li>
+  <li><b>Running out needs no clean-up.</b> A hold past <code>held_until</code> simply counts as free. Nothing has to delete it on the dot.</li>
+</ul>
+<p>Before giving a hold, the server locks the slot's row and counts: bookings + other students' live holds. If that's already the capacity, the answer is <i>"Someone else just took that time. Choose another one."</i></p>
+<div class="why">
+<p><b>Why a countdown from the server?</b> The answer includes <code>seconds_left</code>, counted by the server. A phone whose clock is 3 minutes fast would otherwise show the wrong time left. The server decides anyway: Book after the time is up is refused.</p>
+</div>
+
+<h2 id="book"><span class="num">4</span>Pressing Book: one transaction</h2>
+<p>A <b>transaction</b> is a group of changes that are saved all together, or not at all. Booking is one, exactly as planned on 3 November in <code>tables.html</code>:</p>
+<ol class="steps">
+  <li><b>Lock the slot</b>, then read the student's hold again. Still theirs? Not run out?</li>
+  <li><b>Check the rules again</b> with <code>why_not</code>: the day, the gap, other bookings.</li>
+  <li><b>Check the food</b>: the limits and the substitutes (section 6).</li>
+  <li><b>Take a place:</b> the slot's <code>booked_count</code> goes up by 1. The database refuses going over capacity <span class="rule">S2</span>.</li>
+  <li><b>Take the food off stock</b>, lowest id first, each row locked. Not enough left? <i>"Sorry, Chunk chicken has just run out."</i> <span class="rule">I4</span></li>
+  <li><b>Save it all:</b> the booking with a new code, its food, its ranked substitutes. Delete the hold.</li>
+</ol>
+<p>If step 5 refuses, the route never commits, so steps 1 to 4 are undone too. The student keeps their hold and their list on the page, and can swap the food that ran out.</p>
+<h3>The booking code</h3>
+<p>Codes look like <b>K3P</b>: a letter, a digit, a letter. There's no I, L or O, and no 0 or 1, so nothing gets misheard at the counter. The pattern can't spell a word. That gives 4,232 codes per day. The server picks one nobody has that day, and the database's unique rule is the safety net <span class="rule">P4</span>.</p>
+
+<h2 id="locks"><span class="num">5</span>Locks, and the order they're taken in</h2>
+<p>Three things can go wrong when people act at the same moment. Each one is a test that runs two real database connections at once:</p>
+<table>
+  <tr><th>Two at once</th><th>Without a lock</th><th>With the lock</th></tr>
+  <tr><td>Ana and Ben hold the last place</td><td>Both get a hold</td><td>Ben waits, then sees Ana's hold: <i>"Someone else just took that time."</i></td></tr>
+  <tr><td>Ana and Ben book the last tin (different times)</td><td>Both get the tin, stock 0, two bookings</td><td>Ben waits, then sees 0: <i>"Sorry, Last tin has just run out."</i></td></tr>
+  <tr><td>Ana presses Book twice (a double click)</td><td>—</td><td>The second waits, then finds her booking: <i>"You're booked already. Your code is K3P."</i> <span class="rule">B4</span></td></tr>
+</table>
+<div class="short">
+<p><b>Do the tests really catch it?</b> The first two were run with their lock taken out, and both failed: two holds on the last place, and two bookings of the last tin. With the locks, they pass.</p>
+</div>
+<p>Every lock is taken in the same order: <b>the slot, then the student's hold or booking, then the food from the lowest id up</b>. Booking, cancelling and holding all follow it.</p>
+<div class="why">
+<p><b>Why the order matters:</b> if one booking locked oats then chicken, and another locked chicken then oats, each could end up waiting for the row the other has, forever. That's a <b>deadlock</b>. If everyone locks in the same order, it can't happen.</p>
+</div>
+
+<h2 id="food"><span class="num">6</span>The food rules</h2>
+<p>These need the settings or other tables, so the code checks them, on the page (to say no straight away) and on the server (which really decides):</p>
+<table>
+  <tr><th>Rule</th><th>What the student reads</th></tr>
+  <tr><td>At least one thing</td><td>"Choose at least one thing."</td></tr>
+  <tr><td>Up to 13 things in total <span class="rule">I3</span></td><td>"You can choose up to 13 things. Your list has 14."</td></tr>
+  <tr><td>One of each item, counting all its varieties <span class="rule">I3</span></td><td>On the page, the other oats say "One Oats only". From the server: "You can choose 1 Oats at most, counting all its kinds together."</td></tr>
+  <tr><td>Extras aren't booked <span class="rule">E1</span></td><td>"Bread is an extra: ask for it at pickup instead."</td></tr>
+  <tr><td>Hidden food can't be booked</td><td>"White rice isn't on the list any more. Choose something else."</td></tr>
+  <tr><td>Up to 5 substitutes, not extras, not already on the list, each once <span class="rule">U2</span></td><td>"A substitute can't be something already on your list."</td></tr>
+</table>
+<p>Substitutes are ranked: if something is gone at packing, the volunteer uses them in order (step 6). They aren't taken off stock <span class="rule">U3</span>. The page only offers substitutes that are in stock, because one at 0 couldn't fill a gap.</p>
+
+<h2 id="cancel"><span class="num">7</span>Cancelling</h2>
+<p>Until booking closes (12 pm on the pickup day), a student can cancel <span class="rule">S6</span>. The place goes back in the slot and the food back on stock <span class="rule">I6</span>, so someone else can have them straight away. Locks follow the same order as booking: the slot, the booking, then the food.</p>
+<p>After cancelling, that day can't be booked again, by a database rule (one booking per student per day, of any status). Otherwise cancelling and booking again would be a way to change the food <span class="rule">I7</span>. A later day is fine, because cancellations don't count toward the gap.</p>
+
+<h2 id="answers"><span class="num">8</span>The answers the page gets</h2>
+<table>
+  <tr><th>Address</th><th>What it does</th></tr>
+  <tr><td><code>GET /api/my-booking</code></td><td>The limits, the student's booking or hold, and the first date the gap allows</td></tr>
+  <tr><td><code>POST /api/holds</code></td><td><code>{"slot_id": 12}</code>. Hold a time</td></tr>
+  <tr><td><code>DELETE /api/holds</code></td><td>Let go of it ("Choose a different time")</td></tr>
+  <tr><td><code>POST /api/bookings</code></td><td><code>{"items": [{"variety_id": 11}], "substitutes": [31, 25]}</code>. Book</td></tr>
+  <tr><td><code>POST /api/my-booking/cancel</code></td><td>Cancel</td></tr>
+</table>
+<p>None of these takes a booking id: they always mean the logged-in student's own. Nobody can see or cancel someone else's booking by changing a number.</p>
+<p>When the server says no, the <b>status number</b> tells the page what to do, so rewording a message can never break it:</p>
+<table>
+  <tr><th>Status</th><th>Means</th><th>The page</th></tr>
+  <tr><td>400</td><td>A rule says no</td><td>Shows the message</td></tr>
+  <tr><td>409</td><td>Something changed while choosing: food ran out, the time was taken, or already booked</td><td>Shows the message and reloads. The student's list stays, and if they're booked already, the booking shows</td></tr>
+  <tr><td>410</td><td>The held time is gone</td><td>Back to choosing a time: "Your time ran out, so it was let go."</td></tr>
+</table>
+
+<h2 id="tests"><span class="num">9</span>The tests</h2>
+<p>255 tests pass, 43 of them new.</p>
+<table>
+  <tr><th>File</th><th>What it checks</th></tr>
+  <tr><td><code>test_booking.py</code></td><td>Holds (open times only, one at a time, no extra time, others' holds, full slots), the gap in calendar days, no-shows and the setting, booking, the food rules, food that ran out (everything undone), cancelling, and the three races</td></tr>
+  <tr><td><code>test_booking_api.py</code></td><td>From choosing a time to booked, the countdown, letting go, refusals, pressing Book twice, 410 for a hold that ran out, cancelling, and that only a logged-in student has a booking page</td></tr>
+</table>
+<p>The pages were checked in Edge too, on a phone and a laptop, light and dark. Ana chose a time, chose 4 things (and was told "One Oats only"), ranked 2 substitutes and booked. Ben saw her time as taken and 13 quick oats left instead of 14. Ben held a time and let it go. Ana cancelled and couldn't book Monday again, and Ben could have her time.</p>
+
+<h2 id="later"><span class="num">10</span>Left for later steps</h2>
+<ul>
+  <li><b>Packing</b> (step 6): the packing queue, refilling from substitutes <span class="rule">U4</span>, and marking packed.</li>
+  <li><b>The counter</b> (step 7): checking the card against the booking <span class="rule">P5</span>, picked up, walk-ins, extras. That's also where the account's last pickup date gets set.</li>
+  <li><b>Jobs</b> (step 8): no-shows at 6 pm, putting their food back <span class="rule">I6</span>.</li>
+  <li><b>Coordinator</b> (step 9): closing a day cancels its bookings <span class="rule">S7</span>, and moving one day's times <span class="rule">S9</span>.</li>
+</ul>
+
+<h2 id="run"><span class="num">11</span>How to try it</h2>
+<p>Booking for the sample days only opens at 5 pm the day before each pickup day. To try it sooner, booking for one day has to be opened early, which is the coordinator's job in step 9. Until then, tell me and I'll open one day early in your working database. A student account comes from the <b>Counter</b> page: give a made-up number a setup code, then use <b>Set up your account</b> in a private window.</p>
+
+</main>
+</body>
+</html>

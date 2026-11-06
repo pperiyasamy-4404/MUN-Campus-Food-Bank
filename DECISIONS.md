@@ -410,3 +410,41 @@ Rule E2 shows today's extras as "may be available". An extra counted at 0 isn't 
 
 **The message type the person sees moved to its own file, app/problems.py.**
 Accounts and stock both need "something you can fix", like a taken name. The accounts code keeps its own kinds, like a wrong password, on top of it.
+
+Step 5, slots, holds and booking, also on 6 Nov. How it works is in booking.html.
+
+**Pressing Book is one transaction, as planned in tables.html (part 6).**
+Lock the slot, check the hold, check the rules again, check the food, take a place, take the food off stock (lowest id first), save the booking, let go of the hold. If any step refuses, nothing is saved: the place, the food and the hold stay as they were, and the student's list stays on the page.
+
+**Locks are always taken in the same order: the slot, then the student's hold or booking, then the food from the lowest id up.**
+Booking, cancelling and holding all follow it, so two of them can never wait for each other forever (a deadlock). Three tests run two connections at the same moment: two students holding the last place, two students booking the last tin, and one student pressing Book twice. The first two were checked to fail with their lock taken out.
+
+**Holds count against the places shown to everyone.**
+A time being held by someone choosing food shows as taken, so nobody chooses it and then gets refused. A hold that has run out counts as free straight away, so nothing has to delete it on time.
+
+**Holding the same time again adds no time.**
+Otherwise a student could keep a time forever. Holding a different time lets go of the first one, so each student holds one at a time (S8).
+
+**The countdown starts from the server's number of seconds left.**
+A phone with its clock wrong would otherwise count down wrong. The server decides anyway: Book after the time is up is refused.
+
+**Booking codes look like K3P: letter, digit, letter.**
+No I, L or O, and no 0 or 1, so nothing is misheard at the counter. The pattern can't spell a word. That's 4,232 codes per day, and the database keeps each one unique within its day (P4).
+
+**The pickup gap counts the latest of: the last pickup on the student's account, a picked-up booking, and (if the setting is on) a no-show.**
+In calendar days in Newfoundland (F1). The account's date also covers walk-ins, which come in step 7, and outlives booking details deleted after the retention period.
+
+**Every refusal says why, and what to do.**
+Like "Booking for Monday, November 9 opens Sunday, November 8 at 5:00 p.m.", "You cancelled your booking for Monday, November 9, so it can't be booked again. You can book a later day." or "Sorry, Chunk chicken has just run out. Choose something else." The rules are checked before the hold and again at Book (S8).
+
+**A held time that's gone answers 410, and a change while choosing answers 409.**
+The page goes back to choosing a time on 410, and shows the page as it is now on 409. It decides by the number, not by reading the words, so rewording a message can't break it. Pressing Book twice is a 409 that names the booking's code.
+
+**A student's addresses never take a booking id.**
+/api/my-booking, /api/holds and /api/my-booking/cancel always mean the logged-in student's own. Nobody can see or cancel someone else's booking by changing a number in a request.
+
+**The page only offers substitutes that are in stock.**
+The server allows any shown food that isn't an extra or already on the list (U2). Offering one at 0 would be a substitute that can't fill a gap.
+
+**Pickup days and food now include their ids.**
+The booking page needs to say which time and which food. Ids aren't secret: the server checks every request.
