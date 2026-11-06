@@ -55,7 +55,8 @@ def main(arguments: list[str] | None = None) -> int:
     print("Made the coordinator account." if issued.new_account else "Gave the coordinator a new setup code.")
     print(f"  Username:   {username}")
     print(f"  Setup code: {issued.code}")
-    print(f"  Runs out:   {expires:%A %d %B %Y, %I:%M %p} (Newfoundland time)")
+    clock = f"{expires:%I:%M %p}".lstrip("0")  # 3:31 PM, not 03:31 PM
+    print(f"  Runs out:   {expires:%A %d %B %Y}, {clock} (Newfoundland time)")
     print("Open the staff setup page, type the username and the setup code, and choose a password.")
     print("This code is shown only now. Run this again for a new one.")
     return 0
