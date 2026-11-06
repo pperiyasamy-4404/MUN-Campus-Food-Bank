@@ -417,6 +417,37 @@ def test_switching_off_twice_changes_nothing_more(db_with_settings):
     assert [row[0] for row in log_actions(db)].count("switched_off_volunteer") == 1
 
 
+def test_a_volunteer_who_comes_back_is_switched_back_on_with_a_new_code(db_with_settings):
+    """Same account and username, so the log keeps everything they did under one name.
+    The old password stops working: they choose a new one with the code."""
+    db = db_with_settings
+    alex = coordinator(db)
+    sam = volunteer_with_password(db, NOW, "Sam")
+    accounts.switch_off_volunteer(db, sam, alex, NOW)
+    months_later = NOW + timedelta(days=120)
+
+    issued = accounts.switch_on_volunteer(db, sam, alex, months_later)
+
+    assert sam.disabled_at is None
+    assert not issued.new_account
+    with pytest.raises(WrongDetails):
+        accounts.log_in_staff(db, "Sam", PASSWORD, None, months_later)
+    accounts.set_staff_password(db, "Sam", issued.code, "a new phrase for a new term", None, months_later)
+    assert accounts.log_in_staff(db, "Sam", "a new phrase for a new term", None, months_later) is sam
+    assert len(db.scalars(select(Staff).where(Staff.username == "Sam")).all()) == 1
+    assert [row[0] for row in log_actions(db)][-2:] == ["switched_on_volunteer", "issued_setup_code"]
+
+
+def test_switching_on_an_account_that_is_on_is_refused(db_with_settings):
+    """It would quietly stop their password working."""
+    db = db_with_settings
+    sam = volunteer_with_password(db, NOW, "Sam")
+
+    with pytest.raises(AccountProblem, match="already switched on"):
+        accounts.switch_on_volunteer(db, sam, coordinator(db), NOW)
+    assert accounts.log_in_staff(db, "Sam", PASSWORD, None, NOW) is sam
+
+
 def test_the_coordinator_account_is_not_in_the_volunteer_list(db_with_settings):
     """The coordinator can't switch off their own account by mistake."""
     db = db_with_settings

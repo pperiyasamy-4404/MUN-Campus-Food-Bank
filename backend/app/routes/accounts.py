@@ -106,16 +106,18 @@ def list_volunteers(coordinator: CurrentCoordinator, db: DB) -> list[VolunteerOu
     return [volunteer_out(volunteer, code_expires_at) for volunteer, code_expires_at in rows]
 
 
-class AddedVolunteer(BaseModel):
+class VolunteerWithCode(BaseModel):
+    """A volunteer just added or switched back on, and the setup code to give them."""
+
     volunteer: VolunteerOut
     code: SetupCodeOut
 
 
 @router.post("/volunteers", status_code=201)
-def add_volunteer(details: NewVolunteer, coordinator: CurrentCoordinator, db: DB, now: Now) -> AddedVolunteer:
+def add_volunteer(details: NewVolunteer, coordinator: CurrentCoordinator, db: DB, now: Now) -> VolunteerWithCode:
     volunteer, issued = accounts.add_volunteer(db, details.username, coordinator, now)
     db.commit()
-    return AddedVolunteer(volunteer=volunteer_out(volunteer, issued.expires_at), code=setup_code_out(issued))
+    return VolunteerWithCode(volunteer=volunteer_out(volunteer, issued.expires_at), code=setup_code_out(issued))
 
 
 @router.post("/volunteers/{staff_id}/setup-code", status_code=201)
@@ -132,8 +134,18 @@ def give_volunteer_setup_code(staff_id: int, coordinator: CurrentCoordinator, db
 
 @router.post("/volunteers/{staff_id}/switch-off")
 def switch_off_volunteer(staff_id: int, coordinator: CurrentCoordinator, db: DB, now: Now) -> VolunteerOut:
-    """Logs them out everywhere and stops them logging in again. Asking twice does nothing more."""
+    """Logs them out everywhere and stops them logging in, until they're switched back on.
+    Asking twice does nothing more."""
     volunteer = accounts.volunteer_with_id(db, staff_id)
     accounts.switch_off_volunteer(db, volunteer, coordinator, now)
     db.commit()
     return volunteer_out(volunteer, None)
+
+
+@router.post("/volunteers/{staff_id}/switch-on", status_code=201)
+def switch_on_volunteer(staff_id: int, coordinator: CurrentCoordinator, db: DB, now: Now) -> VolunteerWithCode:
+    """For a volunteer who comes back: same account, a new setup code, and their old password no longer works."""
+    volunteer = accounts.volunteer_with_id(db, staff_id)
+    issued = accounts.switch_on_volunteer(db, volunteer, coordinator, now)
+    db.commit()
+    return VolunteerWithCode(volunteer=volunteer_out(volunteer, issued.expires_at), code=setup_code_out(issued))

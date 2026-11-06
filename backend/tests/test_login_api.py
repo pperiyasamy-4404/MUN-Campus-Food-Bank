@@ -216,6 +216,7 @@ def test_only_staff_can_give_a_student_a_setup_code(client, db):
         ("POST", "/api/volunteers"),
         ("POST", "/api/volunteers/1/setup-code"),
         ("POST", "/api/volunteers/1/switch-off"),
+        ("POST", "/api/volunteers/1/switch-on"),
     ],
 )
 def test_only_the_coordinator_manages_volunteers(client, db, method, address):
@@ -262,6 +263,23 @@ def test_the_coordinator_adds_lists_and_switches_off_volunteers(client, db):
     # Logged out at once, on their own phone too.
     assert me(pats_phone) is None
     assert log_in_staff(pats_phone, "Pat O'Brien").status_code == 401
+
+
+def test_the_coordinator_switches_a_volunteer_back_on(client, db):
+    log_in_coordinator(client, db)
+    sam = volunteer_with_password(db, NOW, "Sam")
+    client.post(f"/api/volunteers/{sam.id}/switch-off")
+
+    response = client.post(f"/api/volunteers/{sam.id}/switch-on")
+
+    assert response.status_code == 201
+    back = response.json()
+    assert (back["volunteer"]["switched_off_at"], back["volunteer"]["password_set"]) == (None, False)
+    assert back["volunteer"]["setup_code_expires_at"] == back["code"]["expires_at"]
+    # Asked again, it's refused, so it can never undo a password Sam has chosen since.
+    again = client.post(f"/api/volunteers/{sam.id}/switch-on")
+    assert again.status_code == 400
+    assert again.json() == {"detail": "Sam's account is already switched on."}
 
 
 def test_a_username_can_only_be_used_once(client, db):

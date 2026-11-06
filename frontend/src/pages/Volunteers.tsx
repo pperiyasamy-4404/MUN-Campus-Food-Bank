@@ -8,14 +8,17 @@ import { showDay, showDayAndClock } from '../time.ts'
 // The coordinator's list of volunteers (R3): add one, give a new setup code,
 // or switch an account off when someone leaves.
 
+// Why a setup code was given: the words around it change.
+type Why = 'added' | 'new code' | 'switched back on'
+
 type List = { state: 'loading' } | { state: 'failed' } | { state: 'ready'; volunteers: Volunteer[] }
 
 export function Volunteers() {
   const { forget } = useMe()
   const [list, setList] = useState<List>({ state: 'loading' })
   const [problem, setProblem] = useState<string | null>(null)
-  // The code just given, and who it's for. Shown once, until Done.
-  const [issued, setIssued] = useState<{ username: string; code: IssuedCode } | null>(null)
+  // The code just given, who it's for, and why. Shown once, until Done.
+  const [issued, setIssued] = useState<{ username: string; code: IssuedCode; why: Why } | null>(null)
 
   // Each change adds 1, which asks for the list again.
   const [version, setVersion] = useState(0)
@@ -46,13 +49,13 @@ export function Volunteers() {
       return setProblem(answer.message)
     }
     setProblem(null)
-    setIssued({ username: volunteer.username, code: answer.data })
+    setIssued({ username: volunteer.username, code: answer.data, why: 'new code' })
     refresh()
   }
 
   async function switchOff(volunteer: Volunteer) {
     const sure = window.confirm(
-      `Switch off ${volunteer.username}? They'll be logged out straight away and can't log in again.`,
+      `Switch off ${volunteer.username}? They'll be logged out straight away, and can't log in until you switch them back on.`,
     )
     if (!sure) return
     const answer = await send<Volunteer>(`/api/volunteers/${volunteer.id}/switch-off`)
@@ -61,6 +64,17 @@ export function Volunteers() {
       return setProblem(answer.message)
     }
     setProblem(null)
+    refresh()
+  }
+
+  async function switchOn(volunteer: Volunteer) {
+    const answer = await send<{ volunteer: Volunteer; code: IssuedCode }>(`/api/volunteers/${volunteer.id}/switch-on`)
+    if (!answer.ok) {
+      if (answer.status === 401) forget()
+      return setProblem(answer.message)
+    }
+    setProblem(null)
+    setIssued({ username: volunteer.username, code: answer.data.code, why: 'switched back on' })
     refresh()
   }
 
@@ -74,21 +88,26 @@ export function Volunteers() {
 
       {issued && (
         <SetupCodeBox
-          title={`Setup code for ${issued.username}`}
+          title={
+            issued.why === 'switched back on'
+              ? `${issued.username} is switched back on`
+              : `Setup code for ${issued.username}`
+          }
           code={issued.code}
           onDone={() => setIssued(null)}
         >
           <p>
             Give it to {issued.username} with their username. They choose a password on the "Staff log in"
             page, under "Choose your password".
-            {!issued.code.new_account && ' Their old password keeps working until they use this code.'}
+            {issued.why === 'new code' && ' Their old password keeps working until they use this code.'}
+            {issued.why === 'switched back on' && ' Their old password no longer works.'}
           </p>
         </SetupCodeBox>
       )}
 
       <AddVolunteer
         onAdded={(username, code) => {
-          setIssued({ username, code })
+          setIssued({ username, code, why: 'added' })
           refresh()
         }}
         onLoggedOut={forget}
@@ -116,7 +135,13 @@ export function Volunteers() {
                 <th scope="row">{volunteer.username}</th>
                 <td>{accountState(volunteer)}</td>
                 <td>
-                  {!volunteer.switched_off_at && (
+                  {volunteer.switched_off_at ? (
+                    <div className="row-actions">
+                      <button type="button" className="secondary" onClick={() => switchOn(volunteer)}>
+                        Switch back on
+                      </button>
+                    </div>
+                  ) : (
                     <div className="row-actions">
                       <button type="button" className="secondary" onClick={() => newCode(volunteer)}>
                         New setup code

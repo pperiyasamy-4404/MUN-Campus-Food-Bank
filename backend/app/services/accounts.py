@@ -184,7 +184,7 @@ def give_volunteer_setup_code(db: Session, volunteer: Staff, coordinator: Staff,
 
 
 def switch_off_volunteer(db: Session, volunteer: Staff, coordinator: Staff, now: datetime) -> None:
-    """A volunteer who leaves can't log in again, starting now.
+    """A volunteer who leaves can't log in again, starting now, until they're switched back on.
 
     The account itself is kept, so the log can still say who did what (R4).
     """
@@ -194,6 +194,23 @@ def switch_off_volunteer(db: Session, volunteer: Staff, coordinator: Staff, now:
     db.execute(delete(SetupCode).where(SetupCode.staff_id == volunteer.id))
     end_every_session(db, volunteer)
     log(db, coordinator, "switched_off_volunteer", now, staff=volunteer)
+
+
+def switch_on_volunteer(db: Session, volunteer: Staff, coordinator: Staff, now: datetime) -> IssuedCode:
+    """A volunteer who comes back keeps their account and username, so the log
+    keeps all they did under one name.
+
+    Their old password stops working, and they choose a new one with the code
+    this gives. They may have been away for months, and the old password could
+    have been shared or forgotten since. A code handed over in person also
+    shows it really is them.
+    """
+    if volunteer.disabled_at is None:
+        raise AccountProblem(f"{volunteer.username}'s account is already switched on.")
+    volunteer.disabled_at = None
+    volunteer.password_hash = None
+    log(db, coordinator, "switched_on_volunteer", now, staff=volunteer)
+    return _give_setup_code(db, volunteer, coordinator, now)
 
 
 def volunteer_with_id(db: Session, staff_id: int) -> Staff:
