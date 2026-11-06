@@ -133,6 +133,7 @@ Problems we know about and accept for now.
 - **A volunteer could use a setup code first.** The volunteer sees the ID number and the setup code. We trust volunteers for now.
 - **Internet down at the counter.** Volunteers can't check cards or the pickup gap. We'll plan for this later.
 - **First visit in person.** A new student can't book online until they've been to the counter for an account. They can take food as a walk-in on that visit.
+- **A stranger guessing can delay a reset on a new phone.** If someone keeps guessing a student's password, the student's usual phone still gets in. A phone that has never logged in to the account shares the stranger's wrong-try count, so it may wait up to 15 minutes to use a new setup code. It needs someone who knows the ID number and keeps guessing.
 
 ## Before going live
 

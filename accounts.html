@@ -72,7 +72,7 @@
   <li><a href="#script">The first coordinator: a script</a></li>
   <li><a href="#pages">The pages</a></li>
   <li><a href="#tests">The tests</a></li>
-  <li><a href="#open">Open questions</a></li>
+  <li><a href="#open">Three questions, answered</a></li>
   <li><a href="#run">How to run it and try it</a></li>
 </ol>
 
@@ -263,6 +263,7 @@
   <tr><td><code>POST /api/volunteers</code></td><td>Coordinator</td><td>Add a volunteer and give their code</td></tr>
   <tr><td><code>POST /api/volunteers/{id}/setup-code</code></td><td>Coordinator</td><td>A new code for a volunteer</td></tr>
   <tr><td><code>POST /api/volunteers/{id}/switch-off</code></td><td>Coordinator</td><td>Switch an account off</td></tr>
+  <tr><td><code>POST /api/volunteers/{id}/switch-on</code></td><td>Coordinator</td><td>Switch it back on, with a new setup code</td></tr>
 </table>
 <p>The check is a dependency, like <code>db</code> and <code>now</code> on the database page. A route just says who it needs:</p>
 <pre class="code">@router.get("/volunteers")
@@ -316,7 +317,7 @@ Open the staff setup page, type the username and the setup code, and choose a pa
   <tr><td><code>/login</code>, <code>/staff/login</code></td><td>Log in</td><td><code>pages/LogIn.tsx</code></td></tr>
   <tr><td><code>/setup</code>, <code>/staff/setup</code></td><td>Choose a password with a setup code</td><td><code>pages/SetUp.tsx</code></td></tr>
   <tr><td><code>/counter</code></td><td>Give a student a setup code (staff only)</td><td><code>pages/Counter.tsx</code></td></tr>
-  <tr><td><code>/volunteers</code></td><td>Add, re-code and switch off volunteers (coordinator only)</td><td><code>pages/Volunteers.tsx</code></td></tr>
+  <tr><td><code>/volunteers</code></td><td>Add volunteers, give new codes, switch accounts off and back on (coordinator only)</td><td><code>pages/Volunteers.tsx</code></td></tr>
 </table>
 <p>Other files: <code>MeProvider.tsx</code> asks <code>/api/me</code> once when the site opens and shares "who's logged in" with every page. <code>Layout.tsx</code> is the top bar and the staff-only guard. <code>forms.tsx</code> has the labelled boxes, the error message and the setup code box. <code>send()</code> in <code>api.ts</code> sends every form as a POST and turns the server's "no" into words.</p>
 
@@ -335,10 +336,10 @@ Open the staff setup page, type the username and the setup code, and choose a pa
 
 <!-- 11 -->
 <h2 id="tests"><span class="num">11</span>The tests</h2>
-<p>167 tests pass, 68 of them new since 4 November. They take about 20 seconds, because argon2 is slow on purpose.</p>
+<p>171 tests pass, 72 of them new since 4 November. They take about 20 seconds, because argon2 is slow on purpose.</p>
 <table>
   <tr><th>File</th><th>What it checks</th></tr>
-  <tr><td><code>test_accounts.py</code></td><td>Every account rule, straight from the Python code: codes, resets, wrong tries, trusted devices, volunteers, the script, and the 10-at-once race</td></tr>
+  <tr><td><code>test_accounts.py</code></td><td>Every account rule, straight from the Python code: codes, resets, wrong tries, trusted devices, volunteers (off and back on), the script, and the 10-at-once race</td></tr>
   <tr><td><code>test_login_api.py</code></td><td>The web side: cookie settings, staying logged in 30 days vs 12 hours, who may use which address, error answers</td></tr>
   <tr><td><code>test_privacy.py</code></td><td>The P10 search, and that no address takes a secret in the web address</td></tr>
   <tr><td><code>test_first_coordinator.py</code></td><td>The script: the printed code works, and it refuses a second coordinator</td></tr>
@@ -347,15 +348,15 @@ Open the staff setup page, type the username and the setup code, and choose a pa
 <p>The pages were also checked in Edge, on a laptop-sized and a phone-sized screen, light and dark. A script played every step: Alex sets up, gives a student a code, adds Sam, the student sets up on a phone, Sam gives a reset code, a stranger guesses 6 times, Alex switches Sam off. None of the 525 web addresses the browser asked for had the ID number or a password in it.</p>
 
 <!-- 12 -->
-<h2 id="open"><span class="num">12</span>Open questions</h2>
-<div class="warn">
-<p><b>1. Can the coordinator give students setup codes?</b> It's allowed now. The rules list it for volunteers, but without it a coordinator helping at the counter would need a second account. A one-word change if not.</p>
+<h2 id="open"><span class="num">12</span>Three questions, answered</h2>
+<div class="short">
+<p><b>1. Can the coordinator give students setup codes?</b> Yes. The rules list it for volunteers, but a coordinator helping at the counter shouldn't need a second account. The log says who gave each code either way.</p>
+</div>
+<div class="short">
+<p><b>2. A volunteer who comes back.</b> The coordinator presses <b>Switch back on</b>. They keep the same account and username, so the log keeps everything they did under one name. Their old password stops working, and they choose a new one with the setup code that appears. They may have been away for months, and the old password could have been shared or forgotten since. A code handed over in person also shows it really is them.</p>
 </div>
 <div class="warn">
-<p><b>2. Switching a volunteer back on.</b> There's no way yet. A volunteer who comes back would need a new username, like "Sam B".</p>
-</div>
-<div class="warn">
-<p><b>3. A stranger guessing can delay a reset on a new phone.</b> Found during the browser check. If someone is guessing a student's password, the student's <i>usual</i> phone still gets in. But a <i>new</i> phone has no device cookie, so it shares the stranger's count, and it may have to wait up to 15 minutes to use a new setup code. This is rare: the stranger must know the ID number and keep guessing. The student can use their usual phone, or wait.</p>
+<p><b>3. A stranger guessing can delay a reset on a new phone.</b> Left as it is for now, and listed under "Known issues" in CONSTRAINTS.md. If someone keeps guessing a student's password, the student's <i>usual</i> phone still gets in. A <i>new</i> phone has no device cookie, so it shares the stranger's count, and may wait up to 15 minutes to use a new setup code. It needs a stranger who knows the ID number and keeps guessing.</p>
 </div>
 <p>Left for the jobs script (step 8): deleting old wrong tries, logins that have run out, and unused setup codes. Until then they just sit in their tables, ignored.</p>
 

@@ -367,6 +367,14 @@ They say "You're logged in" and offer Log out. Otherwise a student who set up th
 **Open question: a stranger guessing can delay a reset on a new phone.**
 Found while checking the pages in a browser. If someone is guessing a student's password, the student's usual phone still gets in, because of its trusted-device cookie. A new phone doesn't have one, so it shares the stranger's count and may wait up to 15 minutes to use a new setup code. It needs a stranger who knows the ID number and keeps guessing, so it should be rare. Counting setup code tries separately from password tries would only move the problem, so it's left as it is for now.
 
+**The user's answers to the three open questions.**
+- The coordinator can give students setup codes: yes, as built.
+- A volunteer who comes back: better than a new username, see the next entry.
+- A stranger delaying a reset on a new phone: left for now. It's listed under Known issues in CONSTRAINTS.md.
+
+**A switched-off volunteer can be switched back on, with a new setup code.**
+This replaces the 5 Nov note that a returning volunteer would need a new username. They keep the same account and username, so the log keeps everything they did under one name (R4). Their old password stops working, and they choose a new one with the code. They may have been away for months, and the old password could have been shared or forgotten since. A code handed over in person also shows it really is them. Switching on an account that is already on is refused, so it can never quietly undo a password the volunteer has chosen.
+
 **Left for later steps:**
 - The jobs script (step 8) will delete old wrong tries, logins that have run out and unused setup codes. Until then they stay in their tables, ignored.
 - The setup script needs the food bank settings in the database, for the setup code lifetime. On a real install the settings have to go in first. For now, only the sample data adds them.
