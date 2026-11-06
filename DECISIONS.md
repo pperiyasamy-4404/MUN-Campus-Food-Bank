@@ -300,3 +300,55 @@ A small `useServerData` function asks once and says loading, ready or failed. Ty
 
 **Open question: exact stock counts or just "available"?**
 The rules don't say what students see. This page shows "6 left" because it's for us. Exact counts help students choose but may cause a rush for the last one. A question for the food bank, and a one-line change either way.
+
+## 2026-11-05
+
+Step 3, accounts and login, server side. Started on 5 Nov and finished on 6 Nov. The pages come next.
+
+**A student stays logged in for 30 days after their last visit. Staff are logged out 12 hours after logging in.** (The user's choice.)
+Places go fast at 5 pm, so a student shouldn't have to find their password on booking night. Each visit moves the 30 days on, at most once a day, so not every visit writes to the database. The counter laptop is shared, so a staff login never lasts overnight, however busy the shift.
+
+**Passwords: argon2id, at least 8 characters, and no other rules.**
+Rules like "one capital and one symbol" lead to Password1!, which is easy to guess. Length is what counts. A password can't be the student's ID number or the volunteer's username, and it can be at most 128 characters, so nobody can make the server hash a whole book. argon2 rather than bcrypt: it's OWASP's first choice, and it needs 64 MB of memory per guess, which makes guessing on graphics cards expensive. bcrypt also ignores everything after 72 bytes. If we make the settings stronger later, each hash is redone the next time its owner logs in.
+
+**Setup codes look like K7QM-4TXP.**
+8 characters from 31 letters and digits, with no 0, O, 1, I or L to misread from a slip of paper. That's about 850 billion codes, so guessing one in its 7 days at 5 tries per 15 minutes is hopeless. Only its keyed hash is saved. Each account has at most one code, and a new one replaces the old. The old password keeps working until the new code is used, so a code given by mistake locks nobody out. Using a code logs the account out everywhere else.
+
+**Wrong tries: 5 every 15 minutes per ID number or username, then "Try again in N minutes". The account is never locked.**
+A lock would let anyone lock a student out on purpose (P9). The wait is counted even for numbers with no account, and wrong setup codes count too. Whatever was wrong (no account, no password yet, the wrong password), the answer uses the same words. A wrong number also takes as long to answer as a wrong password, because it's checked against a made-up hash. So nothing tells anyone which numbers have accounts. The count is locked while it's checked, so 10 tries sent at the same moment still get only 5 checks. A test sends them on 10 connections.
+
+**A browser that has logged in to an account before has its wrong tries counted separately (a "trusted device" cookie).**
+Without this, anyone who knows a student's ID number could type 5 wrong passwords every 15 minutes and keep the real student waiting on booking night. The cookie is signed with the secret key, so nobody can make one for someone else's account. It lasts a year and doesn't log anyone in. The idea comes from OWASP.
+
+**The sessions table keeps a SHA-256 of the login ticket, not a keyed hash.**
+A ticket is 256 random bits. Nobody can list every possible ticket the way they could list every 9-digit ID number, so the key isn't needed.
+
+**Switching off a volunteer keeps their account.**
+They're logged out everywhere and their setup code is deleted, but the audit log can still say who did what (R4). There's no way to switch an account back on yet. A volunteer who comes back would need a new username, like "Sam B".
+
+**The first coordinator is made by a script: `python -m app.first_coordinator Alex`.**
+Before the first coordinator exists, nobody could be trusted with a web page for it. Run again with the same username, the script gives a new setup code, for a forgotten password. It never makes a second coordinator, and it won't turn a volunteer into one. In the audit log and on setup codes, an empty "who did it" means the setup script did.
+
+**Two more database rules: password hashes must start with `$argon2id$`, and setup code hashes must look like a keyed hash.**
+A typed password or a setup code can never be saved as it is, even if some code had a bug (P8). Migration 8be36cf65217 adds them, and lets the audit log name the staff account an action was done to.
+
+## 2026-11-06
+
+**Any staff member can give a student a setup code, the coordinator too.**
+R2 lists it for volunteers, and R3 doesn't mention it for the coordinator. Otherwise a coordinator helping at the counter would need a second, volunteer account. Either way, the log says who gave the code. Making it volunteers only is a one-word change, if the food bank prefers that.
+
+**Form errors say only where the problem is and what it is.**
+FastAPI's own 422 answer repeats what was typed, so a mistyped ID number would come straight back in the error (P10). A test takes one ID number through every address that touches it, then searches every answer, every log line (SQL included) and every database row for it. Putting FastAPI's own error answer back makes the test fail, so we know it can catch a leak.
+
+**No answer from the server is stored by the browser (`Cache-Control: no-store`).**
+A setup code shown on screen must not come back when someone presses Back, or when the next person sits down at the laptop.
+
+**Database errors show the SQL but not the values in it.**
+An error that gets printed or logged could otherwise show a password hash or an ID hash (P3, P10).
+
+**Tests pretend to use https.**
+Login cookies are Secure, sent over https only, so a test client on plain http would never send them back.
+
+**Left for later steps:**
+- The jobs script (step 8) will delete old wrong tries, logins that have run out and unused setup codes. Until then they stay in their tables, ignored.
+- The setup script needs the food bank settings in the database, for the setup code lifetime. On a real install the settings have to go in first. For now, only the sample data adds them.
