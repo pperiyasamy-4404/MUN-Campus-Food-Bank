@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from fastapi import APIRouter
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 
 from app.deps import DB
 from app.models import Category, Item, Tag, Variety, VarietyTag
@@ -42,7 +42,8 @@ Shelf = dict[str, dict[str, list[VarietyOut]]]
 
 @router.get("/food")
 def food_on_the_shelf(db: DB) -> FoodOut:
-    """Every variety still on the list, A to Z. Hidden varieties (active = false) are left out.
+    """Every variety still on the list, A to Z. Hidden varieties (active = false) are left out,
+    and so are extras with none left.
 
     An item with no varieties left on the list doesn't appear, and neither does
     a category with no items.
@@ -58,7 +59,8 @@ def food_on_the_shelf(db: DB) -> FoodOut:
         )
         .join(Item, Item.category_id == Category.id)
         .join(Variety, Variety.item_id == Item.id)
-        .where(Variety.active)
+        # Extras with none left aren't "available today" (E2), so they're left out.
+        .where(Variety.active, or_(~Item.is_extra, Variety.stock > 0))
         .order_by(func.lower(Category.name), func.lower(Item.name), func.lower(Variety.name))
     ).all()
 

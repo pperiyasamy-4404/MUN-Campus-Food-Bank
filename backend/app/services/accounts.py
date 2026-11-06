@@ -17,6 +17,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.models import AuditLog, Settings, SetupCode, Staff, Student
+from app.problems import NameTaken, NotFound, Problem
 from app.security.keyed_hash import id_hash, username_hash
 from app.security.passwords import hash_password, needs_new_hash, password_matches
 from app.security.sessions import end_every_session, end_old_sessions
@@ -34,14 +35,8 @@ Account = Student | Staff
 # ---------- what can go wrong ----------
 
 
-class AccountProblem(Exception):
-    """Something the person can fix. The message is shown to them as it is."""
-
-    status_code = 400
-
-    def __init__(self, message: str):
-        super().__init__(message)
-        self.message = message
+class AccountProblem(Problem):
+    """Something about an account the person can fix, like a password that's their ID number."""
 
 
 class WrongDetails(AccountProblem):
@@ -59,14 +54,6 @@ class TooManyTries(AccountProblem):
         self.retry_after_seconds = max(1, ceil((next_try_at - now).total_seconds()))
         minutes = ceil(self.retry_after_seconds / 60)
         super().__init__(f"Too many wrong tries. Try again in {minutes} minute{'' if minutes == 1 else 's'}.")
-
-
-class NameTaken(AccountProblem):
-    status_code = 409
-
-
-class NotFound(AccountProblem):
-    status_code = 404
 
 
 WRONG_STUDENT_PASSWORD = "That ID number and password don't match."

@@ -3,8 +3,10 @@
 import secrets
 from contextlib import contextmanager
 from datetime import UTC, date, datetime, time, timedelta
+from time import sleep
 
 import pytest
+from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from app.deps import get_now
@@ -118,3 +120,36 @@ def volunteer_with_password(db, now: datetime, username: str = "Sam", password: 
     volunteer, issued = accounts.add_volunteer(db, username, coordinator(db, f"Coordinator {username}"), now)
     accounts.set_staff_password(db, username, issued.code, password, None, now)
     return volunteer
+
+
+# ---------- two connections at once ----------
+
+
+def wait_until_someone_is_waiting_for_a_lock(engine, seconds: float = 5) -> None:
+    """Give the second connection time to reach the database and start waiting for the first one's lock."""
+    deadline = datetime.now(UTC) + timedelta(seconds=seconds)
+    with engine.connect() as watcher:
+        while datetime.now(UTC) < deadline:
+            waiting = watcher.execute(
+                text(
+                    "SELECT count(*) FROM pg_stat_activity "
+                    "WHERE datname = current_database() AND wait_event_type = 'Lock'"
+                )
+            ).scalar_one()
+            if waiting:
+                return
+            watcher.rollback()
+            sleep(0.05)
+
+
+def log_in(client, db, account: Staff | Student, now: datetime) -> None:
+    """Log the test's browser in as this account, without the slow password check.
+
+    The password side is tested in test_login_api.py. Here it would only add a
+    tenth of a second of argon2 to every test.
+    """
+    from app.security.sessions import COOKIE, start_session
+
+    ticket, _ = start_session(db, account, now)
+    db.flush()
+    client.cookies.set(COOKIE, ticket)

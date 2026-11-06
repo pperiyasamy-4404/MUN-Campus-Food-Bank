@@ -87,3 +87,11 @@ def test_extras_are_listed_apart_with_no_count(client, shelf):
 
 def test_an_empty_shelf(client):
     assert food(client) == {"bookable": [], "extras": []}
+
+
+def test_extras_with_none_left_are_left_out(client, shelf, db):
+    """An extra that ran out isn't "available today" (E2)."""
+    db.scalars(select(Variety).where(Variety.name == "White bread")).one().stock = 0
+    db.flush()
+
+    assert food(client)["extras"] == []

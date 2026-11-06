@@ -7,7 +7,6 @@ reasons are in tables.html.
 
 import threading
 from datetime import UTC, datetime, time, timedelta
-from time import sleep
 
 import pytest
 from sqlalchemy import delete, insert, select, text, update
@@ -46,6 +45,7 @@ from tests.helpers import (
     make_student,
     make_variety,
     new_hash,
+    wait_until_someone_is_waiting_for_a_lock,
     refused_by,
 )
 
@@ -249,23 +249,6 @@ def test_two_bookings_for_the_last_place_at_the_same_moment(engine):
         with engine.begin() as connection:
             connection.execute(delete(Slot).where(Slot.id == slot_id))
             connection.execute(delete(PickupDay).where(PickupDay.id == day_id))
-
-
-def wait_until_someone_is_waiting_for_a_lock(engine, seconds: float = 5) -> None:
-    """Give Ben's update time to reach the database and start waiting for Ana's lock."""
-    deadline = datetime.now(UTC) + timedelta(seconds=seconds)
-    with engine.connect() as watcher:
-        while datetime.now(UTC) < deadline:
-            waiting = watcher.execute(
-                text(
-                    "SELECT count(*) FROM pg_stat_activity "
-                    "WHERE datname = current_database() AND wait_event_type = 'Lock'"
-                )
-            ).scalar_one()
-            if waiting:
-                return
-            watcher.rollback()
-            sleep(0.05)
 
 
 # ---------- staff and students ----------

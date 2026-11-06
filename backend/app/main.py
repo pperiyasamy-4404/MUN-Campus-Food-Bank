@@ -2,8 +2,9 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.routes import accounts, food, login, pickup_days
-from app.services.accounts import AccountProblem, TooManyTries
+from app.routes import accounts, food, login, pickup_days, stock
+from app.problems import Problem
+from app.services.accounts import TooManyTries
 
 app = FastAPI(title="Campus Food Bank")
 
@@ -13,10 +14,11 @@ app.include_router(pickup_days.router)
 app.include_router(food.router)
 app.include_router(login.router)
 app.include_router(accounts.router)
+app.include_router(stock.router)
 
 
-@app.exception_handler(AccountProblem)
-def account_problem(request: Request, problem: AccountProblem) -> JSONResponse:
+@app.exception_handler(Problem)
+def person_can_fix(request: Request, problem: Problem) -> JSONResponse:
     """Something the person can fix, like a wrong password, in words they can read."""
     headers = {}
     if isinstance(problem, TooManyTries):
