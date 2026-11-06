@@ -1,6 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
-from app.routes import food, pickup_days
+from app.routes import accounts, food, login, pickup_days
+from app.services.accounts import AccountProblem, TooManyTries
 
 app = FastAPI(title="Campus Food Bank")
 
@@ -8,3 +11,37 @@ app = FastAPI(title="Campus Food Bank")
 # these on to FastAPI and keep everything else for itself.
 app.include_router(pickup_days.router)
 app.include_router(food.router)
+app.include_router(login.router)
+app.include_router(accounts.router)
+
+
+@app.exception_handler(AccountProblem)
+def account_problem(request: Request, problem: AccountProblem) -> JSONResponse:
+    """Something the person can fix, like a wrong password, in words they can read."""
+    headers = {}
+    if isinstance(problem, TooManyTries):
+        # The standard way to say "wait this many seconds", for the page to count down.
+        headers["Retry-After"] = str(problem.retry_after_seconds)
+    return JSONResponse({"detail": problem.message}, status_code=problem.status_code, headers=headers)
+
+
+@app.exception_handler(RequestValidationError)
+def form_problem(request: Request, problem: RequestValidationError) -> JSONResponse:
+    """What was wrong with a form, like "Enter the 9 digits on your MUN card."
+
+    FastAPI's own answer repeats what was typed ("input"), so a mistyped ID
+    number or password would come straight back in the error. This one keeps
+    only where the problem is and what it is (P10).
+    """
+    errors = [{"loc": list(error["loc"]), "msg": error["msg"], "type": error["type"]} for error in problem.errors()]
+    return JSONResponse({"detail": errors}, status_code=422)
+
+
+@app.middleware("http")
+async def never_keep_a_copy(request: Request, call_next):
+    """Answers can hold setup codes and who is logged in, so no browser or proxy
+    may store a copy. Pressing Back after logging out then shows nothing private."""
+    response = await call_next(request)
+    if request.url.path.startswith("/api"):
+        response.headers["Cache-Control"] = "no-store"
+    return response

@@ -28,5 +28,7 @@ class Base(DeclarativeBase):
     }
 
 
-engine = create_engine(config.database_url)
+# hide_parameters: if a database error is printed or logged, it shows the SQL
+# but not the values in it, like a password hash or an ID hash (P3, P10).
+engine = create_engine(config.database_url, hide_parameters=True)
 SessionLocal = sessionmaker(engine)

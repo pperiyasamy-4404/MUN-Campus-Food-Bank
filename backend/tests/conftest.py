@@ -47,6 +47,13 @@ def db(engine):
 
 
 @pytest.fixture
+def db_with_settings(db):
+    """The sample settings, like 7 days for a setup code and 5 tries per 15 minutes."""
+    make_settings(db)
+    return db
+
+
+@pytest.fixture
 def db_with_sample_week(db):
     """The sample settings, with pickups on Monday and Thursday, 3:30 to 5:30 pm."""
     make_settings(db)
@@ -61,7 +68,10 @@ def client(db):
 
     The server uses this test's database session, so it sees the rows the test
     made, and they are undone afterwards like any other test change.
+
+    It pretends to use https, because login cookies are Secure: sent over https only.
+    Like a browser, it keeps the cookies it is given and sends them back.
     """
     app.dependency_overrides[get_db] = lambda: db
-    yield TestClient(app)
+    yield TestClient(app, base_url="https://testserver")
     app.dependency_overrides.clear()

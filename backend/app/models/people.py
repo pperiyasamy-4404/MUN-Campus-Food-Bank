@@ -26,6 +26,8 @@ class Staff(Base):
 
     __table_args__ = (
         CheckConstraint("role IN ('volunteer', 'coordinator')", name="role_is_known"),
+        # Only an argon2 hash fits, so a password typed in can never be saved as text (P8).
+        CheckConstraint("password_hash LIKE '$argon2id$%'", name="password_hash_is_argon2"),
         # "Sam" and "sam" would be the same person, so every log line names one volunteer (R4).
         Index("uq_staff_username_lower", text("lower(username)"), unique=True),
     )
@@ -53,6 +55,8 @@ class Student(Base):
         # An HMAC is 64 characters of 0-9 and a-f, so a raw 9-digit ID number
         # can never be saved here by mistake (P2).
         CheckConstraint("id_hash ~ '^[0-9a-f]{64}$'", name="id_hash_looks_like_hmac"),
+        # Only an argon2 hash fits, so a password typed in can never be saved as text (P8).
+        CheckConstraint("password_hash LIKE '$argon2id$%'", name="password_hash_is_argon2"),
     )
 
 
@@ -97,13 +101,17 @@ class SetupCode(Base):
     staff_id: Mapped[int | None] = mapped_column(
         ForeignKey("staff.id", ondelete="CASCADE"), unique=True
     )
-    issued_by_staff_id: Mapped[int] = mapped_column(ForeignKey("staff.id"))
+    # Empty only for the first coordinator's codes, made by the setup script (R3).
+    issued_by_staff_id: Mapped[int | None] = mapped_column(ForeignKey("staff.id"))
     issued_at: Mapped[datetime] = mapped_column(server_default=func.now())
     expires_at: Mapped[datetime]
 
     __table_args__ = (
         CheckConstraint("num_nonnulls(student_id, staff_id) = 1", name="belongs_to_one_account"),
         CheckConstraint("expires_at > issued_at", name="expires_after_issued"),
+        # An HMAC, so the code itself is never saved: someone reading the
+        # database can't use a code before the student does.
+        CheckConstraint("code_hash ~ '^[0-9a-f]{64}$'", name="code_hash_looks_like_hmac"),
     )
 
 
@@ -138,12 +146,16 @@ class AuditLog(Base):
 
     id: Mapped[int] = mapped_column(Identity(), primary_key=True)
     at: Mapped[datetime] = mapped_column(server_default=func.now())
-    staff_id: Mapped[int] = mapped_column(ForeignKey("staff.id"))
+    # Who did it. Empty only when the setup script did it, on the server itself
+    # (the first coordinator, R3).
+    staff_id: Mapped[int | None] = mapped_column(ForeignKey("staff.id"))
     # For example "created_student" or "fixed_no_show_to_picked_up".
     action: Mapped[str]
     student_id: Mapped[int | None] = mapped_column(
         ForeignKey("students.id", ondelete="SET NULL")
     )
+    # The staff account it was done to, like the volunteer who was given a setup code.
+    affected_staff_id: Mapped[int | None] = mapped_column(ForeignKey("staff.id"))
     booking_id: Mapped[int | None] = mapped_column(
         ForeignKey("bookings.id", ondelete="SET NULL")
     )

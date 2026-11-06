@@ -27,12 +27,14 @@ from app.models import (
     Settings,
     SetupCode,
     Slot,
+    Staff,
     Student,
     Tag,
     Variety,
     VarietyTag,
 )
 from app.sample_data import SAMPLE_SETTINGS
+from app.security.passwords import hash_password
 from tests.helpers import (
     MONDAY,
     add,
@@ -324,20 +326,47 @@ def test_deleting_an_account_deletes_its_sessions(db):
 def test_a_setup_code_belongs_to_a_student_or_a_staff_member(db):
     staff = make_staff(db)
     with refused_by(db, "ck_setup_codes_belongs_to_one_account"):
-        db.add(SetupCode(code_hash="x", issued_by_staff_id=staff.id, expires_at=NOW + timedelta(days=7)))
+        db.add(SetupCode(code_hash=new_hash(), issued_by_staff_id=staff.id, expires_at=NOW + timedelta(days=7)))
 
 
 def test_one_setup_code_per_account(db):
     student = make_student(db)
-    add(db, SetupCode(code_hash="x", student_id=student.id, issued_by_staff_id=student.created_by_staff_id, expires_at=NOW + timedelta(days=7)))
+    add(db, SetupCode(code_hash=new_hash(), student_id=student.id, issued_by_staff_id=student.created_by_staff_id, expires_at=NOW + timedelta(days=7)))
     with refused_by(db, "uq_setup_codes_student_id"):
-        db.add(SetupCode(code_hash="y", student_id=student.id, issued_by_staff_id=student.created_by_staff_id, expires_at=NOW + timedelta(days=7)))
+        db.add(SetupCode(code_hash=new_hash(), student_id=student.id, issued_by_staff_id=student.created_by_staff_id, expires_at=NOW + timedelta(days=7)))
 
 
 def test_a_setup_code_expires_after_it_was_issued(db):
     student = make_student(db)
     with refused_by(db, "ck_setup_codes_expires_after_issued"):
-        db.add(SetupCode(code_hash="x", student_id=student.id, issued_by_staff_id=student.created_by_staff_id, issued_at=NOW, expires_at=NOW))
+        db.add(SetupCode(code_hash=new_hash(), student_id=student.id, issued_by_staff_id=student.created_by_staff_id, issued_at=NOW, expires_at=NOW))
+
+
+def test_a_setup_code_itself_can_never_be_saved(db):
+    """Only its HMAC fits, so someone reading the database can't use a code first."""
+    student = make_student(db)
+    with refused_by(db, "ck_setup_codes_code_hash_looks_like_hmac"):
+        db.add(SetupCode(code_hash="K7QM4TXP", student_id=student.id, issued_by_staff_id=student.created_by_staff_id, expires_at=NOW + timedelta(days=7)))
+
+
+def test_the_setup_script_can_issue_a_code_with_no_staff_member(db):
+    """The first coordinator's code comes from the setup script, not a person (R3)."""
+    coordinator = make_staff(db, role="coordinator")
+    add(db, SetupCode(code_hash=new_hash(), staff_id=coordinator.id, issued_by_staff_id=None, expires_at=NOW + timedelta(days=7)))
+
+
+def test_a_typed_password_can_never_be_saved(db):
+    """P8: only an argon2 hash fits, for students and for staff."""
+    with refused_by(db, "ck_students_password_hash_is_argon2"):
+        db.add(Student(id_hash=new_hash(), password_hash="hunter2hunter2", created_by_staff_id=make_staff(db).id))
+    with refused_by(db, "ck_staff_password_hash_is_argon2"):
+        db.add(Staff(username="pat", role="volunteer", password_hash="hunter2hunter2"))
+
+
+def test_a_real_argon2_hash_is_accepted(db):
+    student = make_student(db)
+    student.password_hash = hash_password("a long phrase I remember")
+    db.flush()
 
 
 def test_wrong_password_tries_store_a_hash_not_the_number(db):

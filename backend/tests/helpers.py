@@ -11,6 +11,7 @@ from app.deps import get_now
 from app.main import app
 from app.models import Booking, Category, Item, PickupDay, Settings, Slot, Staff, Student, Variety
 from app.sample_data import SAMPLE_SETTINGS
+from app.services import accounts
 
 MONDAY = date(2026, 11, 9)
 
@@ -92,3 +93,28 @@ def make_booking(db, student: Student | None = None, slot: Slot | None = None, c
         db,
         Booking(student_id=student.id, slot_id=slot.id, pickup_day_id=slot.pickup_day_id, code=code, **columns),
     )
+
+
+# ---------- accounts ----------
+
+# Made-up card numbers. Nothing in the test database ever has them as text.
+ID_NUMBER = "202398765"
+OTHER_ID_NUMBER = "202311111"
+PASSWORD = "blue kettle on the stove"
+
+
+def student_with_password(db, now: datetime, id_number: str = ID_NUMBER, password: str = PASSWORD) -> Student:
+    """A student who got a setup code at the counter and chose a password with it."""
+    issued = accounts.give_student_setup_code(db, id_number, make_staff(db), now)
+    return accounts.set_student_password(db, id_number, issued.code, password, None, now)
+
+
+def coordinator(db, username: str = "Alex") -> Staff:
+    return make_staff(db, username=username, role="coordinator")
+
+
+def volunteer_with_password(db, now: datetime, username: str = "Sam", password: str = PASSWORD) -> Staff:
+    """A volunteer the coordinator added, who chose a password with their setup code."""
+    volunteer, issued = accounts.add_volunteer(db, username, coordinator(db, f"Coordinator {username}"), now)
+    accounts.set_staff_password(db, username, issued.code, password, None, now)
+    return volunteer
