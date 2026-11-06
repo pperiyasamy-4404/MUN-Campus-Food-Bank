@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 export type BookingStatus = 'not_open_yet' | 'open' | 'booking_over' | 'day_closed'
 
 export type Slot = {
+  id: number
   starts_at: string // like "2026-11-09T15:30:00-03:30"
   places_left: number
 }
@@ -19,6 +20,7 @@ export type PickupDay = {
 }
 
 export type Variety = {
+  id: number
   name: string
   stock: number | null // null for extras, which only show as "may be available"
   tags: string[]
@@ -107,7 +109,8 @@ export type Answer<T> =
 
 /**
  * Send a form to the server, with the values in the body: POST to add or do
- * something, PUT to replace a list (like a variety's tags), PATCH to change a name.
+ * something, PUT to replace a list (like a variety's tags), PATCH to change a name,
+ * DELETE to let go of something (like a held time).
  *
  * Never put an ID number or password in the web address: addresses end up in
  * the browser history and in server logs (P10).
@@ -115,7 +118,7 @@ export type Answer<T> =
 export async function send<T>(
   path: string,
   body: object = {},
-  method: 'POST' | 'PUT' | 'PATCH' = 'POST',
+  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'POST',
 ): Promise<Answer<T>> {
   let response: Response
   try {
@@ -190,4 +193,40 @@ export type StockPage = {
     booking_status: BookingStatus
   } | null
   last_pickup_ended_at: string | null
+}
+
+// ---------- a student's booking (backend/app/routes/booking.py) ----------
+
+export type Limits = {
+  item_limit: number
+  max_per_item: number
+  substitute_limit: number
+  hold_minutes: number
+}
+
+export type HeldTime = {
+  slot_id: number
+  pickup_date: string
+  starts_at: string
+  held_until: string
+  seconds_left: number // counted by the server, so a phone with a wrong clock still counts down right
+}
+
+export type BookingDetails = {
+  code: string // what the student says at the counter, like K3P
+  status: string
+  pickup_date: string
+  starts_at: string
+  booked_at: string
+  cancel_until: string
+  can_cancel: boolean
+  items: { variety: string; item: string; quantity: number }[]
+  substitutes: { rank: number; variety: string; item: string }[]
+}
+
+export type MyBooking = {
+  limits: Limits
+  booking: BookingDetails | null
+  hold: HeldTime | null
+  next_pickup_allowed_on: string | null
 }

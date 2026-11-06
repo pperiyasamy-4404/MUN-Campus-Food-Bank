@@ -1,6 +1,7 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router'
-import { Layout, StaffOnly } from './Layout.tsx'
+import { Layout, StaffOnly, StudentOnly } from './Layout.tsx'
 import { MeProvider } from './MeProvider.tsx'
+import { Book } from './pages/Book.tsx'
 import { Counter } from './pages/Counter.tsx'
 import { Home } from './pages/Home.tsx'
 import { StaffLogIn, StudentLogIn } from './pages/LogIn.tsx'
@@ -22,6 +23,14 @@ function App() {
             <Route path="setup" element={<StudentSetUp />} />
             <Route path="staff/login" element={<StaffLogIn />} />
             <Route path="staff/setup" element={<StaffSetUp />} />
+            <Route
+              path="book"
+              element={
+                <StudentOnly>
+                  <Book />
+                </StudentOnly>
+              }
+            />
             <Route
               path="counter"
               element={

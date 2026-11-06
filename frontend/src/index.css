@@ -668,3 +668,147 @@ h2.in-card {
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
   gap: 1rem;
 }
+
+/* ---------- booking ---------- */
+
+.slots li {
+  list-style: none;
+}
+
+.slot-button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.4rem 0.7rem;
+  background: var(--card);
+  color: var(--ink);
+  border: 2px solid var(--blue);
+}
+
+.slot-button .slot-places {
+  font-weight: 400;
+}
+
+.slot-button:disabled {
+  border-color: var(--line);
+  background: var(--grey-bg);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+/* The held time and the countdown stay at the top while the student scrolls. */
+.hold-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0.5rem 0 1rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.6rem;
+  color: var(--green);
+  background: var(--green-bg);
+  border: 1px solid var(--green);
+}
+
+.hold-bar p {
+  margin: 0.1rem 0;
+}
+
+.time-short {
+  color: var(--red);
+}
+
+.item-name {
+  font-size: 1rem;
+  margin: 0.8rem 0 0.2rem;
+}
+
+.choose-list,
+.ranked {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ranked {
+  counter-reset: rank;
+}
+
+.choose-row,
+.ranked li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.ranked li::before {
+  counter-increment: rank;
+  content: counter(rank) ".";
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.ranked li > span:first-of-type {
+  flex: 1;
+}
+
+.choose-row.chosen {
+  background: var(--green-bg);
+  border-radius: 0.4rem;
+}
+
+.choose-name {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.choose-controls {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.choose-controls button {
+  padding: 0.35rem 0.8rem;
+}
+
+.count {
+  min-width: 1.5rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* The Book button stays at the bottom while the student scrolls. */
+.book-bar {
+  position: sticky;
+  bottom: 0;
+  margin-top: 1rem;
+  padding: 0.8rem 0;
+  background: var(--page);
+  border-top: 1px solid var(--line);
+}
+
+.book-bar button {
+  width: 100%;
+  font-size: 1.1rem;
+}
+
+.booked-list {
+  margin: 0.3rem 0 1rem;
+}
+
+.narrow-wide {
+  max-width: 36rem;
+}
+
+.why-not {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-style: italic;
+}

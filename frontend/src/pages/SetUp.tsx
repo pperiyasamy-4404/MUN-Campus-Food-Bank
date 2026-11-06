@@ -51,7 +51,7 @@ function SetUp({ who }: { who: 'student' | 'staff' }) {
       return
     }
     loggedIn(answer.data)
-    navigate(student ? '/' : '/counter')
+    navigate(student ? '/book' : '/counter')
   }
 
   return (

@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { FoodList } from '../FoodList.tsx'
 import { PickupDayList } from '../PickupDayList.tsx'
 import { useAccount } from '../me.ts'
@@ -17,11 +18,13 @@ export function Home() {
       )}
       <h1>Pickup days and food</h1>
       <p className="lead">
-        A read-only look at the pickup days, their slots and the food, straight from the database. Nothing can be
-        booked here yet. All times are Newfoundland time.
+        The pickup days, their times and the food, straight from the database. Students log in to book. All times
+        are Newfoundland time.
       </p>
       {account?.kind === 'student' && (
-        <p className="notice">You're logged in. Booking comes in a later step.</p>
+        <p className="notice">
+          You're logged in. <Link to="/book">Book a pickup, or see your booking</Link>.
+        </p>
       )}
       <PickupDayList />
       <FoodList />

@@ -28,7 +28,7 @@ export function AlreadyLoggedIn({ me }: { me: Me }) {
         <p>You're logged in on this device.</p>
       )}
       <p className="actions">
-        <Link className="button" to={staff ? '/counter' : '/'}>
+        <Link className="button" to={staff ? '/counter' : '/book'}>
           Carry on
         </Link>
         <button type="button" className="secondary" onClick={logOut}>

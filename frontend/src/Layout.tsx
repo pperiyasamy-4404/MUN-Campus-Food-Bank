@@ -23,6 +23,7 @@ export function Layout() {
           <NavLink to="/" end>
             Pickup days
           </NavLink>
+          {account?.kind === 'student' && <NavLink to="/book">Book</NavLink>}
           {account?.kind === 'staff' && <NavLink to="/counter">Counter</NavLink>}
           {account?.kind === 'staff' && <NavLink to="/stock">Stock</NavLink>}
           {account?.kind === 'staff' && account.role === 'coordinator' && (
@@ -56,6 +57,15 @@ export function Layout() {
       </footer>
     </>
   )
+}
+
+/** Only a logged-in student sees what's inside. Anyone else is sent to the student login page. */
+export function StudentOnly({ children }: { children: ReactNode }) {
+  const { me } = useMe()
+  if (me.state === 'loading') return <p className="muted">Checking who's logged in...</p>
+  if (me.state === 'failed') return null
+  if (me.me?.kind !== 'student') return <Navigate to="/login" replace />
+  return children
 }
 
 /**
