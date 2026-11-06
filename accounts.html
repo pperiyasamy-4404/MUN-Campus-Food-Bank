@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Food Bank: accounts and logging in, explained</title>
+<style>
+  :root {
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc;
+    --blue: #2563eb; --blue-bg: #dbeafe;
+    --green: #059669; --green-bg: #d1fae5;
+    --amber: #b45309; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 980px; margin: 0 auto; padding: 36px 20px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 .num { color: var(--blue); margin-right: 8px; }
+  h3 { font-size: 1.15rem; margin: 30px 0 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--blue); }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
+  .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+  table { border-collapse: collapse; width: 100%; background: #fff; font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 18px 0; }
+  .why { border-left: 4px solid var(--blue); background: #eff6ff; padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .why p { margin: 4px 0; }
+  .short { background: var(--green-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .short p { margin: 2px 0; }
+  .warn { background: var(--amber-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .warn p { margin: 4px 0; }
+  pre.code { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 18px; font: 14px/1.55 ui-monospace, Consolas, monospace; overflow-x: auto; margin: 12px 0; }
+  pre .c { color: #94a3b8; }
+  pre .bad { color: #fca5a5; }
+  pre .good { color: #86efac; }
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; margin: 18px 0; }
+  .diagram svg { display: block; width: 100%; height: auto; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+  @media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+  .two .card { margin: 0; }
+  .toc { columns: 2; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 20px 14px 40px; }
+  @media (max-width: 760px) { .toc { columns: 1; } }
+  .yes { color: var(--green); font-weight: 700; }
+  .no { color: var(--red); font-weight: 700; }
+</style>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Campus Food Bank · Step 3, accounts and logging in · 5–6 November 2026</p>
+<h1>Accounts and logging in</h1>
+<p class="lead">Students, volunteers and the coordinator can now have accounts and log in. A volunteer checks a MUN card at the counter and gives a one-time setup code. The student chooses their own password on their own phone. This page explains how every piece works, and why it's built that way.</p>
+
+<ol class="toc">
+  <li><a href="#people">Three kinds of people, three ways in</a></li>
+  <li><a href="#codes">Setup codes</a></li>
+  <li><a href="#storing">What the database keeps, and what it never keeps</a></li>
+  <li><a href="#login">Logging in: what gets checked</a></li>
+  <li><a href="#cookie">The login ticket and its cookie</a></li>
+  <li><a href="#tries">Wrong tries: slowed down, never locked</a></li>
+  <li><a href="#who">Who may use which address</a></li>
+  <li><a href="#p10">Keeping the ID number out of everything</a></li>
+  <li><a href="#script">The first coordinator: a script</a></li>
+  <li><a href="#pages">The pages</a></li>
+  <li><a href="#tests">The tests</a></li>
+  <li><a href="#open">Open questions</a></li>
+  <li><a href="#run">How to run it and try it</a></li>
+</ol>
+
+<!-- 1 -->
+<h2 id="people"><span class="num">1</span>Three kinds of people, three ways in</h2>
+<table>
+  <tr><th>Who</th><th>Logs in with</th><th>Their account is made by</th><th>Stays logged in</th></tr>
+  <tr><td><b>Student</b></td><td>ID number from their MUN card + password</td><td>A volunteer at the counter, after checking the card <span class="rule">R1</span></td><td>30 days after their last visit</td></tr>
+  <tr><td><b>Volunteer</b></td><td>Username (like "Sam") + password</td><td>The coordinator <span class="rule">R3</span></td><td>12 hours after logging in</td></tr>
+  <tr><td><b>Coordinator</b></td><td>Username + password</td><td>A setup script, run once on the server</td><td>12 hours after logging in</td></tr>
+</table>
+<p>Everyone chooses their own password with a <b>setup code</b>: a one-time code like <code>K7QM-4TXP</code>. Nobody else ever sees the password, not the volunteer, not the coordinator.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 940 250" role="img" aria-label="Counter gives a code, the student uses it on their phone, then is logged in">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+  </defs>
+  <g font-family="system-ui, Segoe UI, sans-serif" font-size="15" text-anchor="middle">
+    <rect x="10" y="30" width="200" height="110" rx="12" fill="#fef3c7" stroke="#b45309"/>
+    <text x="110" y="60" font-weight="700">At the counter</text>
+    <text x="110" y="84" font-size="13">Volunteer checks the card</text>
+    <text x="110" y="103" font-size="13">and types its number twice</text>
+    <text x="110" y="122" font-size="13">/counter</text>
+
+    <rect x="250" y="30" width="200" height="110" rx="12" fill="#d1fae5" stroke="#059669"/>
+    <text x="350" y="60" font-weight="700">Server</text>
+    <text x="350" y="84" font-size="13">finds or makes the account,</text>
+    <text x="350" y="103" font-size="13">makes a code, saves only</text>
+    <text x="350" y="122" font-size="13">its keyed hash</text>
+
+    <rect x="490" y="30" width="200" height="110" rx="12" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="590" y="60" font-weight="700">Student's own phone</text>
+    <text x="590" y="84" font-size="13">ID number + code</text>
+    <text x="590" y="103" font-size="13">+ a new password</text>
+    <text x="590" y="122" font-size="13">/setup</text>
+
+    <rect x="730" y="30" width="200" height="110" rx="12" fill="#e2e8f0" stroke="#475569"/>
+    <text x="830" y="60" font-weight="700">Logged in</text>
+    <text x="830" y="84" font-size="13">a login ticket in a cookie</text>
+    <text x="830" y="103" font-size="13">the code is used up</text>
+    <text x="830" y="122" font-size="13">other logins are ended</text>
+
+    <line x1="210" y1="85" x2="246" y2="85" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="450" y1="85" x2="486" y2="85" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="690" y1="85" x2="726" y2="85" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+
+    <text x="350" y="180" font-size="14" fill="#475569">The code is read out or written on a slip.</text>
+    <text x="350" y="200" font-size="14" fill="#475569">It works once, for 7 days.</text>
+    <text x="710" y="180" font-size="14" fill="#475569">Right there, or later at home.</text>
+    <text x="710" y="200" font-size="14" fill="#475569">The volunteer never sees the password.</text>
+  </g>
+</svg>
+</div>
+
+<div class="why">
+<p><b>Why make accounts at the counter, not with an online sign-up?</b> With a sign-up page, anyone could register someone else's ID number before its owner does, made-up numbers could get accounts, and the page would have to say "this number already has an account", which tells a stranger that person uses the food bank. At the counter a volunteer has the real MUN card in their hand.</p>
+<p><b>Why not email a reset link?</b> We don't store email addresses <span class="rule">P3</span>. A forgotten password is reset the same way: a new code from the counter.</p>
+</div>
+
+<!-- 2 -->
+<h2 id="codes"><span class="num">2</span>Setup codes</h2>
+<p>A setup code is 8 characters from 31 letters and digits, shown as two groups of four: <code>K7QM-4TXP</code>. The letters O, I and L and the digits 0 and 1 are left out, so nobody misreads <code>0</code> as <code>O</code> from a slip of paper.</p>
+<ul>
+  <li><b>It works once.</b> Using it deletes it.</li>
+  <li><b>It runs out</b> after the setup code lifetime: 7 days in the sample settings.</li>
+  <li><b>Each account has at most one.</b> A new code replaces the old one.</li>
+  <li><b>The old password keeps working until the new code is used.</b> So a code given by mistake locks nobody out.</li>
+  <li><b>Using a code logs the account out everywhere else.</b> If a flatmate was logged in on the student's laptop, they're out straight away.</li>
+  <li><b>Small letters and spaces are fine.</b> <code>k7qm 4txp</code> is the same code.</li>
+</ul>
+<div class="why">
+<p><b>How hard is it to guess one?</b> 31<sup>8</sup> is about 850 billion codes. With 5 tries every 15 minutes (section 6), that's 3,360 tries in 7 days: a chance of about 1 in 250 million.</p>
+<p><b>Why not a 6-digit number, like a bank's text message?</b> Only a million of them. That's still fine with slow tries, but 8 characters costs nothing extra and leaves a big safety margin if the try limit is ever loosened.</p>
+</div>
+
+<!-- 3 -->
+<h2 id="storing"><span class="num">3</span>What the database keeps, and what it never keeps</h2>
+<p>Three different ways of "scrambling" text are used, each for its own reason. A <b>hash</b> turns text into a fixed-length string, and it can't be turned back.</p>
+<table>
+  <tr><th>What a person types or holds</th><th>What the database keeps</th><th>How</th><th>Why that way</th></tr>
+  <tr><td>ID number <code>202398765</code></td><td><code>9f2c…</code> (64 characters)</td><td><b>Keyed hash</b> (HMAC-SHA256), with the secret key from <code>backend/.env</code></td><td>There are only a billion 9-digit numbers. Without a key, anyone could hash them all and look the answer up. The key isn't in the database, so a stolen copy is useless <span class="rule">P2</span></td></tr>
+  <tr><td>Setup code <code>K7QM-4TXP</code></td><td><code>51ab…</code></td><td>Keyed hash</td><td>Someone reading the database can't use a code before the student does</td></tr>
+  <tr><td>Password</td><td><code>$argon2id$v=19$m=65536,t=3,p=4$…</code></td><td><b>argon2</b>: slow on purpose, with a random salt</td><td>Each guess costs about a tenth of a second and 64 MB of memory, so trying millions is hopeless <span class="rule">P8</span></td></tr>
+  <tr><td>Login ticket in the cookie</td><td><code>e3b0…</code></td><td>Plain SHA-256</td><td>A ticket is 256 random bits. Nobody can list every possible ticket the way they could list ID numbers, so no key is needed</td></tr>
+</table>
+<p>The database itself refuses anything else. A password hash must start with <code>$argon2id$</code>, and the ID hash and code hash must be exactly 64 characters of 0–9 and a–f. If some code had a bug and tried to save the real password or the 9 digits, PostgreSQL would refuse it. These rules came in with migration <code>8be36cf65217</code>.</p>
+<div class="why">
+<p><b>Why argon2 and not bcrypt?</b> argon2 is OWASP's first choice today. Its need for memory makes guessing on graphics cards expensive. bcrypt also quietly ignores everything after 72 bytes.</p>
+<p><b>Why not argon2 for the ID number too?</b> We have to <i>find</i> the student from the number they type. A keyed hash always gives the same answer for the same number, so it can be looked up. argon2 adds a random salt, so the same number gives a different hash every time, and there would be nothing to look up.</p>
+</div>
+
+<!-- 4 -->
+<h2 id="login"><span class="num">4</span>Logging in: what gets checked</h2>
+<p>When a student presses Log in, <code>log_in_student</code> in <code>app/services/accounts.py</code> does this:</p>
+<ol>
+  <li>Tidy the number: <code>2023 98765</code> becomes <code>202398765</code>. Anything that isn't 9 digits is refused with "Enter the 9 digits on your MUN card."</li>
+  <li>Work out its keyed hash, and find the student with that hash.</li>
+  <li>Check the wrong-tries count (section 6). Too many? Stop here with "Try again in 14 minutes."</li>
+  <li>Check the password against the argon2 hash.</li>
+  <li>Wrong? Save one wrong try and say <i>"That ID number and password don't match."</i></li>
+  <li>Right? Forget earlier wrong tries, make a login ticket, and send it back in a cookie.</li>
+</ol>
+
+<h3>The same words for every kind of wrong</h3>
+<p>No account for that number, an account with no password yet, or the wrong password: the answer is always the same sentence. Even the <i>time</i> it takes is the same. With no account, the password is still checked, against a made-up argon2 hash, so a wrong number takes as long as a wrong password.</p>
+<div class="why">
+<p><b>Why:</b> otherwise anyone could type ID numbers and learn which ones have accounts, which means learning who uses the food bank.</p>
+</div>
+
+<!-- 5 -->
+<h2 id="cookie"><span class="num">5</span>The login ticket and its cookie</h2>
+<p>After a right password, the server makes a <b>ticket</b>: 43 random characters. The browser keeps it in a <b>cookie</b> and sends it back with every request. The server keeps only a hash of it, in the <code>sessions</code> table, with the time it runs out.</p>
+<pre class="code">Set-Cookie: session=Xq3…(43 characters); Max-Age=2592000; HttpOnly; Secure; SameSite=strict
+                                         <span class="c">30 days         ↑ page code can't read it
+                                                          ↑ only over https
+                                                                  ↑ never sent from another website</span></pre>
+<table>
+  <tr><th>Cookie setting</th><th>What it stops</th></tr>
+  <tr><td><code>HttpOnly</code></td><td>Code running on the page can't read the ticket, so a bug that let someone add code to the page still couldn't steal it.</td></tr>
+  <tr><td><code>Secure</code></td><td>The cookie is only sent over https, never as plain text on café Wi-Fi. Browsers count <code>localhost</code> as safe, so it works while we build.</td></tr>
+  <tr><td><code>SameSite=strict</code></td><td>Another website can't make the student's browser send a request with their login, like "cancel my booking".</td></tr>
+</table>
+
+<h3>How long a login lasts (your choice, 5 November)</h3>
+<div class="two">
+<div class="card">
+<p><b>Students: 30 days after their last visit.</b></p>
+<p>Places go fast at 5 pm, so nobody should have to find their password on booking night. Each visit moves the 30 days on, but at most once a day, so not every page load writes to the database.</p>
+</div>
+<div class="card">
+<p><b>Staff: 12 hours after logging in.</b></p>
+<p>The counter laptop is shared. A staff login never lasts overnight, however busy the shift. Visits don't move it on.</p>
+</div>
+</div>
+<div class="why">
+<p><b>Why a ticket in the database and not a token (JWT)?</b> This was decided on 1 November: a password reset at the counter has to log the old browser out <i>at once</i>. With tickets that's one deleted row. A JWT keeps working until it runs out.</p>
+</div>
+
+<!-- 6 -->
+<h2 id="tries"><span class="num">6</span>Wrong tries: slowed down, never locked</h2>
+<p>Rule <span class="rule">P9</span>: wrong passwords are limited per ID number, and the account is never locked. After 5 wrong tries in 15 minutes, the answer is "Too many wrong tries. Try again in 15 minutes." and the password isn't even checked. Once the oldest of those 5 tries is 15 minutes old, one more try is allowed.</p>
+<ul>
+  <li>Wrong setup codes count too, or a guesser would try codes instead.</li>
+  <li>Numbers with no account are slowed down too. Otherwise "wait" would mean "this number has an account".</li>
+  <li>A right password forgets the earlier slips.</li>
+</ul>
+
+<h3>The "trusted device" cookie</h3>
+<p>There's a catch. Anyone who knows a student's ID number could type 5 wrong passwords every 15 minutes, and keep the real student waiting on booking night. So a browser that has logged in to an account before gets a second cookie, called <code>device</code>. It says "this browser has logged in here before". Its wrong tries are counted on their own.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 940 230" role="img" aria-label="Two separate wrong-try counts">
+  <g font-family="system-ui, Segoe UI, sans-serif" font-size="15" text-anchor="middle">
+    <rect x="20" y="20" width="420" height="190" rx="14" fill="#fee2e2" stroke="#b91c1c"/>
+    <text x="230" y="52" font-weight="700">The ID number's shared count</text>
+    <text x="230" y="80" font-size="14">A stranger, and any new phone</text>
+    <text x="230" y="120" font-size="28">✗ ✗ ✗ ✗ ✗</text>
+    <text x="230" y="160" font-size="14">"Too many wrong tries. Try again in 15 minutes."</text>
+    <text x="230" y="185" font-size="13" fill="#475569">Counted under the keyed hash of the number typed</text>
+
+    <rect x="500" y="20" width="420" height="190" rx="14" fill="#d1fae5" stroke="#059669"/>
+    <text x="710" y="52" font-weight="700">This phone's own count</text>
+    <text x="710" y="80" font-size="14">The student's phone, which logged in before</text>
+    <text x="710" y="120" font-size="28">(empty)</text>
+    <text x="710" y="160" font-size="14">Logs in straight away</text>
+    <text x="710" y="185" font-size="13" fill="#475569">Counted under the device cookie</text>
+  </g>
+</svg>
+</div>
+<p>The cookie is signed with the secret key, so nobody can make one for someone else's account. It still allows only 5 tries per 15 minutes, on that phone. It lasts a year and doesn't log anyone in. This idea comes from OWASP, which calls it a "device cookie".</p>
+
+<h3>Ten tries at the same moment</h3>
+<p>Without care, 10 wrong tries sent at once would each count 0 earlier tries, and all 10 would be checked. So before counting, the server takes a <b>lock</b> on that count in PostgreSQL (<code>pg_advisory_xact_lock</code>). The other tries wait their turn, and the lock is let go when the answer is saved. A test really sends 10 tries on 10 connections, and checks that exactly 5 are checked and 5 are told to wait.</p>
+
+<!-- 7 -->
+<h2 id="who"><span class="num">7</span>Who may use which address</h2>
+<table>
+  <tr><th>Address</th><th>Who</th><th>What it does</th></tr>
+  <tr><td><code>POST /api/student/login</code></td><td>Anyone</td><td>ID number + password</td></tr>
+  <tr><td><code>POST /api/student/setup</code></td><td>Anyone</td><td>ID number + setup code + new password, then logged in</td></tr>
+  <tr><td><code>POST /api/staff/login</code></td><td>Anyone</td><td>Username + password</td></tr>
+  <tr><td><code>POST /api/staff/setup</code></td><td>Anyone</td><td>Username + setup code + new password, then logged in</td></tr>
+  <tr><td><code>POST /api/logout</code></td><td>Anyone</td><td>Ends this login, on the server too</td></tr>
+  <tr><td><code>GET /api/me</code></td><td>Anyone</td><td>Who is logged in on this browser, or <code>null</code></td></tr>
+  <tr><td><code>POST /api/student-setup-codes</code></td><td>Any staff</td><td>The counter: make an account or give a new code</td></tr>
+  <tr><td><code>GET /api/volunteers</code></td><td>Coordinator</td><td>The volunteer list</td></tr>
+  <tr><td><code>POST /api/volunteers</code></td><td>Coordinator</td><td>Add a volunteer and give their code</td></tr>
+  <tr><td><code>POST /api/volunteers/{id}/setup-code</code></td><td>Coordinator</td><td>A new code for a volunteer</td></tr>
+  <tr><td><code>POST /api/volunteers/{id}/switch-off</code></td><td>Coordinator</td><td>Switch an account off</td></tr>
+</table>
+<p>The check is a dependency, like <code>db</code> and <code>now</code> on the database page. A route just says who it needs:</p>
+<pre class="code">@router.get("/volunteers")
+def list_volunteers(coordinator: CurrentCoordinator, db: DB) -> list[VolunteerOut]:</pre>
+<p><code>CurrentCoordinator</code> reads the cookie, finds the login, and checks the role, all before the route's own code starts. Nobody logged in gets <code>401 "Please log in."</code>. A volunteer gets <code>403 "Only the coordinator can do this."</code>.</p>
+<div class="why">
+<p><b>Why a dependency and not an "if" inside each route?</b> A route can't forget it. If the type says <code>CurrentCoordinator</code>, the check runs. The pages also hide what you can't use, but that's only for looks: the server checks every request on its own.</p>
+</div>
+
+<!-- 8 -->
+<h2 id="p10"><span class="num">8</span>Keeping the ID number out of everything</h2>
+<p>Rule <span class="rule">P10</span>: the ID number never appears in web addresses, logs or error messages. Five things make sure of that:</p>
+<ol>
+  <li><b>Only in the body of a POST.</b> Never <code>/api/student?id=202398765</code>: addresses end up in browser history and server logs. A test checks that no address takes an ID number, password or code in the web address.</li>
+  <li><b>FastAPI's own error answer is replaced.</b> It repeats what was typed. A mistyped number would come straight back:
+<pre class="code"><span class="bad">FastAPI's own:  {"loc": ["body","id_number"], "msg": "...", "input": "20239876"}</span>
+<span class="good">Ours:           {"loc": ["body","id_number"], "msg": "Enter the 9 digits on your MUN card."}</span></pre></li>
+  <li><b>Secrets are <code>SecretStr</code>.</b> If one is ever printed by mistake, it shows as <code>**********</code>.</li>
+  <li><b>Database errors hide their values</b> (<code>hide_parameters=True</code>), so an error that gets logged can't show a hash.</li>
+  <li><b>No answer is stored by the browser</b> (<code>Cache-Control: no-store</code>). A setup code on screen doesn't come back when someone presses Back.</li>
+</ol>
+<p>Then one test checks it all. It takes one ID number through everything that touches it: the counter, a mistyped number, a wrong code, a short password, setup, a wrong password, logging in. Then it searches every answer, every log line (each SQL statement included) and every row of every table for those 9 digits.</p>
+<div class="short">
+<p><b>Does the test really catch a leak?</b> We checked: with FastAPI's own error answer put back, the test fails with "the ID number is in the answers". With ours, it passes.</p>
+</div>
+
+<!-- 9 -->
+<h2 id="script"><span class="num">9</span>The first coordinator: a script</h2>
+<pre class="code">.venv\Scripts\python -m app.first_coordinator Alex
+
+Made the coordinator account.
+  Username:   Alex
+  Setup code: K7QM-4TXP
+  Runs out:   Friday 13 November 2026, 3:34 PM (Newfoundland time)
+Open the staff setup page, type the username and the setup code, and choose a password.</pre>
+<ul>
+  <li>Run again with the same username: a new code, for a forgotten password.</li>
+  <li>Never a second coordinator, and it won't turn a volunteer into one.</li>
+  <li>In the audit log, "who did it" is empty for the script's actions.</li>
+</ul>
+<div class="why">
+<p><b>Why a script and not a page?</b> Before the first coordinator exists, there's nobody who could be trusted to use such a page. Whoever can run commands on the server can already do anything.</p>
+</div>
+
+<!-- 10 -->
+<h2 id="pages"><span class="num">10</span>The pages</h2>
+<p>The site now has real web addresses, with <b>React Router</b>: a library that shows a different page for each address, without reloading. The Back button and links work as people expect.</p>
+<table>
+  <tr><th>Address</th><th>Page</th><th>File</th></tr>
+  <tr><td><code>/</code></td><td>Pickup days and food (and "Your password was reset on…" for a student <span class="rule">R4</span>)</td><td><code>pages/Home.tsx</code></td></tr>
+  <tr><td><code>/login</code>, <code>/staff/login</code></td><td>Log in</td><td><code>pages/LogIn.tsx</code></td></tr>
+  <tr><td><code>/setup</code>, <code>/staff/setup</code></td><td>Choose a password with a setup code</td><td><code>pages/SetUp.tsx</code></td></tr>
+  <tr><td><code>/counter</code></td><td>Give a student a setup code (staff only)</td><td><code>pages/Counter.tsx</code></td></tr>
+  <tr><td><code>/volunteers</code></td><td>Add, re-code and switch off volunteers (coordinator only)</td><td><code>pages/Volunteers.tsx</code></td></tr>
+</table>
+<p>Other files: <code>MeProvider.tsx</code> asks <code>/api/me</code> once when the site opens and shares "who's logged in" with every page. <code>Layout.tsx</code> is the top bar and the staff-only guard. <code>forms.tsx</code> has the labelled boxes, the error message and the setup code box. <code>send()</code> in <code>api.ts</code> sends every form as a POST and turns the server's "no" into words.</p>
+
+<h3>Small things that matter at a real counter</h3>
+<ul>
+  <li><b>The volunteer types the card number twice.</b> A typo would make an account for someone else's number, and the student's code wouldn't work with their real one.</li>
+  <li><b>The number leaves the screen</b> as soon as the code is given. "Done, clear the screen" removes the code too, before the next person steps up.</li>
+  <li><b>New passwords are typed twice.</b> A typo would mean another trip to the counter. A "Show the password" box helps on a phone.</li>
+  <li><b>"Please don't use your MUN password"</b> is on the setup page <span class="rule">P8</span>.</li>
+  <li><b>No logging in on top of someone else.</b> If a volunteer is logged in on the counter laptop, the student pages say "You're logged in" and ask students to use their own phone. Otherwise a student would replace the volunteer's login, and stay logged in on a shared laptop for 30 days.</li>
+  <li><b>Phones:</b> boxes are big enough to tap, and text is at least 16 px, so phones don't zoom in. The ID number box opens the number keypad.</li>
+</ul>
+<div class="why">
+<p><b>Why React Router?</b> It's the standard way to do this in React. Many screens are coming (booking, packing queue, counter, coordinator), and each needs its own address. <b>Why not write our own?</b> 30 lines would cover today, but Back-button handling, links and "page not found" add up quickly.</p>
+</div>
+
+<!-- 11 -->
+<h2 id="tests"><span class="num">11</span>The tests</h2>
+<p>167 tests pass, 68 of them new since 4 November. They take about 20 seconds, because argon2 is slow on purpose.</p>
+<table>
+  <tr><th>File</th><th>What it checks</th></tr>
+  <tr><td><code>test_accounts.py</code></td><td>Every account rule, straight from the Python code: codes, resets, wrong tries, trusted devices, volunteers, the script, and the 10-at-once race</td></tr>
+  <tr><td><code>test_login_api.py</code></td><td>The web side: cookie settings, staying logged in 30 days vs 12 hours, who may use which address, error answers</td></tr>
+  <tr><td><code>test_privacy.py</code></td><td>The P10 search, and that no address takes a secret in the web address</td></tr>
+  <tr><td><code>test_first_coordinator.py</code></td><td>The script: the printed code works, and it refuses a second coordinator</td></tr>
+  <tr><td><code>test_database_rules.py</code></td><td>+4: the new database rules, like "a typed password can never be saved"</td></tr>
+</table>
+<p>The pages were also checked in Edge, on a laptop-sized and a phone-sized screen, light and dark. A script played every step: Alex sets up, gives a student a code, adds Sam, the student sets up on a phone, Sam gives a reset code, a stranger guesses 6 times, Alex switches Sam off. None of the 525 web addresses the browser asked for had the ID number or a password in it.</p>
+
+<!-- 12 -->
+<h2 id="open"><span class="num">12</span>Open questions</h2>
+<div class="warn">
+<p><b>1. Can the coordinator give students setup codes?</b> It's allowed now. The rules list it for volunteers, but without it a coordinator helping at the counter would need a second account. A one-word change if not.</p>
+</div>
+<div class="warn">
+<p><b>2. Switching a volunteer back on.</b> There's no way yet. A volunteer who comes back would need a new username, like "Sam B".</p>
+</div>
+<div class="warn">
+<p><b>3. A stranger guessing can delay a reset on a new phone.</b> Found during the browser check. If someone is guessing a student's password, the student's <i>usual</i> phone still gets in. But a <i>new</i> phone has no device cookie, so it shares the stranger's count, and it may have to wait up to 15 minutes to use a new setup code. This is rare: the stranger must know the ID number and keep guessing. The student can use their usual phone, or wait.</p>
+</div>
+<p>Left for the jobs script (step 8): deleting old wrong tries, logins that have run out, and unused setup codes. Until then they just sit in their tables, ignored.</p>
+
+<!-- 13 -->
+<h2 id="run"><span class="num">13</span>How to run it and try it</h2>
+<p>Each server needs its own terminal. The folder name has a space, so keep the quotes.</p>
+<pre class="code"><span class="c"># Terminal 1: the server</span>
+cd "D:\MUN Project\backend"
+.venv\Scripts\python -m uvicorn app.main:app --reload
+
+<span class="c"># Terminal 2: the pages</span>
+cd "D:\MUN Project\frontend"
+npm run dev</pre>
+<p>Then make your own coordinator account, in a third terminal:</p>
+<pre class="code">cd "D:\MUN Project\backend"
+.venv\Scripts\python -m app.first_coordinator YourName</pre>
+<p>Open <code>http://localhost:5173/staff/setup</code>, type the username and the code it printed, and choose a password. From there:</p>
+<ol>
+  <li><b>Counter:</b> type a made-up 9-digit number twice, and get a code.</li>
+  <li>Open a <b>private window</b> (it has its own cookies, like a student's phone), go to "Set up your account", and use that number and code.</li>
+  <li><b>Volunteers:</b> add one, then set them up in another private window.</li>
+</ol>
+<p>Use made-up numbers only. Real ones wait until the Campus Food Bank agrees to anything live.</p>
+
+</main>
+</body>
+</html>

@@ -303,7 +303,7 @@ The rules don't say what students see. This page shows "6 left" because it's for
 
 ## 2026-11-05
 
-Step 3, accounts and login, server side. Started on 5 Nov and finished on 6 Nov. The pages come next.
+Step 3, accounts and login. The server side was started on 5 Nov and finished on 6 Nov, with the pages (see 6 Nov). How it all works is in accounts.html.
 
 **A student stays logged in for 30 days after their last visit. Staff are logged out 12 hours after logging in.** (The user's choice.)
 Places go fast at 5 pm, so a student shouldn't have to find their password on booking night. Each visit moves the 30 days on, at most once a day, so not every visit writes to the database. The counter laptop is shared, so a staff login never lasts overnight, however busy the shift.
@@ -348,6 +348,24 @@ An error that gets printed or logged could otherwise show a password hash or an 
 
 **Tests pretend to use https.**
 Login cookies are Secure, sent over https only, so a test client on plain http would never send them back.
+
+**The pages use React Router.**
+Each page gets its own web address: /login, /setup, /staff/login, /staff/setup, /counter and /volunteers. The Back button and links then work as people expect. Many more screens are coming, and React Router is the standard way to do this in React. Writing our own would cover today in 30 lines, but Back-button handling, links and "page not found" add up quickly.
+
+**The page asks the server who is logged in, once, when it opens.**
+The login cookie is HttpOnly, so the page can't read it. `GET /api/me` answers with the account or null, and every page shares that answer. Pages for staff send anyone else to the staff login page. That is only for looks: the server checks every request on its own.
+
+**At the counter, the volunteer types the card number twice.**
+A typo would make an account for someone else's number, and the student's code wouldn't work with their real one. The number is cleared from the screen as soon as the code is given, and "Done, clear the screen" removes the code before the next person steps up.
+
+**New passwords are typed twice, with a "Show the password" box.**
+A typo in a new password would mean another trip to the counter.
+
+**The login and setup pages don't work while someone is logged in on that browser.**
+They say "You're logged in" and offer Log out. Otherwise a student who set up their account on the counter laptop would replace the volunteer's login, and stay logged in on a shared laptop for 30 days. The page asks students to use their own phone.
+
+**Open question: a stranger guessing can delay a reset on a new phone.**
+Found while checking the pages in a browser. If someone is guessing a student's password, the student's usual phone still gets in, because of its trusted-device cookie. A new phone doesn't have one, so it shares the stranger's count and may wait up to 15 minutes to use a new setup code. It needs a stranger who knows the ID number and keeps guessing, so it should be rare. Counting setup code tries separately from password tries would only move the problem, so it's left as it is for now.
 
 **Left for later steps:**
 - The jobs script (step 8) will delete old wrong tries, logins that have run out and unused setup codes. Until then they stay in their tables, ignored.
