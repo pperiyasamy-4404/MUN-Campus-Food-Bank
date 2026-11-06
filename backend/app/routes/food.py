@@ -13,6 +13,7 @@ router = APIRouter(prefix="/api")
 
 
 class VarietyOut(BaseModel):
+    id: int
     name: str
     # None for extras: they only show as "may be available" (E2).
     stock: int | None
@@ -81,6 +82,7 @@ def food_on_the_shelf(db: DB) -> FoodOut:
     for row in rows:
         shelf = extras if row.is_extra else bookable
         variety = VarietyOut(
+            id=row.id,
             name=row.name,
             stock=None if row.is_extra else row.stock,
             tags=tags_by_variety[row.id],

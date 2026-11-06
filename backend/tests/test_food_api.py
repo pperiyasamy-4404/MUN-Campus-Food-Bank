@@ -67,22 +67,26 @@ def test_hidden_varieties_are_left_out(client, shelf):
     assert not any(path.startswith("Cleaning") for path in listed)
 
 
+def without_ids(varieties):
+    """Ids come from the database, so they differ from run to run."""
+    assert all(isinstance(variety.pop("id"), int) for variety in varieties)
+    return varieties
+
+
 def test_bookable_food_shows_its_stock_even_at_zero(client, shelf):
     protein = food(client)["bookable"][1]
 
-    assert protein["items"][1]["varieties"] == [
+    assert without_ids(protein["items"][1]["varieties"]) == [
         {"name": "Chickpeas (canned)", "stock": 0, "tags": ["Gluten-free", "Halal", "Vegetarian"]}
     ]
 
 
 def test_extras_are_listed_apart_with_no_count(client, shelf):
     """Extras only show as "may be available" (E1, E2), so the server doesn't send a count."""
-    assert food(client)["extras"] == [
-        {
-            "name": "Bakery",
-            "items": [{"name": "Bread", "varieties": [{"name": "White bread", "stock": None, "tags": ["Vegetarian"]}]}],
-        }
-    ]
+    [bakery] = food(client)["extras"]
+    [bread] = bakery["items"]
+    assert (bakery["name"], bread["name"]) == ("Bakery", "Bread")
+    assert without_ids(bread["varieties"]) == [{"name": "White bread", "stock": None, "tags": ["Vegetarian"]}]
 
 
 def test_an_empty_shelf(client):

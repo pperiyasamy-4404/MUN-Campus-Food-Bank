@@ -16,11 +16,12 @@ from math import ceil
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
-from app.models import AuditLog, Settings, SetupCode, Staff, Student
+from app.models import AuditLog, SetupCode, Staff, Student
 from app.problems import NameTaken, NotFound, Problem
 from app.security.keyed_hash import id_hash, username_hash
 from app.security.passwords import hash_password, needs_new_hash, password_matches
 from app.security.sessions import end_every_session, end_old_sessions
+from app.services.settings import food_bank_settings
 from app.security.setup_codes import new_setup_code, setup_code_hash
 from app.security.wrong_tries import (
     count_wrong_try,
@@ -236,13 +237,6 @@ def set_up_first_coordinator(db: Session, username: str, now: datetime) -> Issue
 
 
 # ---------- shared steps ----------
-
-
-def food_bank_settings(db: Session) -> Settings:
-    settings = db.get(Settings, 1)
-    if settings is None:
-        raise LookupError("The settings row is missing")
-    return settings
 
 
 def log(

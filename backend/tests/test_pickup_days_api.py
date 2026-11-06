@@ -34,7 +34,9 @@ def test_a_day_comes_with_its_slots_in_newfoundland_time(client, db_with_sample_
     assert day["closed_reason"] is None
     # 3:30 to 5:30 pm in 10-minute slots: 12 of them, the last at 5:20 (S1).
     assert len(day["slots"]) == 12
-    assert day["slots"][0] == {"starts_at": "2026-11-09T15:30:00-03:30", "places_left": 1}
+    first = day["slots"][0]
+    assert (first["starts_at"], first["places_left"]) == ("2026-11-09T15:30:00-03:30", 1)
+    assert isinstance(first["id"], int)
     assert day["slots"][-1]["starts_at"] == "2026-11-09T17:20:00-03:30"
 
 

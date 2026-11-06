@@ -68,3 +68,15 @@ def booking_status(day: PickupDay, now: datetime) -> BookingStatus:
     if now < day.booking_closes_at:
         return "open"
     return "booking_over"
+
+
+def say_day(on: date) -> str:
+    """'Monday, November 9', for messages people read. Matches the page's dates."""
+    return f"{on:%A, %B} {on.day}"
+
+
+def say_moment(moment: datetime) -> str:
+    """'Monday, November 9 at 3:30 p.m.', in Newfoundland time (T1)."""
+    local = moment.astimezone(NEWFOUNDLAND)
+    clock = f"{local:%I:%M}".lstrip("0") + (" a.m." if local.hour < 12 else " p.m.")
+    return f"{say_day(local.date())} at {clock}"

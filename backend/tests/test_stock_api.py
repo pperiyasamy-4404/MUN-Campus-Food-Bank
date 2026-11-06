@@ -147,7 +147,8 @@ def test_a_volunteer_adds_a_donation_of_something_new(client, db, sam, protein):
     assert item["varieties"][0]["counted_by"] == "Sam"
     # Students see it straight away.
     food = client.get("/api/food").json()
-    assert food["bookable"][0]["items"][0]["varieties"] == [{"name": "Red lentils", "stock": 12, "tags": ["Halal"]}]
+    [lentils] = food["bookable"][0]["items"][0]["varieties"]
+    assert (lentils["name"], lentils["stock"], lentils["tags"]) == ("Red lentils", 12, ["Halal"])
 
 
 def test_adding_a_variety_and_a_taken_name(client, db, sam):
