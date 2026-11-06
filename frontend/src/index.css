@@ -28,7 +28,7 @@ body {
 
 main {
   max-width: 52rem;
-  margin: 3rem auto 5rem;
+  margin: 2rem auto 4rem;
   padding: 0 1rem;
 }
 
@@ -204,4 +204,302 @@ h4 {
 
 .variety-out .stock {
   color: var(--red);
+}
+
+/* ---------- the bar at the top, and the line at the bottom ---------- */
+
+.top {
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+
+.top nav {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 0.6rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1.1rem;
+}
+
+.top a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.top a:hover,
+.top a.active {
+  color: var(--ink);
+}
+
+.top a.active {
+  text-decoration: underline;
+  text-underline-offset: 0.3rem;
+}
+
+.top .brand {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.who {
+  font-weight: 600;
+}
+
+.bottom {
+  max-width: 52rem;
+  margin: 0 auto 2rem;
+  padding: 1rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+
+.bottom a {
+  color: var(--muted);
+}
+
+.banner {
+  max-width: 50rem;
+  margin: 1rem auto 0;
+}
+
+/* ---------- forms ---------- */
+
+.narrow {
+  max-width: 26rem;
+}
+
+form {
+  margin-top: 1rem;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label {
+  display: block;
+  font-weight: 600;
+}
+
+.hint {
+  margin: 0.1rem 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+input:not([type='checkbox']) {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  /* 16px or more, so phones don't zoom in when the box is tapped */
+  font: inherit;
+  font-size: max(1rem, 16px);
+  color: var(--ink);
+  background: var(--page);
+  border: 1px solid var(--muted);
+  border-radius: 0.5rem;
+}
+
+input:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* Shown in capitals, like the code on the slip. The server doesn't mind either way. */
+.code-input {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.field-wrong input {
+  border: 2px solid var(--red);
+}
+
+.field-error {
+  margin: 0.3rem 0 0;
+  color: var(--red);
+  font-weight: 600;
+}
+
+.check {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin: -0.3rem 0 1.2rem;
+}
+
+.check input {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+button,
+a.button {
+  display: inline-block;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.6rem 1.1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--blue);
+  background: var(--blue);
+  color: var(--page);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--blue);
+}
+
+button.danger {
+  background: transparent;
+  color: var(--red);
+  border-color: var(--red);
+}
+
+button.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-weight: 400;
+  text-decoration: underline;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.after-form {
+  margin-top: 1.5rem;
+  color: var(--muted);
+}
+
+.after-form a {
+  color: var(--blue);
+}
+
+.notice {
+  color: var(--amber);
+  background: var(--amber-bg);
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.5rem;
+}
+
+/* ---------- a setup code, shown once ---------- */
+
+.code-box {
+  margin: 1rem 0 1.5rem;
+  padding: 1rem 1.2rem;
+  border: 2px solid var(--green);
+  border-radius: 0.8rem;
+  background: var(--green-bg);
+}
+
+.code-box h2 {
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-size: 1.1rem;
+}
+
+.code {
+  margin: 0.6rem 0;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--ink);
+}
+
+.tell ol {
+  margin: 0.2rem 0 0.8rem;
+  padding-left: 1.3rem;
+}
+
+.tell p {
+  margin: 0;
+}
+
+/* ---------- the volunteer list ---------- */
+
+.add-form h2 {
+  margin-top: 0;
+  padding-top: 0;
+  border: none;
+}
+
+.people {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.people th,
+.people td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.people thead th {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+/* On a phone, the buttons go under each other. */
+@media (width < 40rem) {
+  .row-actions {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+}
+
+.people td:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.row-actions button {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.9rem;
+}
+
+.switched-off th,
+.switched-off td {
+  color: var(--muted);
+}
+
+/* Read out by screen readers, but not shown. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

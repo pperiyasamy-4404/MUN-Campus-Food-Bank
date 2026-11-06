@@ -41,3 +41,15 @@ export function showDayAndClock(moment: string): string {
 export function showDate(date: string): string {
   return dateOnly.format(new Date(`${date}T00:00:00Z`))
 }
+
+const dayOnly = new Intl.DateTimeFormat('en-CA', {
+  timeZone: NEWFOUNDLAND,
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric',
+})
+
+/** "Tuesday, November 10": the Newfoundland date of an exact moment. */
+export function showDay(moment: string): string {
+  return dayOnly.format(new Date(moment))
+}
