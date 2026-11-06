@@ -378,3 +378,35 @@ This replaces the 5 Nov note that a returning volunteer would need a new usernam
 **Left for later steps:**
 - The jobs script (step 8) will delete old wrong tries, logins that have run out and unused setup codes. Until then they stay in their tables, ignored.
 - The setup script needs the food bank settings in the database, for the setup code lifetime. On a real install the settings have to go in first. For now, only the sample data adds them.
+
+Step 4, items and stock, also on 6 Nov. How it works is in stock.html.
+
+**A count is what's on the shelf. The server takes off what's booked but not packed yet.**
+Booked items stay on the shelf until they're packed, but they're already promised. So 8 tins on the shelf with 2 booked leaves 6 to book. Packed items are in bags, not on the shelf, so they're left out either way. This makes a count right even while booking is open, so nobody has to remember when counting is safe. If fewer are on the shelf than were booked, stock stays at 0 (I4) and the volunteer is told how many bags will need a substitute.
+
+**A count locks the variety's row first.**
+A student booking the same food at the same moment waits until the count is saved, then takes their one off the new number. Without the lock, the count could overwrite the booking and promise the same tin twice. A test does exactly that on two connections. It fails without the lock (5 left instead of 4) and passes with it. The first version of that test passed both ways, because the count happened to equal the old stock, so it was changed.
+
+**One way to change stock: count the shelf.**
+There's no "+12 donated" button. One number to type, the number on the shelf, means the stock can't drift away from what's really there. A donation is shelved, then counted.
+
+**Each variety remembers when it was last counted, and by whom.**
+The stock page marks food not counted since the last pickup ended (that day's no-show time, when everything is settled). Volunteers can show only that food, to count what's needed before booking opens (I8). A database rule keeps the time and the person together.
+
+**Any staff member can count, add food, choose tags, and hide or show food. Only the coordinator adds categories and tags, and fixes names.**
+Rule I8 says volunteers or the coordinator update the items and stock counts, and donations arrive while volunteers are there. Categories and tags shape what students see and filter by, so one person keeps them tidy (R3). A typo in a name is fixed by the coordinator, and bookings show the new name because they point to the row.
+
+**A new item always comes with its first variety.**
+An item with no varieties would show students nothing. If there's only one kind, the variety can share the item's name.
+
+**A count above 999 is refused.**
+It catches a typo like 1000 for 10, which would let far too many students book.
+
+**Names are unique ignoring capitals, decided by the database.**
+The server tries to save and turns a refused name into "There's already an item called Pasta. Add a variety to it instead." Even two people adding Pasta at the same moment get that answer. A test found a bug here: the new name was set before the savepoint, so a refused rename broke the whole request. The name is now set inside the savepoint.
+
+**Extras with none left aren't shown to students.**
+Rule E2 shows today's extras as "may be available". An extra counted at 0 isn't available, so it's left out. On the staff page, extras show "10 left" instead of "can be booked", because they aren't booked online (E1).
+
+**The message type the person sees moved to its own file, app/problems.py.**
+Accounts and stock both need "something you can fix", like a taken name. The accounts code keeps its own kinds, like a wrong password, on top of it.

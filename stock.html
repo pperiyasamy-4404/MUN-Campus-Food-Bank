@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Food Bank: food and stock, explained</title>
+<style>
+  :root {
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc;
+    --blue: #2563eb; --blue-bg: #dbeafe;
+    --green: #059669; --green-bg: #d1fae5;
+    --amber: #b45309; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 980px; margin: 0 auto; padding: 36px 20px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 .num { color: var(--blue); margin-right: 8px; }
+  h3 { font-size: 1.15rem; margin: 30px 0 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--blue); }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
+  .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+  table { border-collapse: collapse; width: 100%; background: #fff; font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+  .why { border-left: 4px solid var(--blue); background: #eff6ff; padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .why p { margin: 4px 0; }
+  .short { background: var(--green-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .short p { margin: 2px 0; }
+  .warn { background: var(--amber-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .warn p { margin: 4px 0; }
+  pre.code { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 18px; font: 14px/1.55 ui-monospace, Consolas, monospace; overflow-x: auto; margin: 12px 0; }
+  pre .c { color: #94a3b8; }
+  pre .bad { color: #fca5a5; }
+  pre .good { color: #86efac; }
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; margin: 18px 0; }
+  .diagram svg { display: block; width: 100%; height: auto; }
+  .toc { columns: 2; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 20px 14px 40px; }
+  @media (max-width: 760px) { .toc { columns: 1; } }
+  .yes { color: var(--green); font-weight: 700; }
+  .no { color: var(--red); font-weight: 700; }
+</style>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Campus Food Bank · Step 4, items and stock · 6 November 2026</p>
+<h1>Food and stock</h1>
+<p class="lead">Volunteers and the coordinator now have a <b>Stock</b> page. Before each booking window opens, they count what's on the shelf and type the numbers in. When a donation of something new comes in, they add it. This page explains how it works and why.</p>
+
+<ol class="toc">
+  <li><a href="#stock">What "stock" means</a></li>
+  <li><a href="#count">Counting: what's on the shelf</a></li>
+  <li><a href="#lock">A count and a booking at the same moment</a></li>
+  <li><a href="#fresh">What needs counting</a></li>
+  <li><a href="#adding">Adding food</a></li>
+  <li><a href="#who">Who may do what</a></li>
+  <li><a href="#extras">Extras</a></li>
+  <li><a href="#addresses">The addresses</a></li>
+  <li><a href="#tests">The tests</a></li>
+  <li><a href="#ask">Two things to check with you</a></li>
+  <li><a href="#run">How to try it</a></li>
+</ol>
+
+<h2 id="stock"><span class="num">1</span>What "stock" means</h2>
+<p>Food comes in three levels <span class="rule">I1</span>: a <b>category</b> (Breakfast), an <b>item</b> (Oats) and a <b>variety</b> (Quick oats). Stock is counted per variety, because that's what is on the shelf.</p>
+<p>The number in the database, <code>varieties.stock</code>, is <b>how many more students can book it</b>. It isn't quite the number on the shelf:</p>
+<div class="diagram">
+<svg viewBox="0 0 940 200" role="img" aria-label="8 boxes on the shelf, 2 of them booked, leaves 6 to book">
+  <g font-family="system-ui, Segoe UI, sans-serif" font-size="15" text-anchor="middle">
+    <text x="470" y="28" font-weight="700">Quick oats: 8 boxes on the shelf</text>
+    <rect x="130" y="50" width="70" height="80" rx="8" fill="#fef3c7" stroke="#b45309"/>
+    <rect x="210" y="50" width="70" height="80" rx="8" fill="#fef3c7" stroke="#b45309"/>
+    <rect x="290" y="50" width="70" height="80" rx="8" fill="#d1fae5" stroke="#059669"/>
+    <rect x="370" y="50" width="70" height="80" rx="8" fill="#d1fae5" stroke="#059669"/>
+    <rect x="450" y="50" width="70" height="80" rx="8" fill="#d1fae5" stroke="#059669"/>
+    <rect x="530" y="50" width="70" height="80" rx="8" fill="#d1fae5" stroke="#059669"/>
+    <rect x="610" y="50" width="70" height="80" rx="8" fill="#d1fae5" stroke="#059669"/>
+    <rect x="690" y="50" width="70" height="80" rx="8" fill="#d1fae5" stroke="#059669"/>
+    <text x="205" y="158" font-size="14">2 booked, not packed yet</text>
+    <text x="205" y="178" font-size="13" fill="#475569">already promised to students</text>
+    <text x="525" y="158" font-size="14">6 can be booked</text>
+    <text x="525" y="178" font-size="13" fill="#475569">this is varieties.stock</text>
+  </g>
+</svg>
+</div>
+<p>When a student books, their box comes off <code>stock</code> straight away <span class="rule">I5</span>. But it stays on the shelf until a volunteer packs their bag. This is where a booked box is, for each booking status:</p>
+<table>
+  <tr><th>Booking status</th><th>Where the food is</th><th>On the shelf?</th></tr>
+  <tr><td><code>booked</code></td><td>On the shelf, waiting to be packed</td><td class="yes">yes</td></tr>
+  <tr><td><code>packed</code></td><td>In a bag with a sticky note</td><td class="no">no</td></tr>
+  <tr><td><code>picked_up</code></td><td>Gone home with the student</td><td class="no">no</td></tr>
+  <tr><td><code>cancelled</code>, <code>no_show</code></td><td>Back on the shelf, and back in <code>stock</code> <span class="rule">I6</span></td><td>counted as normal</td></tr>
+</table>
+
+<h2 id="count"><span class="num">2</span>Counting: what's on the shelf</h2>
+<p>The volunteer types the number they <b>see</b>. The server works out the rest:</p>
+<pre class="code">stock = on the shelf − booked, not packed yet
+    6 = 8            − 2</pre>
+<div class="why">
+<p><b>Why this way:</b> the volunteer never has to think about bookings. And a count is right at any time, even while booking is open, so nobody has to remember when counting is "safe".</p>
+<p><b>Why not "set stock to what I counted"?</b> While booking is open, that would offer the 2 promised boxes a second time.</p>
+<p><b>Why not a "+12 donated" button as well?</b> With two ways of changing the number, it can drift away from what's really there. One number to type, the one on the shelf, can't drift. A donation is shelved, then counted.</p>
+</div>
+<p><b>Fewer on the shelf than were booked?</b> Say 1 box is there, but 3 were booked. Stock can't go below 0 <span class="rule">I4</span>, so it's set to 0, and the page says: <i>"Saved. 2 booked ones are missing from the shelf: those bags will need a substitute."</i></p>
+<p>A count above 999 is refused, to catch a typo like 1000 for 10.</p>
+
+<h2 id="lock"><span class="num">3</span>A count and a booking at the same moment</h2>
+<p>Sam counts 5 tins and presses Save. At the same moment, a student books one. Without care:</p>
+<pre class="code"><span class="c">    Sam (count)                       Student (booking)</span>
+1.                                    stock 3 → 2, the tin goes in their booking
+2.  reads "booked, not packed": 0     <span class="c">(the booking isn't saved yet)</span>
+3.                                    saved
+4.  stock = 5 − 0 = 5                 <span class="bad">← the booked tin is offered again</span></pre>
+<p>So the count <b>locks</b> the variety's row before reading anything (<code>SELECT … FOR UPDATE</code>). A lock means "nobody else may change this row until I'm done". The booking already holds that lock from step 1, so Sam's count waits until the booking is saved, and then sees it:</p>
+<pre class="code"><span class="good">4.  stock = 5 − 1 = 4                 ← right</span></pre>
+<div class="short">
+<p><b>Tested for real:</b> a test does exactly this on two database connections. With the lock it gets 4. With the lock taken out it gets 5, so it fails. The first version of this test passed either way, because Sam's count equalled the old stock, so nothing was overwritten. Starting the stock at 3 fixed that.</p>
+</div>
+
+<h2 id="fresh"><span class="num">4</span>What needs counting</h2>
+<p>Each variety remembers its last count: <code>counted_at</code> and <code>counted_by_staff_id</code>. A database rule keeps the two together, so a count always says who made it.</p>
+<p>Food <b>needs counting</b> if it hasn't been counted since the last pickup ended. "Ended" means that day's no-show time, 6 pm, when every pickup, walk-in and no-show is settled. The page shows:</p>
+<ul>
+  <li>when the next booking window opens, like <i>"Count the shelf before booking for Monday, November 9 opens, Sunday, November 8 at 5:00 p.m."</i></li>
+  <li>how many foods still need counting, with an amber edge on each one</li>
+  <li>a tick box: <b>Only show food that needs counting</b></li>
+</ul>
+<p>Hidden food never needs counting.</p>
+
+<h2 id="adding"><span class="num">5</span>Adding food</h2>
+<ul>
+  <li><b>Something new</b> (a donation of lentils): <b>+ Add food to book</b>, with a category, the item ("Canned lentils"), its first variety ("Red lentils"), tags, and how many are on the shelf. An item can't be added on its own: with no varieties, students would see nothing. If there's only one kind, the variety can share the item's name.</li>
+  <li><b>A new kind of something already on the list</b> (penne next to spaghetti): <b>+ Add a variety of Pasta</b>, under the item.</li>
+  <li><b>Something the food bank stops getting</b>: <b>Edit → Hide</b>. It's hidden, not deleted, because old bookings still point to it. Students stop seeing it at once.</li>
+</ul>
+<h3>Names</h3>
+<p>Names are unique ignoring capitals: "Oats" and "oats" are the same item. The database decides, with a unique index on the lowercase name. The server tries to save, and turns a refusal into words: <i>"There's already an item called oats. Add a variety to it instead."</i></p>
+<div class="why">
+<p><b>Why let the database decide, instead of checking first?</b> If two volunteers add "Pasta" at the same moment, both checks would pass. The database rule can't be fooled that way.</p>
+<p><b>A bug a test found:</b> the save happens inside a <b>savepoint</b>, a small part of the transaction that can be undone on its own. For a rename, the new name was set <i>before</i> the savepoint opened. Opening a savepoint saves whatever is waiting first, so a refused name failed outside it, and the whole request broke. The name is now set inside the savepoint.</p>
+</div>
+
+<h2 id="who"><span class="num">6</span>Who may do what</h2>
+<table>
+  <tr><th></th><th>Volunteer</th><th>Coordinator</th></tr>
+  <tr><td>Count the shelf</td><td class="yes">yes</td><td class="yes">yes</td></tr>
+  <tr><td>Add an item or a variety</td><td class="yes">yes</td><td class="yes">yes</td></tr>
+  <tr><td>Choose a variety's tags, hide or show it</td><td class="yes">yes</td><td class="yes">yes</td></tr>
+  <tr><td>Add a category or a tag</td><td class="no">no</td><td class="yes">yes</td></tr>
+  <tr><td>Fix a name</td><td class="no">no</td><td class="yes">yes</td></tr>
+</table>
+<p>Rule <span class="rule">I8</span> says volunteers or the coordinator update the food and the counts, and donations arrive while volunteers are there. Categories and tags shape what students see and filter by, so one person keeps them tidy <span class="rule">R3</span>. Bookings point to the row, not the name, so a fixed name shows everywhere.</p>
+
+<h2 id="extras"><span class="num">7</span>Extras</h2>
+<p>Extras like bread and eggs aren't booked online <span class="rule">E1</span>. On the stock page they show <i>"10 left"</i>, not "can be booked". Students see them as "may be available" <span class="rule">E2</span>. Now <b>an extra at 0 isn't shown to students at all</b>, because it isn't available today.</p>
+
+<h2 id="addresses"><span class="num">8</span>The addresses</h2>
+<table>
+  <tr><th>Address</th><th>Who</th><th>What it does</th></tr>
+  <tr><td><code>GET /api/stock</code></td><td>Any staff</td><td>Everything for the page: categories, items, varieties (hidden ones too), tags, the next booking window, and when the last pickup ended</td></tr>
+  <tr><td><code>POST /api/varieties/{id}/count</code></td><td>Any staff</td><td><code>{"on_shelf": 8}</code>. Answers with the new numbers, and how many bags are short</td></tr>
+  <tr><td><code>POST /api/items</code></td><td>Any staff</td><td>A new item with its first variety</td></tr>
+  <tr><td><code>POST /api/items/{id}/varieties</code></td><td>Any staff</td><td>A new variety</td></tr>
+  <tr><td><code>PUT /api/varieties/{id}/tags</code></td><td>Any staff</td><td>Replace its tags</td></tr>
+  <tr><td><code>POST /api/varieties/{id}/hide</code>, <code>/show</code></td><td>Any staff</td><td>Hide or show it</td></tr>
+  <tr><td><code>POST /api/categories</code>, <code>POST /api/tags</code></td><td>Coordinator</td><td>Add one</td></tr>
+  <tr><td><code>PATCH /api/categories/{id}</code>, <code>/api/items/{id}</code>, <code>/api/varieties/{id}</code></td><td>Coordinator</td><td>Fix a name</td></tr>
+</table>
+<p><b>PUT</b> means "replace this whole thing" (the list of tags). <b>PATCH</b> means "change part of it" (just the name). The rules are in <code>app/services/stock.py</code> and the addresses in <code>app/routes/stock.py</code>. The page is <code>frontend/src/pages/Stock.tsx</code>, with its forms in <code>StockForms.tsx</code>.</p>
+
+<h2 id="tests"><span class="num">9</span>The tests</h2>
+<p>212 tests pass, 41 of them new.</p>
+<table>
+  <tr><th>File</th><th>What it checks</th></tr>
+  <tr><td><code>test_stock.py</code></td><td>Counting with each booking status, a short shelf, sensible numbers, the two-connection race, adding food, tags, hiding, unique names, renames</td></tr>
+  <tr><td><code>test_stock_api.py</code></td><td>Who may use which address, the page's data, and error answers like "Type a number from 0 to 999."</td></tr>
+  <tr><td><code>test_food_api.py</code></td><td>+1: extras at 0 aren't shown to students</td></tr>
+</table>
+<p>The page was also checked in Edge, on a laptop and a phone, light and dark. Alex counted, added lentils, tried to add "oats" twice, added a variety, hid steel-cut oats (and a student's page stopped showing them), added a tag and a category, and renamed Peanut butter. Sam, a volunteer, counted rice on a phone and saw no coordinator tools.</p>
+
+<h2 id="ask"><span class="num">10</span>Two things to check with you</h2>
+<div class="warn">
+<p><b>1. Who may do what</b> (section 6). Volunteers can add food and hide it. Only the coordinator adds categories and tags, and fixes names. Is that the split you want?</p>
+</div>
+<div class="warn">
+<p><b>2. Extras at 0 are hidden from students.</b> Before today, every extra on the list showed as "may be available", even at 0. Hiding the empty ones seems closer to rule E2, but it changes what students see.</p>
+</div>
+
+<h2 id="run"><span class="num">11</span>How to try it</h2>
+<p>Start both servers as usual, log in as your coordinator, and open <b>Stock</b> in the top bar. Your working database already has the new columns. Its sample food has never been counted, so every variety shows "Never counted".</p>
+
+</main>
+</body>
+</html>
