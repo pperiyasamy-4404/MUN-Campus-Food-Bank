@@ -24,6 +24,7 @@ export function Layout() {
             Pickup days
           </NavLink>
           {account?.kind === 'staff' && <NavLink to="/counter">Counter</NavLink>}
+          {account?.kind === 'staff' && <NavLink to="/stock">Stock</NavLink>}
           {account?.kind === 'staff' && account.role === 'coordinator' && (
             <NavLink to="/volunteers">Volunteers</NavLink>
           )}

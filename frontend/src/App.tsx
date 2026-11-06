@@ -5,6 +5,7 @@ import { Counter } from './pages/Counter.tsx'
 import { Home } from './pages/Home.tsx'
 import { StaffLogIn, StudentLogIn } from './pages/LogIn.tsx'
 import { StaffSetUp, StudentSetUp } from './pages/SetUp.tsx'
+import { Stock } from './pages/Stock.tsx'
 import { Volunteers } from './pages/Volunteers.tsx'
 
 // Every page and its web address. The addresses never hold anything private:
@@ -26,6 +27,14 @@ function App() {
               element={
                 <StaffOnly>
                   <Counter />
+                </StaffOnly>
+              }
+            />
+            <Route
+              path="stock"
+              element={
+                <StaffOnly>
+                  <Stock />
                 </StaffOnly>
               }
             />

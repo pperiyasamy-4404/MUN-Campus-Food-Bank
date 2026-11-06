@@ -106,16 +106,21 @@ export type Answer<T> =
   | { ok: false; status: number; message: string; fields: Record<string, string> }
 
 /**
- * Send a form to the server, always as a POST with the values in the body.
+ * Send a form to the server, with the values in the body: POST to add or do
+ * something, PUT to replace a list (like a variety's tags), PATCH to change a name.
  *
  * Never put an ID number or password in the web address: addresses end up in
  * the browser history and in server logs (P10).
  */
-export async function send<T>(path: string, body: object = {}): Promise<Answer<T>> {
+export async function send<T>(
+  path: string,
+  body: object = {},
+  method: 'POST' | 'PUT' | 'PATCH' = 'POST',
+): Promise<Answer<T>> {
   let response: Response
   try {
     response = await fetch(path, {
-      method: 'POST',
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
@@ -132,10 +137,11 @@ export async function send<T>(path: string, body: object = {}): Promise<Answer<T
     return problem(response.status, detail)
   }
   if (Array.isArray(detail)) {
-    // A form problem (422): one message per box, like loc ["body", "id_number"].
+    // A form problem (422): one message per box. loc ["body", "id_number"] is
+    // "id_number", and loc ["body", "first_variety", "name"] is "first_variety.name".
     const fields: Record<string, string> = {}
     for (const { loc, msg } of detail as { loc: (string | number)[]; msg: string }[]) {
-      fields[String(loc[1] ?? 'form')] ??= msg
+      fields[loc.slice(1).join('.') || 'form'] ??= msg
     }
     return { ok: false, status: response.status, message: 'Please fix the boxes marked in red.', fields }
   }
@@ -144,4 +150,44 @@ export async function send<T>(path: string, body: object = {}): Promise<Answer<T
 
 function problem(status: number, message: string): Answer<never> {
   return { ok: false, status, message, fields: {} }
+}
+
+// ---------- food and stock, for staff (backend/app/routes/stock.py) ----------
+
+export type StockVariety = {
+  id: number
+  name: string
+  shown: boolean
+  stock: number // how many more students can book it
+  booked_not_packed: number // still on the shelf, already promised
+  tag_ids: number[]
+  counted_at: string | null
+  counted_by: string | null
+}
+
+export type StockItem = {
+  id: number
+  name: string
+  is_extra: boolean
+  varieties: StockVariety[]
+}
+
+export type StockCategory = {
+  id: number
+  name: string
+  items: StockItem[]
+}
+
+export type TagChoice = { id: number; name: string }
+
+export type StockPage = {
+  categories: StockCategory[]
+  tags: TagChoice[]
+  next_booking: {
+    pickup_date: string
+    booking_opens_at: string
+    booking_closes_at: string
+    booking_status: BookingStatus
+  } | null
+  last_pickup_ended_at: string | null
 }
