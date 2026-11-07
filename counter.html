@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Food Bank: the counter, explained</title>
+<style>
+  :root {
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc;
+    --blue: #2563eb; --blue-bg: #dbeafe;
+    --green: #059669; --green-bg: #d1fae5;
+    --amber: #b45309; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 980px; margin: 0 auto; padding: 36px 20px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 .num { color: var(--blue); margin-right: 8px; }
+  h3 { font-size: 1.15rem; margin: 30px 0 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--blue); }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
+  .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; background: #fff; font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+  .why { border-left: 4px solid var(--blue); background: #eff6ff; padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .why p { margin: 4px 0; }
+  .ask { background: var(--amber-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .ask p { margin: 4px 0; }
+  pre.code { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 18px; font: 14px/1.55 ui-monospace, Consolas, monospace; overflow-x: auto; margin: 12px 0; }
+  pre .c { color: #94a3b8; }
+  pre .bad { color: #fca5a5; }
+  pre .good { color: #86efac; }
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; margin: 18px 0; }
+  .diagram svg { display: block; width: 100%; height: auto; }
+  .toc { columns: 2; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 20px 14px 40px; }
+  @media (max-width: 760px) { .toc { columns: 1; } }
+  .steps { counter-reset: step; list-style: none; padding: 0; }
+  .steps li { counter-increment: step; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px 8px 46px; margin: 6px 0; position: relative; }
+  .steps li::before { content: counter(step); position: absolute; left: 12px; top: 8px; width: 24px; height: 24px; border-radius: 50%; background: var(--blue); color: #fff; font-weight: 700; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
+  .yes { color: #065f46; font-weight: 600; }
+  .no { color: var(--red); font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Campus Food Bank · Step 7, the counter · 7 November 2026</p>
+<h1>The counter</h1>
+<p class="lead">This is where students actually get their food. Booked students say their code, a volunteer checks their MUN card, and hands over the packed bag. Students without a booking are served as walk-ins, from what's left on the shelf. Both count toward the 28 days, so nobody can walk in one week and book online the next.</p>
+
+<ol class="toc">
+  <li><a href="#lines">Two lines, one counter</a></li>
+  <li><a href="#when">When the counter is open</a></li>
+  <li><a href="#handover">Handing over a bag</a></li>
+  <li><a href="#walkin">Walk-ins</a></li>
+  <li><a href="#extras">One of each extra, kept by the database</a></li>
+  <li><a href="#lock">The student's lock</a></li>
+  <li><a href="#tables">What the database remembers</a></li>
+  <li><a href="#addresses">The addresses and pages</a></li>
+  <li><a href="#tests">The tests</a></li>
+  <li><a href="#ask">One question for you</a></li>
+  <li><a href="#run">How to try it</a></li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="lines"><span class="num">1</span>Two lines, one counter</h2>
+<div class="diagram">
+<svg viewBox="0 0 940 300" role="img" aria-label="Booked students: code, card, bag. Walk-ins: card twice, check, shelf. Both set the last pickup date.">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+  </defs>
+  <g font-family="system-ui, Segoe UI, sans-serif" font-size="14" text-anchor="middle">
+    <text x="20" y="34" text-anchor="start" font-weight="700" fill="#2563eb">Booked</text>
+    <rect x="100" y="12" width="170" height="64" rx="10" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="185" y="40" font-weight="700">Says "K3P"</text>
+    <text x="185" y="60" font-size="12">finds the packed bag</text>
+    <rect x="300" y="12" width="170" height="64" rx="10" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="385" y="40" font-weight="700">Gaps and extras</text>
+    <text x="385" y="60" font-size="12">from the shelf (U6, E3)</text>
+    <rect x="500" y="12" width="170" height="64" rx="10" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="585" y="40" font-weight="700">MUN card</text>
+    <text x="585" y="60" font-size="12">must match the booking</text>
+    <line x1="270" y1="44" x2="296" y2="44" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="470" y1="44" x2="496" y2="44" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+
+    <text x="20" y="194" text-anchor="start" font-weight="700" fill="#059669">Walk-in</text>
+    <rect x="100" y="172" width="170" height="64" rx="10" fill="#d1fae5" stroke="#059669"/>
+    <text x="185" y="200" font-weight="700">MUN card, twice</text>
+    <text x="185" y="220" font-size="12">no booking to compare with</text>
+    <rect x="300" y="172" width="170" height="64" rx="10" fill="#d1fae5" stroke="#059669"/>
+    <text x="385" y="200" font-weight="700">The check</text>
+    <text x="385" y="220" font-size="12">28 days, no exception</text>
+    <rect x="500" y="172" width="170" height="64" rx="10" fill="#d1fae5" stroke="#059669"/>
+    <text x="585" y="200" font-weight="700">From the shelf</text>
+    <text x="585" y="220" font-size="12">up to 13, extras one each</text>
+    <line x1="270" y1="204" x2="296" y2="204" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="470" y1="204" x2="496" y2="204" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+
+    <rect x="730" y="92" width="190" height="84" rx="12" fill="#fef3c7" stroke="#b45309"/>
+    <text x="825" y="122" font-weight="700">Saved at once</text>
+    <text x="825" y="143" font-size="12">who served them, the food,</text>
+    <text x="825" y="160" font-size="12">and the last pickup date (F1)</text>
+    <path d="M670,44 C710,44 710,110 726,120" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#b2)"/>
+    <path d="M670,204 C710,204 710,150 726,145" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#b2)"/>
+    <defs><marker id="b2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker></defs>
+    <text x="470" y="285" font-size="13" fill="#475569">Two lines side by side, with their own volunteers (W3). Both count toward the 28 days.</text>
+  </g>
+</svg>
+</div>
+<p>The Counter page now has a small menu: <b>Hand over a bag</b> (<code>/counter</code>), <b>Walk-in</b> (<code>/counter/walk-in</code>), and <b>Setup code</b> (<code>/counter/setup-code</code>), which is the page from step 3.</p>
+
+<!-- ============================================================ -->
+<h2 id="when"><span class="num">2</span>When the counter is open</h2>
+<p>On a pickup day, from when booking closes (12 pm) until the no-show time (6 pm). Handing over can't start earlier anyway, because bags are packed from 12 pm, and only a packed bag can be picked up <span class="rule">B2</span>. Walk-ins use the same hours, so the counter has one rule. Otherwise the page says why:</p>
+<pre class="code">The counter opens when booking closes, at 12:00 p.m.
+Pickup for Monday, November 9 is over.
+Today isn't a pickup day. The next one is Thursday, November 12.</pre>
+
+<!-- ============================================================ -->
+<h2 id="handover"><span class="num">3</span>Handing over a bag</h2>
+<ol class="steps">
+  <li>The student says their code, like <b>K3P</b>. The volunteer types it and presses <b>Find the bag</b>. Only today's bags are found.</li>
+  <li>The page shows what's in the bag and the sticky note. If the bag isn't packed yet: "Bag K3P isn't packed yet. Pack it on the Packing page, then hand it over", with a link straight to it.</li>
+  <li>If the bag is short, the student chooses from the shelf <span class="rule">U6</span>. They also say which extras they'd like <span class="rule">E3</span>.</li>
+  <li>The volunteer types the number on the student's MUN card, and presses <b>Hand over</b>.</li>
+</ol>
+<p>The server then does it all in one transaction: lock the student and the booking, check it's packed, check the card, take the chosen food and extras off stock, and mark it picked up, by this volunteer <span class="rule">B3</span>. The student's last pickup date becomes today, so their next pickup is 28 days later <span class="rule">F1</span>.</p>
+
+<h3>The card check</h3>
+<p>Booking online proves nothing. The card at the counter does <span class="rule">P5</span>. The server makes the keyed hash of the typed number and compares it with the one saved on the account:</p>
+<pre class="code">typed 202300001 → keyed hash 3f9a…  ==  the booking's student 3f9a…   <span class="good">← hand it over</span>
+typed 202300009 → keyed hash 71c2…  !=  3f9a…                         <span class="bad">← refused</span>
+
+"That card doesn't match bag N5D. Check the code and the card. Don't hand over the bag until they match."</pre>
+<p>The number is typed once here: a typo just doesn't match. The refusal never repeats the number <span class="rule">P10</span>, and the volunteer never sees the hash <span class="rule">P4</span>.</p>
+
+<h3>A short bag: choosing from the shelf</h3>
+<p>When packing couldn't fill a gap, the sticky note says "Sunflower oil → choose at the counter". At the counter, the page says "The bag is 1 short" and shows the shelf: only food nobody booked, with how many are left. The same limits as booking apply:</p>
+<ul>
+  <li>At most as many things as the gaps. They can choose fewer, or nothing.</li>
+  <li>The per-item limit counts what's already in the bag. A bag with quick oats shows "One Oats only" next to steel-cut oats.</li>
+  <li>Extras go under Extras, not here.</li>
+</ul>
+<p>Once handed over, the bag's page shows "Also given at the counter" with what they chose and their extras.</p>
+
+<!-- ============================================================ -->
+<h2 id="walkin"><span class="num">4</span>Walk-ins</h2>
+<p>The volunteer types the card number twice and presses <b>Check the card</b>. Twice, because there's no booking to compare with: a typo would record the walk-in under someone else's number and block them for 28 days. The check saves nothing, and has four possible answers:</p>
+<div class="table-wrap">
+<table>
+  <tr><th>Who</th><th>What the page says</th><th>Rule</th></tr>
+  <tr><td>A card with no account yet</td><td class="yes">"They can be served. This is their first visit: recording it makes an account for their card."</td><td><span class="rule">W1</span></td></tr>
+  <tr><td>Picked up within 28 days, online or walk-in</td><td class="no">"Not yet. Their next pickup can be on Wednesday, November 25 or later." No override, as you decided.</td><td><span class="rule">F1</span> <span class="rule">W1</span></td></tr>
+  <tr><td>Booked for today</td><td class="no">"They booked for today: bag U3P, at 3:10 p.m. Hand over that bag instead."</td><td>—</td></tr>
+  <tr><td>Booked for a later day</td><td class="yes">Can be served, but serving them cancels that booking. A checkbox must be ticked first.</td><td><span class="rule">W4</span></td></tr>
+</table>
+</div>
+<p>Then the volunteer adds what they take from the shelf (up to 13 things, the per-item limit, food nobody booked) and any extras, and presses <b>Record the walk-in</b>. The answer says when their next pickup can be.</p>
+<p>For W4, the cancelled booking's place and food go back for someone else, in the same transaction. Its cancel reason is <code>walk_in</code>.</p>
+
+<!-- ============================================================ -->
+<h2 id="extras"><span class="num">5</span>One of each extra, kept by the database</h2>
+<p>Rule <span class="rule">E3</span>: at most one of each extra item, like one bread, even if there's white and whole wheat. The code checks it, and tables.html promised the database would too. The trouble: a database rule only sees the row it's saving, and "is this an extra?" lives in the <code>items</code> table.</p>
+<p>The trick is to <b>copy</b> the item and is_extra onto each row of <code>counter_items</code>, and then make the copies impossible to get wrong:</p>
+<pre class="code">counter_items row:  variety 14 (White bread),  item 7 (Bread),  is_extra true
+
+link (variety_id, item_id) → varieties (id, item_id)    <span class="c">-- variety 14 really is a kind of item 7</span>
+link (item_id, is_extra)   → items (id, is_extra)       <span class="c">-- item 7 really is an extra</span>
+UNIQUE (booking_id, item_id) WHERE is_extra             <span class="c">-- one Bread per pickup</span></pre>
+<p>Saving whole wheat bread as well is refused by <code>uq_counter_items_one_extra_per_item_per_booking</code>. Saving bread with <code>is_extra false</code> to dodge it is refused by the link. It's the same pattern the bookings table uses to keep a booking's day the same as its slot's day.</p>
+
+<!-- ============================================================ -->
+<h2 id="lock"><span class="num">6</span>The student's lock</h2>
+<p>A new "at the same moment" problem: a student is at the counter as a walk-in, while their phone presses Book for Thursday.</p>
+<pre class="code"><span class="bad">Without a student lock:</span>
+  Counter checks: last pickup long ago ✓      Phone checks: last pickup long ago ✓
+  Counter saves the walk-in, today             Phone saves the booking, Thursday
+  <span class="bad">← two pickups in four days</span>
+
+<span class="good">With it:</span>
+  Counter locks the student, checks, saves, lets go
+  The phone was waiting. Now it sees today's pickup:
+  <span class="good">"Your next pickup can be on Monday, December 7 or later."</span></pre>
+<p>So the lock order everywhere is now: <b>the student, then the slot, then the hold or booking, then the food from the lowest id up</b>. Book locks the student first, and so do both counter lines. A test runs exactly this on two connections, with different food so nothing else makes Book wait. With the lock taken out, the booking went through and the test failed. A second test has two walk-ins take the last tin at once. Without the food lock, both got it.</p>
+
+<!-- ============================================================ -->
+<h2 id="tables"><span class="num">7</span>What the database remembers</h2>
+<p>Two new tables, 21 in all, in migration <code>8ed315f3aef8</code>:</p>
+<div class="table-wrap">
+<table>
+  <tr><th>Table</th><th>What it holds</th><th>Database rules</th></tr>
+  <tr><td><code>walk_ins</code></td><td>One student served without a booking: the day, when, and which volunteer (R4).</td><td>One walk-in per student per day.</td></tr>
+  <tr><td><code>counter_items</code></td><td>Food handed over that wasn't in a packed bag: extras, a choice for a gap, and everything a walk-in takes.</td><td>Belongs to one booking or one walk-in. One of each extra item. An extra is one. The copied item and is_extra must be right.</td></tr>
+</table>
+</div>
+<div class="why">
+  <p><b>Why not make walk-ins bookings?</b> A booking has a slot and a code, and rules about both. A walk-in has neither, so half the booking rules would need switching off.</p>
+  <p><b>Why one table for extras, gap choices and walk-in food?</b> They're the same columns. Three tables would repeat them three times.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="addresses"><span class="num">8</span>The addresses and pages</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>Address</th><th>What it does</th></tr>
+  <tr><td><code>GET /api/counter</code></td><td>Is the counter open, and what's on the shelf: food and extras with how many are left.</td></tr>
+  <tr><td><code>POST /api/counter/find</code></td><td>Today's bag for a code. A POST, so codes don't end up in the browser's history.</td></tr>
+  <tr><td><code>POST /api/counter/pickups</code></td><td>Hand over a bag: the code, the card number, gap choices and extras.</td></tr>
+  <tr><td><code>POST /api/walk-ins/check</code></td><td>Can this card be served now? Saves nothing.</td></tr>
+  <tr><td><code>POST /api/walk-ins</code></td><td>Record a walk-in: the card number, the food, extras, and "yes, cancel their booking" for W4.</td></tr>
+</table>
+</div>
+<p>Staff only. Card numbers only ever travel in the body of a POST <span class="rule">P10</span>. The pages are <code>HandOver.tsx</code>, <code>WalkIn.tsx</code> and <code>SetupCode.tsx</code>, with the shared shelf and extras pickers in <code>CounterParts.tsx</code>.</p>
+
+<!-- ============================================================ -->
+<h2 id="tests"><span class="num">9</span>The tests</h2>
+<p>49 new tests, 358 in all, every one passing.</p>
+<ul>
+  <li><code>tests/test_counter.py</code>: when the counter is open; handing over (right card, wrong card, not packed, twice, another day's code); a short bag and its limits; extras one of each, and only real extras; walk-ins (first visit, inside 28 days, twice in a day, booked today, W4 with and without confirming, limits, nothing left); booking online after a walk-in; and the two "same moment" tests.</li>
+  <li><code>tests/test_counter_api.py</code>: the addresses the way the pages use them. Staff only, and no student hash in any answer <span class="rule">P4</span>.</li>
+  <li><code>tests/test_database_rules.py</code>: the new rules, including trying to dodge "one bread" with a wrong copy.</li>
+  <li><code>tests/test_privacy.py</code>: a second search for the card number <span class="rule">P10</span>. It goes through walk-ins, a typo and the wrong card at handover, and is then searched for in every answer, every log line (SQL included) and every database row.</li>
+</ul>
+<p>The pages were also clicked through in Edge on a phone-sized screen against the test database: a short bag with a wrong card then the right one, a full bag, a bag not packed yet, a first-visit walk-in, a refusal, a student sent to their bag, and W4. That found one gap, now fixed: a picked-up bag didn't show what was given at the counter.</p>
+
+<!-- ============================================================ -->
+<h2 id="ask"><span class="num">10</span>One question for you</h2>
+<div class="ask">
+  <p><b>Walk-in hours.</b> The counter is open 12 pm to 6 pm on pickup days, and walk-ins can be served any time in that window. Should walk-ins only be served during pickup hours, 3:30 to 5:30?</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="run"><span class="num">11</span>How to try it</h2>
+<p>Run the two servers as usual (see <a href="project-so-far.html#run">project-so-far.html, part 13</a>). Then <b>Staff log in → Counter</b>.</p>
+<p>The counter only opens on a pickup day after 12 pm, and your working database's sample days are next week. Ask me and I'll set up today as a pickup day with a few bags, so you can try both lines.</p>
+
+<p class="lead" style="margin-top:40px">Written 7 November 2026. The rules are in CONSTRAINTS.md, and the reason for each choice is in DECISIONS.md, 7 November.</p>
+
+</main>
+</body>
+</html>

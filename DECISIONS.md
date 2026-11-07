@@ -514,3 +514,46 @@ U6: the student chooses from the shelf at pickup. Step 7 records what they chose
 - **A volunteer can undo Packed on the wrong bag, until it's handed over.** This adds the move packed → booked to B2. Undo Packed puts the substitutes that went in back on the shelf (their stock goes up by one). The booked food stays promised, so its stock doesn't change. "Ran out" marks stay, because the shelf really had none. The undo is logged with who did it (`undid_packed`), like other fixes (B6). It's refused once the bag is picked up, after the no-show time, and on a bag that isn't packed. The page asks "Undo Packed on bag K3P?" first, because one tap shouldn't undo someone's work. It locks in the same order as Packed: the booking, then the food from the lowest id up.
 - **A walk-in who hasn't reached the pickup gap is refused, with no override.** In the user's words, they can take only once in 28 days. W1 now says so, and the question is off the list for the food bank. Step 7 builds it.
 - **Students see exact counts, like "6 left".** As built since 4 Nov. The question is off the list for the food bank.
+
+Step 7, the counter, also on 7 Nov. How it works is in counter.html.
+
+**The counter is open on a pickup day from the booking close time until the no-show time, for both lines.**
+Bags are packed from 12 pm, and only a packed bag can be handed over, so handing over can't start earlier. Walk-ins take only what nobody booked (stock already leaves out booked food), so they could start any time. They use the same hours so the counter has one rule. At the no-show time the day is over. On any other day the page says when the next pickup day is.
+
+**Handing over a bag: the code first, then the card, typed once.**
+The student says their code, the volunteer finds the bag, then types the number on the MUN card. The server checks the card matches the booking (P5), with a constant-time comparison of the keyed hashes. A typo just doesn't match, so typing it once is enough here. The refusal never repeats the number (P10): "That card doesn't match bag K3P. Check the code and the card. Don't hand over the bag until they match."
+
+**A walk-in's card is typed twice.**
+There's no booking to compare it with, so a typo would record the walk-in under someone else's number and block them for 28 days. It's the same reason as at account setup.
+
+**A first-time walk-in gets an account made for their card.**
+CONSTRAINTS.md says a new student can take food as a walk-in on their first visit. The pickup gap needs an account to count from. The page suggests giving them a setup code if they want to book online.
+
+**A walk-in who booked for today is sent to their bag instead.**
+"They booked for today: bag K3P, at 3:40 p.m. Hand over that bag instead." Their food is already packed for them.
+
+**W4: a walk-in with a booking for a later day is served only once the volunteer confirms the booking is cancelled.**
+The page shows the booking and a checkbox, and Record stays greyed out until it's ticked. The booking's place and food go back for someone else, and its cancel reason is `walk_in`.
+
+**When a bag is short, the student chooses from the shelf, up to the number of gaps, within the same limits.**
+U6. The per-item limit counts what's already in the bag, so a student whose bag has quick oats can't choose steel-cut oats as well. They may choose fewer, or nothing.
+
+**Extras are one of each extra item, and the database keeps this too.**
+As planned in tables.html. The new `counter_items` table copies the item and is_extra onto each row, and two links on pairs, (variety, item) and (item, is_extra), make sure the copies are right. Then a unique rule on (booking, item) where is_extra holds "one bread" even if the code had a bug. Two new unique rules on varieties and items let those links exist.
+
+**One table for everything handed over that wasn't in a packed bag: `counter_items`.**
+Extras, a student's choice for a gap, and everything a walk-in takes. Each row belongs to one booking or one walk-in (a CHECK, like sessions). Why not three tables: they'd be the same columns three times. Walk-ins get their own table, `walk_ins`, because they have no slot and no code. A booking would need half its rules switched off to hold one.
+
+**Locks now start with the student: the student, then the slot, then the hold or booking, then the food.**
+A walk-in and an online booking for the same student at the same moment could both pass the pickup gap, because each reads the other's change only after it's saved. Book now locks the student first, as the counter does, so they take turns. A test runs them on two connections with different food, so only the student's lock can make Book wait. With the lock taken out, the booking went through and the test fails.
+
+**A picked-up bag shows what was given at the counter too.**
+Found in the browser check: after the handover, the bag listed only what was packed, not the rice chosen for the gap or the bread.
+
+**The setup code page moved to /counter/setup-code.** /counter is now "Hand over a bag", and a small menu links the three counter pages.
+
+**Left for later steps:**
+- Fixing a mistake afterwards (B6: no-show ↔ picked up) comes with no-shows in step 8.
+- Old walk-ins and counter items are deleted after the retention period with the bookings (P7, step 8).
+
+**Open question for the user:** the counter is open 12 pm to 6 pm on pickup days, walk-ins included. Should walk-ins only be served during pickup hours, 3:30 to 5:30?
