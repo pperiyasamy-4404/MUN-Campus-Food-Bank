@@ -16,6 +16,7 @@ from app.sample_data import SAMPLE_SETTINGS
 from app.services import accounts
 
 MONDAY = date(2026, 11, 9)
+THURSDAY = date(2026, 11, 12)
 
 
 @contextmanager

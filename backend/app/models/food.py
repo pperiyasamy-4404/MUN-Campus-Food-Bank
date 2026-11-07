@@ -52,6 +52,9 @@ class Variety(Base):
     # still needs counting before booking opens (I8). Empty until the first count.
     counted_at: Mapped[datetime | None]
     counted_by_staff_id: Mapped[int | None] = mapped_column(ForeignKey("staff.id"))
+    # A volunteer packing a bag found none on the shelf (U7). Every bag still to
+    # pack with this food is flagged until someone counts the shelf again.
+    ran_out_at: Mapped[datetime | None]
 
     __table_args__ = (
         # Even when two students take the last one at the same moment (I4).

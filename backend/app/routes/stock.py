@@ -56,6 +56,8 @@ class VarietyRow(BaseModel):
     tag_ids: list[int]
     counted_at: datetime | None
     counted_by: str | None
+    # A volunteer packing a bag found none on the shelf. Cleared by the next count (U7).
+    ran_out_at: datetime | None
 
 
 class ItemRow(BaseModel):
@@ -147,6 +149,7 @@ def variety_row(variety: Variety, tag_ids: list[int], promised: int, counters: d
         tag_ids=sorted(tag_ids),
         counted_at=_newfoundland(variety.counted_at),
         counted_by=counters.get(variety.counted_by_staff_id) if variety.counted_by_staff_id else None,
+        ran_out_at=_newfoundland(variety.ran_out_at),
     )
 
 

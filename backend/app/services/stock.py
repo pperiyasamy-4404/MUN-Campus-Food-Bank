@@ -63,6 +63,8 @@ def count_shelf(db: Session, variety_id: int, on_shelf: int, staff: Staff, now: 
     variety.stock = max(0, on_shelf - promised)
     variety.counted_at = now
     variety.counted_by_staff_id = staff.id
+    # A count is what's really there, so a "none on the shelf" from packing no longer applies (U7).
+    variety.ran_out_at = None
     return Count(variety=variety, booked_not_packed=promised, short_by=max(0, promised - on_shelf))
 
 

@@ -51,6 +51,8 @@ class Booking(Base):
     status: Mapped[str] = mapped_column(server_default=text("'booked'"))
     booked_at: Mapped[datetime] = mapped_column(server_default=func.now())
     packed_at: Mapped[datetime | None]
+    # Which volunteer pressed Packed (step 6).
+    packed_by_staff_id: Mapped[int | None] = mapped_column(ForeignKey("staff.id"))
     picked_up_at: Mapped[datetime | None]
     picked_up_by_staff_id: Mapped[int | None] = mapped_column(ForeignKey("staff.id"))
     cancelled_at: Mapped[datetime | None]
@@ -80,6 +82,8 @@ class Booking(Base):
         UniqueConstraint("pickup_day_id", "code"),
         # The status always matches the times saved with it.
         CheckConstraint("status <> 'packed' OR packed_at IS NOT NULL", name="packed_has_a_time"),
+        # A packed bag always says who packed it.
+        CheckConstraint("(packed_at IS NULL) = (packed_by_staff_id IS NULL)", name="packed_by_a_volunteer"),
         CheckConstraint(
             "(status = 'picked_up') = (picked_up_at IS NOT NULL)", name="picked_up_matches_status"
         ),
@@ -113,14 +117,20 @@ class BookingItem(Base):
     )
     variety_id: Mapped[int] = mapped_column(ForeignKey("varieties.id"), primary_key=True)
     quantity: Mapped[int] = mapped_column(server_default=text("1"))
+    # How many weren't on the shelf when the bag was packed (U4). Their gaps are
+    # filled from the substitutes, or by the student at the counter (U6).
+    missing: Mapped[int] = mapped_column(server_default=text("0"))
 
-    __table_args__ = (CheckConstraint("quantity >= 1", name="quantity_at_least_1"),)
+    __table_args__ = (
+        CheckConstraint("quantity >= 1", name="quantity_at_least_1"),
+        CheckConstraint("missing BETWEEN 0 AND quantity", name="missing_within_quantity"),
+    )
 
 
 class BookingSubstitute(Base):
     """A ranked swap, used only if something the student booked is missing (U2, U4).
 
-    Not taken from stock (U3). The limit, "not an extra" and "not already in the
+    Not taken from stock when booking (U3), only when it goes in the bag. The limit, "not an extra" and "not already in the
     order" need settings or other tables, so the code checks them.
     """
 
@@ -131,8 +141,15 @@ class BookingSubstitute(Base):
     )
     rank: Mapped[int] = mapped_column(SmallInteger, primary_key=True, autoincrement=False)
     variety_id: Mapped[int] = mapped_column(ForeignKey("varieties.id"))
+    # Empty unless it went in the bag. Then it says which booked food it replaced,
+    # for the sticky note: "Sunflower oil -> White rice" (U8).
+    replaces_variety_id: Mapped[int | None]
 
     __table_args__ = (
         CheckConstraint("rank >= 1", name="rank_from_1"),
         UniqueConstraint("booking_id", "variety_id"),
+        # It can only replace food booked in the same booking.
+        ForeignKeyConstraint(
+            ["booking_id", "replaces_variety_id"], ["booking_items.booking_id", "booking_items.variety_id"]
+        ),
     )

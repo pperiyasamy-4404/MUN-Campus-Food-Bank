@@ -443,6 +443,7 @@ def test_a_new_booking_is_allowed_after_the_last_one_was_picked_up(db):
         slot=make_slot(db, day=make_day(db, on=MONDAY)),
         status="picked_up",
         packed_at=NOW,
+        packed_by_staff_id=volunteer.id,
         picked_up_at=NOW,
         picked_up_by_staff_id=volunteer.id,
     )
@@ -488,17 +489,24 @@ def test_a_booking_day_always_matches_its_slot(db):
 def test_only_a_volunteer_click_counts_as_picked_up(db):
     """B3: a pickup always records which volunteer handed over the bag."""
     with refused_by(db, "ck_bookings_picked_up_by_a_volunteer"):
-        make_booking(db, status="picked_up", packed_at=NOW, picked_up_at=NOW)
+        make_booking(db, status="picked_up", packed_at=NOW, packed_by_staff_id=make_staff(db).id, picked_up_at=NOW)
 
 
 def test_picked_up_always_has_a_time(db):
     with refused_by(db, "ck_bookings_picked_up_matches_status"):
-        make_booking(db, status="picked_up", packed_at=NOW)
+        make_booking(db, status="picked_up", packed_at=NOW, packed_by_staff_id=make_staff(db).id)
 
 
 def test_packed_always_has_a_time(db):
     with refused_by(db, "ck_bookings_packed_has_a_time"):
         make_booking(db, status="packed")
+
+
+def test_a_packed_bag_always_says_who_packed_it(db):
+    with refused_by(db, "ck_bookings_packed_by_a_volunteer"):
+        make_booking(db, status="packed", packed_at=NOW)
+    with refused_by(db, "ck_bookings_packed_by_a_volunteer"):
+        make_booking(db, packed_by_staff_id=make_staff(db).id)
 
 
 def test_a_cancellation_always_has_a_time_and_a_reason(db):
@@ -517,7 +525,7 @@ def test_a_no_show_always_has_a_time(db):
 
 def test_a_booking_can_go_booked_packed_picked_up(db):
     booking = make_booking(db)
-    booking.status, booking.packed_at = "packed", NOW
+    booking.status, booking.packed_at, booking.packed_by_staff_id = "packed", NOW, make_staff(db).id
     db.flush()
     booking.status, booking.picked_up_at, booking.picked_up_by_staff_id = "picked_up", NOW, make_staff(db).id
     db.flush()
@@ -555,3 +563,43 @@ def test_a_variety_is_listed_as_a_substitute_once(db):
     add(db, BookingSubstitute(booking_id=booking.id, rank=1, variety_id=variety.id))
     with refused_by(db, "uq_booking_substitutes_booking_id_variety_id"):
         db.add(BookingSubstitute(booking_id=booking.id, rank=2, variety_id=variety.id))
+
+
+# ---------- packing (step 6) ----------
+
+
+def test_missing_is_never_more_than_was_booked(db):
+    booking, variety = make_booking(db), make_variety(db)
+    line = add(db, BookingItem(booking_id=booking.id, variety_id=variety.id, quantity=2))
+    line.missing = 2
+    db.flush()
+    with refused_by(db, "ck_booking_items_missing_within_quantity"):
+        line.missing = 3
+    with refused_by(db, "ck_booking_items_missing_within_quantity"):
+        line.missing = -1
+
+
+def test_a_substitute_can_only_replace_food_booked_in_the_same_booking(db):
+    """U5: a swap always points at something this student booked."""
+    booking = make_booking(db)
+    other_booking = make_booking(db, slot=make_slot(db, day=make_day(db, on=MONDAY + timedelta(days=3))))
+    oil, rice = make_variety(db), make_variety(db)
+    add(db, BookingItem(booking_id=booking.id, variety_id=oil.id))
+    add(db, BookingItem(booking_id=other_booking.id, variety_id=rice.id))
+    substitute = add(db, BookingSubstitute(booking_id=booking.id, rank=1, variety_id=make_variety(db).id))
+
+    substitute.replaces_variety_id = oil.id
+    db.flush()
+    with refused_by(db, "fk_booking_substitutes_booking_id_replaces_variety_id"):
+        substitute.replaces_variety_id = rice.id
+
+
+def test_deleting_a_packed_booking_deletes_its_food_and_swaps(db):
+    """The retention job (step 8) deletes old bookings. Their swaps must go with them."""
+    booking, oil = make_booking(db), make_variety(db)
+    add(db, BookingItem(booking_id=booking.id, variety_id=oil.id, missing=1))
+    add(db, BookingSubstitute(booking_id=booking.id, rank=1, variety_id=make_variety(db).id, replaces_variety_id=oil.id))
+
+    db.execute(delete(Booking).where(Booking.id == booking.id))
+
+    assert db.scalars(select(BookingSubstitute).where(BookingSubstitute.booking_id == booking.id)).all() == []

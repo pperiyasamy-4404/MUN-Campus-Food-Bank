@@ -49,6 +49,8 @@ def slot(db) -> Slot:
 def book(db, slot: Slot, variety: Variety, status: str = "booked", quantity: int = 1) -> Booking:
     """A student's booking with this variety in it. Its stock was taken when they booked."""
     columns = dict(STATUS_TIMES[status])
+    if "packed_at" in columns:
+        columns["packed_by_staff_id"] = make_staff(db).id
     if status == "picked_up":
         columns["picked_up_by_staff_id"] = make_staff(db).id
     booking = make_booking(db, slot=slot, status=status, code=f"B{next(codes)}", **columns)

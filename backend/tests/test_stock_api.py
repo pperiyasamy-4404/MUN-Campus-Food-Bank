@@ -71,6 +71,7 @@ def test_the_page_lists_hidden_food_and_what_is_booked(client, db, sam):
             "tag_ids": [vegetarian.id],
             "counted_at": None,
             "counted_by": None,
+            "ran_out_at": None,
         }
     ]
     assert the_page(client)["tags"] == [{"id": vegetarian.id, "name": "Vegetarian"}]
