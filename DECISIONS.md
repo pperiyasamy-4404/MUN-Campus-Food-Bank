@@ -504,3 +504,7 @@ U6: the student chooses from the shelf at pickup. Step 7 records what they chose
 **Left for later steps:**
 - The counter (step 7) shows a packed bag's sticky note, and records what a student chose for a gap (U6).
 - A no-show (step 8) or a closed day (step 9) puts a packed bag's food back on the shelf. That means what was really in the bag: the booked food minus what was missing, plus the substitutes that went in.
+
+**The user's answers to the two step 4 questions (7 Nov).**
+- Volunteers can add categories and tags, and fix names, the same as the coordinator. This replaces the 6 Nov split. Volunteers are the ones at the shelf when a new kind of food arrives, so they shouldn't have to wait for the coordinator. Every stock address now needs a staff login, not a coordinator one. The stock page asks people to check the list first, so there's only one of each, and the database still refuses a name that's taken (ignoring capitals). R2 in CONSTRAINTS.md now says so.
+- An extra with none left isn't shown to students. That's how it was built on 6 Nov, so nothing changes.

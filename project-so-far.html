@@ -77,9 +77,9 @@
 
 <div class="stats">
   <div class="stat"><b>6 of 9</b><span>building steps done</span></div>
-  <div class="stat"><b>307</b><span>tests, all passing</span></div>
+  <div class="stat"><b>303</b><span>tests, all passing</span></div>
   <div class="stat"><b>19</b><span>tables in the database</span></div>
-  <div class="stat"><b>36</b><span>commits on GitHub</span></div>
+  <div class="stat"><b>38</b><span>commits on GitHub</span></div>
 </div>
 
 <ol class="toc">
@@ -140,13 +140,13 @@
   <tr>
     <td><b>Volunteer</b></td>
     <td>A username (like a first name) and a password <span class="rule">R3</span>.</td>
-    <td>Make student accounts and give setup codes (the Counter page). Count the shelf and add food (the Stock page). Pack bags and swap in substitutes (the Packing page).</td>
+    <td>Make student accounts and give setup codes (the Counter page). Count the shelf, add food, categories and tags, and fix names (the Stock page). Pack bags and swap in substitutes (the Packing page).</td>
     <td>Handing over bags, walk-ins and extras (step 7).</td>
   </tr>
   <tr>
     <td><b>Coordinator</b></td>
     <td>A username and password. The very first one is made by a script on the server.</td>
-    <td>Everything a volunteer can do, plus: add and switch off volunteers, add categories and tags, fix names.</td>
+    <td>Everything a volunteer can do, plus: add volunteers, and switch them off and on.</td>
     <td>Change the settings, close a day, see weekly totals (step 9).</td>
   </tr>
 </table>
@@ -268,7 +268,7 @@
     <text x="632" y="140" font-size="12" fill="#475569">rows</text>
 
     <rect x="345" y="220" width="575" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="6 4"/>
-    <text x="632" y="246" font-weight="700">The tests: pytest, 307 of them</text>
+    <text x="632" y="246" font-weight="700">The tests: pytest, 303 of them</text>
     <text x="632" y="268" font-size="13">They call the server and the rules, against a separate test database, rebuilt every run.</text>
     <line x1="470" y1="220" x2="470" y2="184" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#b)"/>
   </g>
@@ -291,7 +291,7 @@
   </div>
   <div class="card">
     <h3>The tests: pytest</h3>
-    <p>307 small programs that each check one thing, like "a 14th item is refused". They run against a real PostgreSQL test database, never the working one. Each test is undone when it ends, so tests can't affect each other.</p>
+    <p>303 small programs that each check one thing, like "a 14th item is refused". They run against a real PostgreSQL test database, never the working one. Each test is undone when it ends, so tests can't affect each other.</p>
   </div>
 </div>
 
@@ -332,7 +332,7 @@
 │   │   ├── sample_data.py  <span class="c">← made-up days and food for trying things</span>
 │   │   └── first_coordinator.py  <span class="c">← makes the very first coordinator</span>
 │   ├── migrations/         <span class="c">← Alembic's history of table changes (4 so far)</span>
-│   └── tests/              <span class="c">← the 307 tests, one file per area</span>
+│   └── tests/              <span class="c">← the 303 tests, one file per area</span>
 │
 └── frontend/               <span class="c">← the pages (React + TypeScript)</span>
     └── src/
@@ -617,11 +617,7 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
 </div>
 
 <h3>Questions still open</h3>
-<p><b>For you</b>, from step 4. Both are built one way already, and each is a small change:</p>
-<ul>
-  <li>Volunteers can count stock and add food, and only the coordinator adds categories and tags and fixes names. Is that the right split?</li>
-  <li>An extra with none left (like bread at 0) isn't shown to students at all. Is that right, or should it say "none today"?</li>
-</ul>
+<p><b>Answered 7 Nov</b>, from step 4: volunteers can add categories and tags and fix names too (now built), and an extra with none left isn't shown to students (as built).</p>
 <p><b>For you</b>, from step 6 (more in <a href="packing.html#ask">packing.html</a>):</p>
 <ul>
   <li>Volunteers can pack until 6 pm, not only until pickup starts at 3:30, so a missed bag can still be packed. Is that right?</li>
