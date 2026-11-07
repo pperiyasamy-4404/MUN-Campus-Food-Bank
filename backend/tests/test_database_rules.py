@@ -17,6 +17,7 @@ from app.models import (
     BookingItem,
     BookingSubstitute,
     Category,
+    CounterItem,
     Hold,
     Item,
     LoginFailure,
@@ -31,6 +32,7 @@ from app.models import (
     Tag,
     Variety,
     VarietyTag,
+    WalkIn,
 )
 from app.sample_data import SAMPLE_SETTINGS
 from app.security.passwords import hash_password
@@ -603,3 +605,66 @@ def test_deleting_a_packed_booking_deletes_its_food_and_swaps(db):
     db.execute(delete(Booking).where(Booking.id == booking.id))
 
     assert db.scalars(select(BookingSubstitute).where(BookingSubstitute.booking_id == booking.id)).all() == []
+
+
+# ---------- the counter (step 7) ----------
+
+
+def _extra(db, item_name: str = "Bread") -> Variety:
+    category = add(db, Category(name=f"Bakery {item_name}"))
+    item = add(db, Item(name=item_name, category_id=category.id, is_extra=True))
+    return add(db, Variety(item_id=item.id, name=f"White {item_name.lower()}", stock=5))
+
+
+def _counter_item(variety: Variety, item: Item | None = None, **columns) -> CounterItem:
+    item_id = item.id if item else variety.item_id
+    is_extra = columns.pop("is_extra", None)
+    return CounterItem(variety_id=variety.id, item_id=item_id, is_extra=is_extra, **columns)
+
+
+def test_a_counter_item_belongs_to_one_booking_or_one_walk_in(db):
+    booking, variety = make_booking(db), make_variety(db)
+    walk_in = add(db, WalkIn(student_id=make_student(db).id, pickup_day_id=booking.pickup_day_id, served_at=NOW, served_by_staff_id=make_staff(db).id))
+    with refused_by(db, "ck_counter_items_for_one_pickup"):
+        db.add(_counter_item(variety, is_extra=False))
+    with refused_by(db, "ck_counter_items_for_one_pickup"):
+        db.add(_counter_item(variety, is_extra=False, booking_id=booking.id, walk_in_id=walk_in.id))
+
+
+def test_one_of_each_extra_item_per_pickup(db):
+    """E3: one bread, even if there are two kinds of bread."""
+    booking, white = make_booking(db), _extra(db)
+    brown = add(db, Variety(item_id=white.item_id, name="Brown bread", stock=5))
+    add(db, _counter_item(white, is_extra=True, booking_id=booking.id))
+    with refused_by(db, "uq_counter_items_one_extra_per_item_per_booking"):
+        db.add(_counter_item(brown, is_extra=True, booking_id=booking.id))
+
+
+def test_one_of_each_extra_item_per_walk_in(db):
+    day, white = make_day(db), _extra(db)
+    brown = add(db, Variety(item_id=white.item_id, name="Brown bread", stock=5))
+    walk_in = add(db, WalkIn(student_id=make_student(db).id, pickup_day_id=day.id, served_at=NOW, served_by_staff_id=make_staff(db).id))
+    add(db, _counter_item(white, is_extra=True, walk_in_id=walk_in.id))
+    with refused_by(db, "uq_counter_items_one_extra_per_item_per_walk_in"):
+        db.add(_counter_item(brown, is_extra=True, walk_in_id=walk_in.id))
+
+
+def test_an_extra_is_one(db):
+    with refused_by(db, "ck_counter_items_one_of_an_extra"):
+        db.add(_counter_item(_extra(db), is_extra=True, booking_id=make_booking(db).id, quantity=2))
+
+
+def test_the_copied_item_and_is_extra_must_be_right(db):
+    """The two links keep the copies honest, so the extra rule above can't be dodged."""
+    booking, bread, oats = make_booking(db), _extra(db), make_variety(db)
+    with refused_by(db, "fk_counter_items_item_id_is_extra"):
+        db.add(_counter_item(bread, is_extra=False, booking_id=booking.id))
+    with refused_by(db, "fk_counter_items_variety_id_item_id"):
+        db.add(_counter_item(bread, item=db.get(Item, oats.item_id), is_extra=False, booking_id=booking.id))
+
+
+def test_one_walk_in_per_student_per_day(db):
+    day, student, staff = make_day(db), make_student(db), make_staff(db)
+    add(db, WalkIn(student_id=student.id, pickup_day_id=day.id, served_at=NOW, served_by_staff_id=staff.id))
+    with refused_by(db, "uq_walk_ins_student_id_pickup_day_id"):
+        db.add(WalkIn(student_id=student.id, pickup_day_id=day.id, served_at=NOW, served_by_staff_id=staff.id))

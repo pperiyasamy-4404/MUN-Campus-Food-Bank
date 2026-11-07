@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, ForeignKey, Identity, Index, text
+from sqlalchemy import CheckConstraint, ForeignKey, Identity, Index, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -32,7 +32,11 @@ class Item(Base):
     # Extras like bread aren't booked online and don't count toward the item limit (E1).
     is_extra: Mapped[bool] = mapped_column(server_default=text("false"))
 
-    __table_args__ = (Index("uq_items_name_lower", text("lower(name)"), unique=True),)
+    __table_args__ = (
+        Index("uq_items_name_lower", text("lower(name)"), unique=True),
+        # Lets counter_items link to the pair (item, is_extra), so its copy of is_extra is always right.
+        UniqueConstraint("id", "is_extra"),
+    )
 
 
 class Variety(Base):
@@ -62,6 +66,8 @@ class Variety(Base):
         # A count always says who made it.
         CheckConstraint("(counted_at IS NULL) = (counted_by_staff_id IS NULL)", name="count_has_a_counter"),
         Index("uq_varieties_item_id_name_lower", "item_id", text("lower(name)"), unique=True),
+        # Lets counter_items link to the pair (variety, item), so its copy of the item is always right.
+        UniqueConstraint("id", "item_id"),
     )
 
 

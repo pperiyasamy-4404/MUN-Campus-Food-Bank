@@ -481,6 +481,39 @@ def _ran_out(variety: Variety, now: datetime) -> None:
         variety.ran_out_at = now
 
 
+@dataclass(frozen=True)
+class InTheBag:
+    variety: Variety
+    item: Item
+    quantity: int
+
+
+def bag_contents(food: list[BagFood], substitutes: list[BagSubstitute]) -> list[InTheBag]:
+    """What's really in a bag: the booked food, minus what wasn't on the shelf,
+    plus the substitutes that went in.
+
+    Before packing, that's simply what was booked. The counter uses it for the
+    limits when a student fills a gap (U6). When a bag's food goes back on the
+    shelf, this is what goes back.
+    """
+    contents = [
+        InTheBag(line.variety, line.item, line.row.quantity - line.row.missing)
+        for line in food
+        if line.row.quantity > line.row.missing
+    ]
+    contents += [InTheBag(line.variety, line.item, 1) for line in substitutes if line.row.replaces_variety_id]
+    return contents
+
+
+def gaps(food: list[BagFood], substitutes: list[BagSubstitute]) -> list[int]:
+    """The booked food nothing replaced, one entry per missing thing (U6)."""
+    filled = Counter(line.row.replaces_variety_id for line in substitutes if line.row.replaces_variety_id)
+    unfilled: list[int] = []
+    for line in food:
+        unfilled += [line.variety.id] * (line.row.missing - filled[line.variety.id])
+    return unfilled
+
+
 def saved_note(food: list[BagFood], substitutes: list[BagSubstitute]) -> list[str]:
     """The sticky note of a bag that's packed, from what was saved."""
     swaps: list[tuple[int, int | None]] = [

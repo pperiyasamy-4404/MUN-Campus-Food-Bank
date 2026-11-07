@@ -4,9 +4,12 @@ Plain Python with a database session, like the other services. The routes in
 app/routes/booking.py commit. If any check here refuses, the route never
 commits, so everything done so far in that request is undone.
 
-The order locks are taken in, everywhere: the slot, then the student's hold or
-booking, then varieties from the lowest id up. Two transactions that take locks
-in the same order can't end up waiting for each other forever (a deadlock).
+The order locks are taken in, everywhere: the student, then the slot, then the
+student's hold or booking, then varieties from the lowest id up. Two
+transactions that take locks in the same order can't end up waiting for each
+other forever (a deadlock). Only Book and the counter (services/counter.py)
+need the student's lock: it makes a walk-in and an online booking for the same
+student, at the same moment, take turns at the pickup gap.
 """
 
 import secrets
@@ -181,6 +184,7 @@ class Choice:
 def book(db: Session, student: Student, items: list[Choice], substitutes: list[int], now: datetime) -> Booking:
     """Turn the student's hold into a booking, in one transaction (tables.html, part 6).
 
+    0. Lock the student (see the top of this file).
     1. Lock the slot, then check the hold is still theirs and hasn't run out.
     2. Check the rules again: the day, the pickup gap, other bookings (S8).
     3. Check the food: the limits (I3) and the substitutes (U2).
@@ -189,6 +193,12 @@ def book(db: Session, student: Student, items: list[Choice], substitutes: list[i
     6. Save the booking, its food and substitutes, and let go of the hold.
     """
     settings = food_bank_settings(db)
+
+    # 0. The student first. A walk-in being recorded at the counter for them right
+    # now finishes first, and then the pickup gap below sees it.
+    db.scalar(
+        select(Student).where(Student.id == student.id).with_for_update().execution_options(populate_existing=True)
+    )
 
     # 1. Which slot does the hold say? Lock that slot first, then read the hold again.
     held = db.get(Hold, student.id)

@@ -4,6 +4,7 @@ The design, and the reason for each rule, is in tables.html at the top of the re
 """
 
 from app.models.bookings import Booking, BookingItem, BookingSubstitute, Hold
+from app.models.counter import CounterItem, WalkIn
 from app.models.days import PickupDay, PickupHours, Settings, Slot
 from app.models.food import Category, Item, Tag, Variety, VarietyTag
 from app.models.people import AuditLog, LoginFailure, LoginSession, SetupCode, Staff, Student
@@ -14,6 +15,7 @@ __all__ = [
     "BookingItem",
     "BookingSubstitute",
     "Category",
+    "CounterItem",
     "Hold",
     "Item",
     "LoginFailure",
@@ -28,4 +30,5 @@ __all__ = [
     "Tag",
     "Variety",
     "VarietyTag",
+    "WalkIn",
 ]
