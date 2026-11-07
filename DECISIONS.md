@@ -573,5 +573,8 @@ Phone photos are often 3 to 5 MB. The Stock page redraws it at most 800 pixels w
 **A photo's address carries the time it was saved, like `/api/items/3/photo?v=1762700000`.**
 So browsers may keep a photo for a year, and still fetch a new one the moment it changes. Every other `/api` answer is still never kept (`no-store`).
 
-**The sample food has public-domain photos.**
-Found through Openverse, all CC0 or marked public domain, cropped to 640×480 and about 50 KB each. Who took each one is in `backend/app/sample_photos/CREDITS.md`. `python -m app.add_sample_photos` gives an older database its sample photos, without replacing any photo already chosen.
+**The sample food has free photos.**
+Found through Openverse and Wikimedia Commons, cropped to 640×480 and about 40 KB each. Who took each one is in `backend/app/sample_photos/CREDITS.md`. `python -m app.add_sample_photos` gives an older database its sample photos, without replacing any photo already chosen.
+
+**Better photos for seven items, and canned food shows a can.** (The user's request, 7 Nov.)
+New photos for oats (a pile of rolled oats), peanut butter (an open jar), cooking oil (bottles of oil), pasta (dry penne), rice (a bowl of dry rice), canned tuna (a can of chunk light tuna in water) and canned chicken. The first set was all public domain, and that set had no cans at all. So now some photos are CC BY: free to use as long as the photographer is credited, which `CREDITS.md` does. There is no free photo of a can of chicken anywhere we looked (Openverse, Wikimedia Commons), so canned chicken shows a plain can with its label out of view. A volunteer can take a photo of the real can and put it in on the Stock page.
