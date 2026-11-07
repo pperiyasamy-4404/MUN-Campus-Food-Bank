@@ -74,18 +74,18 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 
 ### Packing
 
-- **K1** Volunteers pack on the pickup day, after booking closes and before pickup starts. With the sample settings, between 12 pm and 3 pm.
+- **K1** Volunteers pack on the pickup day, after booking closes and before pickup starts. With the sample settings, between 12 pm and 3 pm. A bag that isn't packed by then can still be packed until the no-show time, while the student waits.
 
 ### Walk-ins
 
-- **W1** Walk-ins are recorded in the same system. The volunteer checks the student's card and enters the ID number, the system checks the pickup gap, the volunteer selects the items given on the Walk-in screen, and the pickup is done. This keeps the pickup gap fair (nobody can walk in one week and book online the next) and keeps the stock count right without recounting.
+- **W1** Walk-ins are recorded in the same system. The volunteer checks the student's card and enters the ID number, the system checks the pickup gap, the volunteer selects the items given on the Walk-in screen, and the pickup is done. A walk-in who hasn't reached the pickup gap is refused. There's no override. This keeps the pickup gap fair (nobody can walk in one week and book online the next) and keeps the stock count right without recounting.
 - **W3** Walk-ins are served in their own line, by their own volunteers, side by side with online pickups. They don't use slots.
 - **W4** If a walk-in already has an upcoming booking, the volunteer cancels the booking and serves them now.
 
 ### Booking life
 
 - **B1** A booking goes booked → packed → picked up, or ends as cancelled or no-show.
-- **B2** Only these moves are allowed: booked → packed, packed → picked up, booked or packed → cancelled, booked or packed → no-show, and a fix between no-show and picked up (B6). For example, a cancelled booking can't be marked picked up.
+- **B2** Only these moves are allowed: booked → packed, packed → booked (a volunteer undoing Packed on the wrong bag, before it's handed over, logged), packed → picked up, booked or packed → cancelled, booked or packed → no-show, and a fix between no-show and picked up (B6). For example, a cancelled booking can't be marked picked up.
 - **B3** Volunteers mark a booking picked up when they hand over the bag. Only a volunteer's click counts: students can't mark their own pickup. A booking that isn't picked up by the no-show time becomes a no-show. The system does this by itself.
 - **B4** Clicking "Book" twice creates only one booking.
 - **B6** A volunteer can fix a mistake afterwards: change a no-show to picked up, or back. Every fix is logged with who made it. Fixes should be made before the next booking window opens, so the pickup gap and the stock count are right in time.
@@ -158,5 +158,3 @@ Problems we know about and accept for now.
 - When does new stock arrive each week?
 - When do volunteers pack on pickup days? We assume 12–3 pm.
 - How many students can the counter serve in 10 minutes?
-- If a walk-in hasn't reached 28 days but needs food urgently, do you ever make an exception? If so, the Walk-in screen needs a logged override.
-- When booking, should students see exact counts ("6 left") or only "available" and "out of stock"?

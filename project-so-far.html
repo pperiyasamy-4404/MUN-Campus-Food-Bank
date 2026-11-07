@@ -77,9 +77,9 @@
 
 <div class="stats">
   <div class="stat"><b>6 of 9</b><span>building steps done</span></div>
-  <div class="stat"><b>303</b><span>tests, all passing</span></div>
+  <div class="stat"><b>309</b><span>tests, all passing</span></div>
   <div class="stat"><b>19</b><span>tables in the database</span></div>
-  <div class="stat"><b>38</b><span>commits on GitHub</span></div>
+  <div class="stat"><b>40</b><span>commits on GitHub</span></div>
 </div>
 
 <ol class="toc">
@@ -268,7 +268,7 @@
     <text x="632" y="140" font-size="12" fill="#475569">rows</text>
 
     <rect x="345" y="220" width="575" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="6 4"/>
-    <text x="632" y="246" font-weight="700">The tests: pytest, 303 of them</text>
+    <text x="632" y="246" font-weight="700">The tests: pytest, 309 of them</text>
     <text x="632" y="268" font-size="13">They call the server and the rules, against a separate test database, rebuilt every run.</text>
     <line x1="470" y1="220" x2="470" y2="184" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#b)"/>
   </g>
@@ -291,7 +291,7 @@
   </div>
   <div class="card">
     <h3>The tests: pytest</h3>
-    <p>303 small programs that each check one thing, like "a 14th item is refused". They run against a real PostgreSQL test database, never the working one. Each test is undone when it ends, so tests can't affect each other.</p>
+    <p>309 small programs that each check one thing, like "a 14th item is refused". They run against a real PostgreSQL test database, never the working one. Each test is undone when it ends, so tests can't affect each other.</p>
   </div>
 </div>
 
@@ -332,7 +332,7 @@
 │   │   ├── sample_data.py  <span class="c">← made-up days and food for trying things</span>
 │   │   └── first_coordinator.py  <span class="c">← makes the very first coordinator</span>
 │   ├── migrations/         <span class="c">← Alembic's history of table changes (4 so far)</span>
-│   └── tests/              <span class="c">← the 303 tests, one file per area</span>
+│   └── tests/              <span class="c">← the 309 tests, one file per area</span>
 │
 └── frontend/               <span class="c">← the pages (React + TypeScript)</span>
     └── src/
@@ -590,7 +590,7 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
   </g>
 </svg>
 </div>
-<p>A cancelled booking can never become picked up, for example. A day the coordinator closes cancels every booking on it too <span class="rule">S7</span>. That's step 9.</p>
+<p>A cancelled booking can never become picked up, for example. One more move isn't drawn: a volunteer can undo Packed on the wrong bag, which takes it from packed back to booked, until it's handed over. A day the coordinator closes cancels every booking on it too <span class="rule">S7</span>. That's step 9.</p>
 <p>Food moves with the status. Booking takes it off stock. Cancelling or a no-show puts it back <span class="rule">I5</span> <span class="rule">I6</span>.</p>
 
 <!-- ================================================================ -->
@@ -618,17 +618,11 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
 
 <h3>Questions still open</h3>
 <p><b>Answered 7 Nov</b>, from step 4: volunteers can add categories and tags and fix names too (now built), and an extra with none left isn't shown to students (as built).</p>
-<p><b>For you</b>, from step 6 (more in <a href="packing.html#ask">packing.html</a>):</p>
-<ul>
-  <li>Volunteers can pack until 6 pm, not only until pickup starts at 3:30, so a missed bag can still be packed. Is that right?</li>
-  <li>A packed bag can't be undone. Should a volunteer be able to undo Packed on the wrong bag, before pickup?</li>
-</ul>
+<p><b>Answered 7 Nov</b>, from step 6: volunteers can pack until 6 pm (as built), and a volunteer can undo Packed on the wrong bag until it's handed over (now built). For step 7: a walk-in who hasn't reached 28 days is refused, with no override. Students keep seeing exact counts like "6 left".</p>
 <p><b>For the food bank</b>, when we talk to them. These are in <code>CONSTRAINTS.md</code>:</p>
 <ul>
   <li>How is the 4-week rule checked today? When does new stock arrive? When do volunteers pack?</li>
   <li>How many students can the counter serve in 10 minutes?</li>
-  <li>Do they ever make an urgent exception for a walk-in?</li>
-  <li>Should students see exact counts ("6 left") or only "available"?</li>
 </ul>
 
 <h3>Known issues we accept for now</h3>

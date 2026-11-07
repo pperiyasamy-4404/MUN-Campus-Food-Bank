@@ -508,3 +508,9 @@ U6: the student chooses from the shelf at pickup. Step 7 records what they chose
 **The user's answers to the two step 4 questions (7 Nov).**
 - Volunteers can add categories and tags, and fix names, the same as the coordinator. This replaces the 6 Nov split. Volunteers are the ones at the shelf when a new kind of food arrives, so they shouldn't have to wait for the coordinator. Every stock address now needs a staff login, not a coordinator one. The stock page asks people to check the list first, so there's only one of each, and the database still refuses a name that's taken (ignoring capitals). R2 in CONSTRAINTS.md now says so.
 - An extra with none left isn't shown to students. That's how it was built on 6 Nov, so nothing changes.
+
+**The user's answers to four more questions (7 Nov).**
+- **Packing goes on until the no-show time**, as built. K1 now says a bag that isn't packed when pickup starts can still be packed until 6 pm.
+- **A volunteer can undo Packed on the wrong bag, until it's handed over.** This adds the move packed → booked to B2. Undo Packed puts the substitutes that went in back on the shelf (their stock goes up by one). The booked food stays promised, so its stock doesn't change. "Ran out" marks stay, because the shelf really had none. The undo is logged with who did it (`undid_packed`), like other fixes (B6). It's refused once the bag is picked up, after the no-show time, and on a bag that isn't packed. The page asks "Undo Packed on bag K3P?" first, because one tap shouldn't undo someone's work. It locks in the same order as Packed: the booking, then the food from the lowest id up.
+- **A walk-in who hasn't reached the pickup gap is refused, with no override.** In the user's words, they can take only once in 28 days. W1 now says so, and the question is off the list for the food bank. Step 7 builds it.
+- **Students see exact counts, like "6 left".** As built since 4 Nov. The question is off the list for the food bank.

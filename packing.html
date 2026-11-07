@@ -286,7 +286,7 @@ for substitute in substitutes, best first:
   </g>
 </svg>
 </div>
-<p>When a volunteer opens a flagged bag, that food is already marked "None on the shelf", with "Another bag found none at 12:26 p.m. If there is some, tap Found it." So nobody searches the shelf for it again.</p>
+<p>When a volunteer opens a flagged bag, that food is already marked "None on the shelf", with "A volunteer found none on the shelf at 12:26 p.m. If there is some, tap Found it." So nobody searches the shelf for it again.</p>
 <p><b>Counting the shelf clears the mark</b>, because a count is what's really there. The stock page lists food that ran out as needing a count, in red: "None on the shelf while packing, Monday, November 9 at 12:26 p.m. Count it to take the flag off other bags."</p>
 
 <!-- ============================================================ -->
@@ -324,13 +324,14 @@ for substitute in substitutes, best first:
   <tr><td><code>GET /api/packing/bags/{id}</code></td><td>One bag: its food, substitutes, and once packed, who packed it and the note.</td></tr>
   <tr><td><code>POST /api/packing/bags/{id}/plan</code></td><td>What goes in instead, for what was found so far. Saves nothing.</td></tr>
   <tr><td><code>POST /api/packing/bags/{id}/packed</code></td><td>Saves the bag. 409 if it's packed already, or if the plan changed.</td></tr>
+  <tr><td><code>POST /api/packing/bags/{id}/unpack</code></td><td>Undo Packed on the wrong bag, until it's handed over. 409 if it isn't packed.</td></tr>
 </table>
 </div>
 <p>The pages are <code>frontend/src/pages/Packing.tsx</code> (the queue) and <code>PackBag.tsx</code> (one bag). "Packing" is in the top bar for staff.</p>
 
 <!-- ============================================================ -->
 <h2 id="tests"><span class="num">10</span>The tests</h2>
-<p>52 new tests, 307 in all, every one passing. Highlights:</p>
+<p>58 new tests for packing, with the 6 for Undo Packed added later the same day. 309 in all, every one passing. Highlights:</p>
 <ul>
   <li><code>tests/test_packing.py</code>: 11 tests of the refill rule on its own, including both examples. Packing between 12 pm and 6 pm only. What Packed saves, with stock before and after. Only the bag's own food <span class="rule">U5</span>. A changed plan saves nothing. A bag is packed once <span class="rule">B2</span>. Flags appear when food runs out and go when it's counted <span class="rule">U7</span>. And the two "same moment" tests from part 5.</li>
   <li><code>tests/test_packing_api.py</code>: the addresses, used the way the pages use them. Staff only. A bag shows nothing about the student <span class="rule">P4</span>.</li>
@@ -339,11 +340,21 @@ for substitute in substitutes, best first:
 <p>The pages were also checked in Edge on a phone-sized screen, light and dark, against the test database: four bags, sunflower oil running out, the flags, a bag going out one short, and the stock page.</p>
 
 <!-- ============================================================ -->
-<h2 id="ask"><span class="num">11</span>Two questions for you</h2>
+<h2 id="ask"><span class="num">11</span>Two questions for you (both answered)</h2>
 <div class="ask">
-  <p><b>1. Packing until 6 pm?</b> I let volunteers pack until the no-show time, not just until pickup starts at 3:30, so a missed bag can be packed while the student waits. Is that right, or should packing stop at 3:30?</p>
-  <p><b>2. Undo Packed?</b> Right now a packed bag can't go back to "to pack", because B2 has no such move. If someone presses Packed on the wrong bag, nothing can fix it. Should a volunteer be able to undo Packed, before pickup starts?</p>
+  <p><b>1. Packing until 6 pm?</b> <b>Answered 7 Nov: yes</b>, as built. K1 in CONSTRAINTS.md now says so.</p>
+  <p><b>2. Undo Packed?</b> <b>Answered 7 Nov: yes, until the bag is handed over.</b> Now built: see below.</p>
 </div>
+<h3>Undo Packed</h3>
+<p>A packed bag's page has "Pressed Packed on the wrong bag? Undo Packed" at the bottom. It asks first, then <code>POST /api/packing/bags/{id}/unpack</code> does this, locking in the same order as Packed:</p>
+<ul>
+  <li>The bag goes back to "to pack", and shows in the queue again.</li>
+  <li>The substitutes that went in go back on the shelf, so their stock goes up by one again.</li>
+  <li>The booked food stays promised to this student, so its stock doesn't change.</li>
+  <li>"Ran out" marks stay. The shelf really had none, until someone counts it.</li>
+  <li>It's logged with who did it (<code>undid_packed</code> in the audit log), like other fixes <span class="rule">B6</span>.</li>
+</ul>
+<p>It's refused once the bag has been picked up, after the no-show time, and on a bag that isn't packed. Rule B2 in CONSTRAINTS.md now has the move packed → booked.</p>
 
 <!-- ============================================================ -->
 <h2 id="run"><span class="num">12</span>How to try it</h2>
