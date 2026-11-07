@@ -166,6 +166,7 @@ export type StockVariety = {
   tag_ids: number[]
   counted_at: string | null
   counted_by: string | null
+  ran_out_at: string | null // none on the shelf while packing. Cleared by the next count (U7).
 }
 
 export type StockItem = {
@@ -229,4 +230,73 @@ export type MyBooking = {
   booking: BookingDetails | null
   hold: HeldTime | null
   next_pickup_allowed_on: string | null
+}
+
+// ---------- packing, for staff (backend/app/routes/packing.py) ----------
+
+export type QueueBag = {
+  id: number
+  code: string
+  starts_at: string
+  status: string
+  things: number
+  ran_out: string[] // booked food another volunteer found none of on the shelf (U7)
+  packed_at: string | null
+  packed_by: string | null
+}
+
+export type PackingQueue = {
+  // The day being packed now, or packed next. null if no pickup days are coming up.
+  day: {
+    pickup_date: string
+    packing_starts_at: string // when booking closes (K1)
+    pickup_starts_at: string | null
+    no_show_at: string
+    can_pack: boolean
+    why_not: string | null
+  } | null
+  bags: QueueBag[]
+}
+
+export type BagFood = {
+  variety_id: number
+  variety: string
+  item: string
+  quantity: number
+  missing: number // saved when the bag is packed, 0 before
+  ran_out_at: string | null // a volunteer found none on the shelf, maybe for another bag
+}
+
+export type BagSubstitute = {
+  rank: number
+  variety_id: number
+  variety: string
+  item: string
+  replaced: string | null // once packed: the booked food it went in for
+}
+
+export type Bag = {
+  id: number
+  code: string
+  pickup_date: string
+  starts_at: string
+  status: string
+  packed_at: string | null
+  packed_by: string | null
+  can_pack: boolean
+  why_not: string | null
+  food: BagFood[]
+  substitutes: BagSubstitute[]
+  sticky_note: string[] // once packed: what was written on the bag (U8)
+}
+
+/** What happens to one substitute, by the refill rule (U4). */
+export type Outcome = 'use' | 'not_on_shelf' | 'none_left' | 'already_has_item' | 'not_needed'
+
+export type PackingPlan = {
+  substitutes: { rank: number; variety_id: number; outcome: Outcome; replaces: string | null }[]
+  sticky_note: string[]
+  in_bag: number // fewer than booked: the student chooses the rest at the counter (U6)
+  booked: number
+  uses: number[] // the substitutes to put in. Sent back with Packed.
 }

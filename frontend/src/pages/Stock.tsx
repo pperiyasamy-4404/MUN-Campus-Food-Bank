@@ -237,6 +237,12 @@ function VarietyRow({
             ? `Counted ${showDayAndClock(variety.counted_at)} by ${variety.counted_by}`
             : 'Never counted'}
         </p>
+        {variety.ran_out_at && (
+          <p className="stock-age stock-ran-out">
+            None on the shelf while packing, {showDayAndClock(variety.ran_out_at)}. Count it to take the flag off
+            other bags.
+          </p>
+        )}
       </div>
       <form className="count-form" onSubmit={save} noValidate>
         <label htmlFor={box}>On the shelf now</label>

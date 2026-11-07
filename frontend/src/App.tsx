@@ -5,6 +5,8 @@ import { Book } from './pages/Book.tsx'
 import { Counter } from './pages/Counter.tsx'
 import { Home } from './pages/Home.tsx'
 import { StaffLogIn, StudentLogIn } from './pages/LogIn.tsx'
+import { PackBag } from './pages/PackBag.tsx'
+import { Packing } from './pages/Packing.tsx'
 import { StaffSetUp, StudentSetUp } from './pages/SetUp.tsx'
 import { Stock } from './pages/Stock.tsx'
 import { Volunteers } from './pages/Volunteers.tsx'
@@ -44,6 +46,22 @@ function App() {
               element={
                 <StaffOnly>
                   <Stock />
+                </StaffOnly>
+              }
+            />
+            <Route
+              path="packing"
+              element={
+                <StaffOnly>
+                  <Packing />
+                </StaffOnly>
+              }
+            />
+            <Route
+              path="packing/:bookingId"
+              element={
+                <StaffOnly>
+                  <PackBag />
                 </StaffOnly>
               }
             />

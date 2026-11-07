@@ -27,11 +27,13 @@ export async function change<T>(
 /**
  * Shown food that hasn't been counted since the last pickup ended. Pickups and
  * walk-ins have changed the shelf since, so the count should be done again
- * before booking opens (I8). Hidden food doesn't need counting.
+ * before booking opens (I8). Food a volunteer found none of while packing needs
+ * a count too: until then it can't be booked, and bags with it are flagged (U7).
+ * Hidden food doesn't need counting.
  */
 export function needsCounting(variety: StockVariety, lastPickupEndedAt: string | null): boolean {
   if (!variety.shown) return false
-  if (variety.counted_at === null) return true
+  if (variety.counted_at === null || variety.ran_out_at !== null) return true
   return lastPickupEndedAt !== null && new Date(variety.counted_at) < new Date(lastPickupEndedAt)
 }
 
