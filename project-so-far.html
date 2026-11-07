@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Food Bank: the project so far</title>
+<style>
+  :root {
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc;
+    --blue: #2563eb; --blue-bg: #dbeafe;
+    --green: #059669; --green-bg: #d1fae5;
+    --amber: #b45309; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 980px; margin: 0 auto; padding: 36px 20px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 .num { color: var(--blue); margin-right: 8px; }
+  h3 { font-size: 1.15rem; margin: 30px 0 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--blue); }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
+  .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; background: #fff; font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+  .why { border-left: 4px solid var(--blue); background: #eff6ff; padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .why p { margin: 4px 0; }
+  .short { background: var(--green-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .short p { margin: 2px 0; }
+  .warn { background: var(--amber-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .warn p { margin: 2px 0; }
+  pre.code { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 18px; font: 14px/1.55 ui-monospace, Consolas, monospace; overflow-x: auto; margin: 12px 0; }
+  pre .c { color: #94a3b8; }
+  pre .bad { color: #fca5a5; }
+  pre .good { color: #86efac; }
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; margin: 18px 0; }
+  .diagram svg { display: block; width: 100%; height: auto; }
+  .toc { columns: 2; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 20px 14px 40px; }
+  @media (max-width: 760px) { .toc { columns: 1; } }
+  .steps { counter-reset: step; list-style: none; padding: 0; }
+  .steps li { counter-increment: step; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px 8px 46px; margin: 6px 0; position: relative; }
+  .steps li::before { content: counter(step); position: absolute; left: 12px; top: 8px; width: 24px; height: 24px; border-radius: 50%; background: var(--blue); color: #fff; font-weight: 700; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 18px 0; }
+  @media (max-width: 760px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .stat b { display: block; font-size: 1.6rem; line-height: 1.2; }
+  .stat span { color: var(--muted); font-size: .9rem; }
+  .tag { display: inline-block; font-size: .78rem; font-weight: 700; padding: 1px 8px; border-radius: 99px; white-space: nowrap; }
+  .done { background: var(--green-bg); color: #065f46; }
+  .next { background: var(--amber-bg); color: #92400e; }
+  .later { background: var(--slate-bg); color: #334155; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 12px; margin: 16px 0; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; }
+  .card h3 { margin: 2px 0 6px; font-size: 1.05rem; }
+  .card p { margin: 6px 0; font-size: .95rem; }
+  dl.words { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; }
+  dl.words dt { font-weight: 700; }
+  dl.words dd { margin: 0; }
+  @media (max-width: 640px) { dl.words { grid-template-columns: 1fr; } dl.words dd { margin-bottom: 8px; } }
+</style>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Campus Food Bank · The whole project so far · 7 November 2026</p>
+<h1>The project so far</h1>
+<p class="lead">Read this page first. It explains the whole project in one place: what we're building, who uses it, how the pieces fit together, what's done, and what's next. The other pages go deeper into one step each. This one links to them.</p>
+
+<div class="stats">
+  <div class="stat"><b>5 of 9</b><span>building steps done</span></div>
+  <div class="stat"><b>255</b><span>tests, all passing</span></div>
+  <div class="stat"><b>19</b><span>tables in the database</span></div>
+  <div class="stat"><b>32</b><span>commits on GitHub</span></div>
+</div>
+
+<ol class="toc">
+  <li><a href="#what">What we're building</a></li>
+  <li><a href="#people">The three kinds of people</a></li>
+  <li><a href="#journey">A student's journey, start to end</a></li>
+  <li><a href="#pieces">The four pieces, and how they talk</a></li>
+  <li><a href="#request">One click, followed all the way</a></li>
+  <li><a href="#folders">Where everything lives</a></li>
+  <li><a href="#rules">The rules, and their letters</a></li>
+  <li><a href="#done">What's been built, step by step</a></li>
+  <li><a href="#tables">The 19 tables, in plain words</a></li>
+  <li><a href="#ideas">Five ideas that hold it together</a></li>
+  <li><a href="#life">A booking's life</a></li>
+  <li><a href="#next">What's next</a></li>
+  <li><a href="#run">How to run it</a></li>
+  <li><a href="#pages">Which page to read for what</a></li>
+  <li><a href="#words">Words used on this page</a></li>
+</ol>
+
+<!-- ================================================================ -->
+<h2 id="what"><span class="num">1</span>What we're building</h2>
+<p>The Campus Food Bank at Memorial University gives free food to students. We're building a website for it. With it, a student can:</p>
+<ul>
+  <li>choose a <b>10-minute pickup time</b> on a Monday or Thursday afternoon,</li>
+  <li>choose <b>up to 13 things</b> from what's on the shelf, like oats, pasta or canned chicken,</li>
+  <li>list <b>up to 5 substitutes</b>, in case something runs out before their bag is packed,</li>
+  <li>get a short <b>booking code</b> like <code>K3P</code> to say at the counter.</li>
+</ul>
+<p>Volunteers pack the bags before pickup starts and hand them over. A coordinator runs the food bank and its settings.</p>
+
+<h3>Two promises shape everything</h3>
+<div class="cards">
+  <div class="card">
+    <h3>Fair</h3>
+    <p>Each student can pick up once every 28 days. The system checks this, so nobody has to remember faces or keep a paper list <span class="rule">F1</span>.</p>
+  </div>
+  <div class="card">
+    <h3>Private</h3>
+    <p>The system never stores a student's name, email or phone number. It doesn't even store their MUN ID number. Volunteers only ever see the booking code and the food <span class="rule">P2</span> <span class="rule">P3</span> <span class="rule">P4</span>.</p>
+  </div>
+</div>
+<div class="warn">
+  <p><b>It's a prototype.</b> Everything uses made-up data. Nothing is live. The food bank hasn't agreed to anything yet, and the real rules will be agreed with them later.</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="people"><span class="num">2</span>The three kinds of people</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>Who</th><th>How they log in</th><th>What they can do now</th><th>Coming later</th></tr>
+  <tr>
+    <td><b>Student</b></td>
+    <td>Their MUN ID number and a password they chose. The account is made at the counter <span class="rule">R1</span>.</td>
+    <td>See the pickup days. Hold a time, choose food and substitutes, book, see their booking, cancel.</td>
+    <td>Nothing more. Students only ever book and cancel.</td>
+  </tr>
+  <tr>
+    <td><b>Volunteer</b></td>
+    <td>A username (like a first name) and a password <span class="rule">R3</span>.</td>
+    <td>Make student accounts and give setup codes (the Counter page). Count the shelf and add food (the Stock page).</td>
+    <td>The packing queue (step 6). Handing over bags, walk-ins and extras (step 7).</td>
+  </tr>
+  <tr>
+    <td><b>Coordinator</b></td>
+    <td>A username and password. The very first one is made by a script on the server.</td>
+    <td>Everything a volunteer can do, plus: add and switch off volunteers, add categories and tags, fix names.</td>
+    <td>Change the settings, close a day, see weekly totals (step 9).</td>
+  </tr>
+</table>
+</div>
+<p>"Staff" on these pages means volunteers and the coordinator together.</p>
+
+<!-- ================================================================ -->
+<h2 id="journey"><span class="num">3</span>A student's journey, start to end</h2>
+<p>Green is built. Amber is the next step. Grey comes after that.</p>
+<div class="diagram">
+<svg viewBox="0 0 940 470" role="img" aria-label="A student's journey in seven stages, four built, one next, two later">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+  </defs>
+  <g font-family="system-ui, Segoe UI, sans-serif" font-size="14" text-anchor="middle">
+    <!-- row 1 -->
+    <rect x="20" y="20" width="280" height="120" rx="12" fill="#d1fae5" stroke="#059669"/>
+    <text x="160" y="48" font-weight="700">1. At the counter</text>
+    <text x="160" y="72" font-size="13">A volunteer checks the MUN card</text>
+    <text x="160" y="91" font-size="13">and types the number twice.</text>
+    <text x="160" y="110" font-size="13">The student gets a setup code,</text>
+    <text x="160" y="129" font-size="13" font-weight="700">K7QM-4TXP</text>
+
+    <rect x="330" y="20" width="280" height="120" rx="12" fill="#d1fae5" stroke="#059669"/>
+    <text x="470" y="48" font-weight="700">2. On their own phone</text>
+    <text x="470" y="72" font-size="13">They type their ID number</text>
+    <text x="470" y="91" font-size="13">and the setup code,</text>
+    <text x="470" y="110" font-size="13">and choose a password.</text>
+    <text x="470" y="129" font-size="13" fill="#475569">The volunteer never sees it.</text>
+
+    <rect x="640" y="20" width="280" height="120" rx="12" fill="#d1fae5" stroke="#059669"/>
+    <text x="780" y="48" font-weight="700">3. Booking opens</text>
+    <text x="780" y="72" font-size="13">5 pm the day before pickup.</text>
+    <text x="780" y="91" font-size="13">They choose a time.</text>
+    <text x="780" y="110" font-size="13">It's held for them</text>
+    <text x="780" y="129" font-size="13">for 10 minutes.</text>
+
+    <line x1="300" y1="80" x2="326" y2="80" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="610" y1="80" x2="636" y2="80" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <path d="M780,140 L780,170 L160,170 L160,196" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+
+    <!-- row 2 -->
+    <rect x="20" y="200" width="280" height="120" rx="12" fill="#d1fae5" stroke="#059669"/>
+    <text x="160" y="228" font-weight="700">4. Choose food, press Book</text>
+    <text x="160" y="252" font-size="13">Up to 13 things,</text>
+    <text x="160" y="271" font-size="13">up to 5 substitutes, ranked.</text>
+    <text x="160" y="290" font-size="13">They get a booking code,</text>
+    <text x="160" y="309" font-size="13" font-weight="700">K3P</text>
+
+    <rect x="330" y="200" width="280" height="120" rx="12" fill="#fef3c7" stroke="#b45309"/>
+    <text x="470" y="228" font-weight="700">5. Packing, 12 to 3 pm</text>
+    <text x="470" y="252" font-size="13">Volunteers pack each bag.</text>
+    <text x="470" y="271" font-size="13">Missing food is swapped</text>
+    <text x="470" y="290" font-size="13">for the student's substitutes.</text>
+    <text x="470" y="309" font-size="13" font-weight="700" fill="#92400e">Step 6, next</text>
+
+    <rect x="640" y="200" width="280" height="120" rx="12" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="780" y="228" font-weight="700">6. Pickup, 3:30 to 5:30 pm</text>
+    <text x="780" y="252" font-size="13">They say K3P. The volunteer</text>
+    <text x="780" y="271" font-size="13">types the card number, which</text>
+    <text x="780" y="290" font-size="13">must match the booking.</text>
+    <text x="780" y="309" font-size="13" font-weight="700" fill="#334155">Step 7</text>
+
+    <line x1="300" y1="260" x2="326" y2="260" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="610" y1="260" x2="636" y2="260" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <path d="M780,320 L780,350 L470,350 L470,376" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+
+    <!-- row 3 -->
+    <rect x="330" y="380" width="280" height="80" rx="12" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="470" y="408" font-weight="700">7. 6 pm: anyone who didn't come</text>
+    <text x="470" y="428" font-size="13">is a no-show. Their food goes back.</text>
+    <text x="470" y="448" font-size="13" font-weight="700" fill="#334155">Step 8</text>
+
+    <!-- cancel -->
+    <text x="160" y="352" font-size="13" fill="#b91c1c">Changed their mind? They can cancel</text>
+    <text x="160" y="370" font-size="13" fill="#b91c1c">until 12 pm on pickup day (built).</text>
+  </g>
+</svg>
+</div>
+<p>A student who comes without a booking is a <b>walk-in</b>. They're served in their own line, and the system still checks the 28 days <span class="rule">W1</span>. That's step 7 too.</p>
+
+<!-- ================================================================ -->
+<h2 id="pieces"><span class="num">4</span>The four pieces, and how they talk</h2>
+<div class="diagram">
+<svg viewBox="0 0 940 300" role="img" aria-label="Browser with React pages talks to the FastAPI server, which talks to PostgreSQL. Tests check the server against a test database.">
+  <defs>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+  </defs>
+  <g font-family="system-ui, Segoe UI, sans-serif" font-size="14" text-anchor="middle">
+    <rect x="20" y="30" width="250" height="150" rx="12" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="145" y="58" font-weight="700">The pages (frontend)</text>
+    <text x="145" y="82" font-size="13">React + TypeScript</text>
+    <text x="145" y="101" font-size="13">in the browser: a student's</text>
+    <text x="145" y="120" font-size="13">phone, or the counter laptop</text>
+    <text x="145" y="150" font-size="12" fill="#475569">frontend/src/</text>
+
+    <rect x="345" y="30" width="250" height="150" rx="12" fill="#d1fae5" stroke="#059669"/>
+    <text x="470" y="58" font-weight="700">The server (backend)</text>
+    <text x="470" y="82" font-size="13">Python + FastAPI</text>
+    <text x="470" y="101" font-size="13">routes: the web addresses</text>
+    <text x="470" y="120" font-size="13">services: the rules</text>
+    <text x="470" y="150" font-size="12" fill="#475569">backend/app/</text>
+
+    <rect x="670" y="30" width="250" height="150" rx="12" fill="#fef3c7" stroke="#b45309"/>
+    <text x="795" y="58" font-weight="700">The database</text>
+    <text x="795" y="82" font-size="13">PostgreSQL 18</text>
+    <text x="795" y="101" font-size="13">19 tables, and rules</text>
+    <text x="795" y="120" font-size="13">that refuse bad data</text>
+    <text x="795" y="150" font-size="12" fill="#475569">campus_food_bank</text>
+
+    <line x1="270" y1="90" x2="341" y2="90" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+    <line x1="341" y1="120" x2="274" y2="120" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+    <text x="307" y="80" font-size="12" fill="#475569">/api/...</text>
+    <text x="307" y="140" font-size="12" fill="#475569">JSON</text>
+
+    <line x1="595" y1="90" x2="666" y2="90" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+    <line x1="666" y1="120" x2="599" y2="120" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+    <text x="632" y="80" font-size="12" fill="#475569">SQL</text>
+    <text x="632" y="140" font-size="12" fill="#475569">rows</text>
+
+    <rect x="345" y="220" width="575" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="6 4"/>
+    <text x="632" y="246" font-weight="700">The tests: pytest, 255 of them</text>
+    <text x="632" y="268" font-size="13">They call the server and the rules, against a separate test database, rebuilt every run.</text>
+    <line x1="470" y1="220" x2="470" y2="184" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#b)"/>
+  </g>
+</svg>
+</div>
+
+<div class="cards">
+  <div class="card">
+    <h3>The pages: React + TypeScript</h3>
+    <p>What people see and click. <b>React</b> builds a screen out of small pieces called components. When the data changes, like the 10-minute countdown, React redraws only what changed. <b>TypeScript</b> is JavaScript with types, so a typo like <code>booking.cod</code> is caught before the page runs. <b>Vite</b> runs the pages while we work on them.</p>
+    <p>The pages decide nothing important. Anyone can change what runs in their own browser, so every rule is checked again on the server.</p>
+  </div>
+  <div class="card">
+    <h3>The server: Python + FastAPI</h3>
+    <p>Each web address, like <code>POST /api/bookings</code>, is a short Python function in <code>app/routes/</code>. It checks the request has the right shape, then calls the rules in <code>app/services/</code>. Keeping the rules apart from the web part means a test can check a rule directly.</p>
+  </div>
+  <div class="card">
+    <h3>The database: PostgreSQL</h3>
+    <p>Keeps everything: accounts, food, days, bookings. <b>SQLAlchemy</b> lets Python treat each table as a class and each row as an object. <b>Alembic</b> keeps a numbered history of every change to the tables (a migration), so the same database can be built again anywhere.</p>
+  </div>
+  <div class="card">
+    <h3>The tests: pytest</h3>
+    <p>255 small programs that each check one thing, like "a 14th item is refused". They run against a real PostgreSQL test database, never the working one. Each test is undone when it ends, so tests can't affect each other.</p>
+  </div>
+</div>
+
+<div class="why">
+  <p><b>Why one website, not two?</b> While we work, the pages live at <code>localhost:5173</code> and the server at <code>localhost:8000</code>. Vite passes every <code>/api</code> request on to the server, so the browser thinks it's all one site. The login cookie then works with its strictest safety settings, and we need no extra setup for two sites talking to each other.</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="request"><span class="num">5</span>One click, followed all the way</h2>
+<p>A student has chosen quick oats and penne, with rice as a substitute, and presses <b>Book</b>. Here's everything that happens, in about a tenth of a second:</p>
+<ol class="steps">
+  <li><b>The page</b> (<code>ChooseFood.tsx</code>) sends <code>POST /api/bookings</code> with <code>{"items": [{"variety_id": 4}, {"variety_id": 7}], "substitutes": [9]}</code>. The browser adds the login cookie by itself.</li>
+  <li><b>FastAPI</b> checks the request has the right shape. A list of numbers? Good. Then it finds who's logged in from the cookie. Not a student? "Please log in." The route's own code never runs.</li>
+  <li><b>The route</b> (<code>routes/booking.py</code>) calls <code>book()</code> in <code>services/booking.py</code>.</li>
+  <li><b>The rules</b>: lock the time, check the 10 minutes haven't run out, check the 28 days and the other rules again, check the food limits, take a place, take the food off stock.</li>
+  <li><b>The database</b> saves the booking, its food and its substitutes, all together or not at all.</li>
+  <li><b>The answer</b> goes back: <code>{"code": "K3P", "status": "booked", ...}</code>.</li>
+  <li><b>The page</b> shows "Your code is K3P", with the food and a Cancel button.</li>
+</ol>
+<p>If anything in step 4 refuses, nothing is saved and the student reads why, like "Sorry, Penne has just run out. Choose something else." Their list stays on the screen.</p>
+
+<!-- ================================================================ -->
+<h2 id="folders"><span class="num">6</span>Where everything lives</h2>
+<pre class="code">MUN Project/
+├── CONSTRAINTS.md          <span class="c">← the rules (P1, F1, S2...), the settings, open questions</span>
+├── DECISIONS.md            <span class="c">← every choice we made, by date, with the reason</span>
+├── project-so-far.html     <span class="c">← this page</span>
+├── *.html                  <span class="c">← one explainer page per step</span>
+│
+├── backend/                <span class="c">← the server (Python)</span>
+│   ├── .env                <span class="c">← passwords and the secret key. Never committed.</span>
+│   ├── app/
+│   │   ├── main.py         <span class="c">← starts the server and joins the routes together</span>
+│   │   ├── models/         <span class="c">← the 19 tables: people, food, days, bookings</span>
+│   │   ├── routes/         <span class="c">← the web addresses: /api/bookings, /api/stock...</span>
+│   │   ├── services/       <span class="c">← the rules: booking.py, stock.py, accounts.py</span>
+│   │   ├── security/       <span class="c">← hashing, passwords, login cookies, wrong tries</span>
+│   │   ├── sample_data.py  <span class="c">← made-up days and food for trying things</span>
+│   │   └── first_coordinator.py  <span class="c">← makes the very first coordinator</span>
+│   ├── migrations/         <span class="c">← Alembic's history of table changes (3 so far)</span>
+│   └── tests/              <span class="c">← the 255 tests, one file per area</span>
+│
+└── frontend/               <span class="c">← the pages (React + TypeScript)</span>
+    └── src/
+        ├── App.tsx         <span class="c">← every page and its web address</span>
+        ├── api.ts          <span class="c">← the code that talks to the server</span>
+        ├── Layout.tsx      <span class="c">← the bar at the top, and who may see which page</span>
+        └── pages/          <span class="c">← Book, Counter, Stock, Volunteers, LogIn, SetUp...</span></pre>
+<div class="short">
+  <p><b>To read the code, start here:</b> <code>backend/app/services/booking.py</code>. It's the heart of the system, and every function says which rule it follows. Then read <code>backend/tests/test_booking.py</code> next to it: each test is one rule, written as an example.</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="rules"><span class="num">7</span>The rules, and their letters</h2>
+<p>All the rules are in <code>CONSTRAINTS.md</code>. Each has a letter and a number, like <span class="rule">F1</span>. The same label appears in the code, the tests and these pages. So when you see <code># F1</code> in the code, that line is the 28-day rule.</p>
+<div class="table-wrap">
+<table>
+  <tr><th>Letter</th><th>About</th><th>One example</th></tr>
+  <tr><td><span class="rule">P</span></td><td>Privacy and identity</td><td><b>P2</b> The ID number is never stored, only a keyed hash of it.</td></tr>
+  <tr><td><span class="rule">F</span></td><td>How often</td><td><b>F1</b> At least 28 days between pickups.</td></tr>
+  <tr><td><span class="rule">S</span></td><td>Days and slots</td><td><b>S2</b> A slot never has more students than its capacity, even when many book at once.</td></tr>
+  <tr><td><span class="rule">I</span></td><td>Items and stock</td><td><b>I4</b> Stock never goes below zero, even when two students take the last one together.</td></tr>
+  <tr><td><span class="rule">E</span></td><td>Extras</td><td><b>E1</b> Eggs, bread and chips aren't booked online. Students ask at pickup.</td></tr>
+  <tr><td><span class="rule">U</span></td><td>Substitutes</td><td><b>U4</b> When packing, missing food is replaced from the substitute list, in order.</td></tr>
+  <tr><td><span class="rule">K</span></td><td>Packing</td><td><b>K1</b> Volunteers pack between 12 pm and 3 pm.</td></tr>
+  <tr><td><span class="rule">W</span></td><td>Walk-ins</td><td><b>W1</b> Walk-ins are recorded too, so the 28 days stay fair.</td></tr>
+  <tr><td><span class="rule">B</span></td><td>A booking's life</td><td><b>B4</b> Clicking Book twice makes only one booking.</td></tr>
+  <tr><td><span class="rule">R</span></td><td>Roles</td><td><b>R1</b> Student accounts are made at the counter, with a one-time setup code.</td></tr>
+  <tr><td><span class="rule">T</span></td><td>Time</td><td><b>T1</b> Times are saved in UTC and shown in Newfoundland time.</td></tr>
+</table>
+</div>
+<p>Some numbers are missing, like S3 and S4. Those rules were removed, and the others kept their numbers so old notes still point to the right rule.</p>
+
+<h3>Fixed rules and settings</h3>
+<p>A <b>fixed rule</b> is in the code and doesn't change, like "stock never goes below zero". A <b>setting</b> is a number the coordinator can change without touching the code. The settings live in one row of the <code>settings</code> table. The values now are samples, until the food bank tells us the real ones:</p>
+<div class="table-wrap">
+<table>
+  <tr><th>Setting</th><th>Sample</th><th>Setting</th><th>Sample</th></tr>
+  <tr><td>Pickup gap</td><td>28 days</td><td>Item limit</td><td>13 per booking</td></tr>
+  <tr><td>Pickup days</td><td>Mon and Thu, 3:30–5:30 pm</td><td>Max of each item</td><td>1</td></tr>
+  <tr><td>Booking opens</td><td>5 pm the day before</td><td>Substitutes</td><td>up to 5</td></tr>
+  <tr><td>Booking and cancelling close</td><td>12 pm on pickup day</td><td>No-show time</td><td>6 pm</td></tr>
+  <tr><td>Slot length</td><td>10 minutes</td><td>Booking details kept</td><td>90 days</td></tr>
+  <tr><td>Students per slot</td><td>1</td><td>Setup code lasts</td><td>7 days</td></tr>
+  <tr><td>Hold time</td><td>10 minutes</td><td>Wrong passwords</td><td>5 per 15 minutes</td></tr>
+</table>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="done"><span class="num">8</span>What's been built, step by step</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>When</th><th>Step</th><th>What it gave us</th><th>Read more</th></tr>
+  <tr>
+    <td>25–30 Oct</td><td><b>Planning</b> <span class="tag done">done</span></td>
+    <td>The rules, written and argued over in four rounds of questions. The known issues. The questions for the food bank.</td>
+    <td><a href="how-it-works.html">how-it-works</a>, <a href="questions-and-issues.html">questions-and-issues</a></td>
+  </tr>
+  <tr>
+    <td>1 Nov</td><td><b>Tech choices</b> <span class="tag done">done</span></td>
+    <td>Six choices: TypeScript, login cookies instead of tokens, SQLAlchemy with real database rules, PostgreSQL installed on Windows, pytest on a real database, one repository with two folders.</td>
+    <td><a href="tech-and-stack.html">tech-and-stack</a></td>
+  </tr>
+  <tr>
+    <td>2 Nov</td><td><b>PostgreSQL installed</b> <span class="tag done">done</span></td>
+    <td>The database server runs on this laptop, on port 5432, and starts by itself.</td>
+    <td>DECISIONS.md, 2 Nov</td>
+  </tr>
+  <tr>
+    <td>3 Nov</td><td><b>Step 1, set up</b> <span class="tag done">done</span></td>
+    <td>The <code>backend</code> and <code>frontend</code> folders. The server said "hello" and the page showed it.</td>
+    <td>DECISIONS.md, 3 Nov</td>
+  </tr>
+  <tr>
+    <td>3 Nov</td><td><b>Step 2, tables</b> <span class="tag done">done</span></td>
+    <td>19 tables, with database rules like "stock can't go below 0". Pickup days and slots made from the settings. Sample data. 81 tests.</td>
+    <td><a href="tables.html">tables</a></td>
+  </tr>
+  <tr>
+    <td>4 Nov</td><td><b>A first real page</b> <span class="tag done">done</span></td>
+    <td>The home page shows the real pickup days, their times and the food, read from the database.</td>
+    <td><a href="database-page.html">database-page</a></td>
+  </tr>
+  <tr>
+    <td>5–6 Nov</td><td><b>Step 3, accounts</b> <span class="tag done">done</span></td>
+    <td>Setup codes, passwords, logging in and out, slowing down password guessing. The Counter page (make a student account) and the Volunteers page (coordinator only).</td>
+    <td><a href="accounts.html">accounts</a></td>
+  </tr>
+  <tr>
+    <td>6 Nov</td><td><b>Step 4, stock</b> <span class="tag done">done</span></td>
+    <td>Counting the shelf, adding food and varieties, dietary tags, hiding food. The Stock page.</td>
+    <td><a href="stock.html">stock</a></td>
+  </tr>
+  <tr>
+    <td>6 Nov</td><td><b>Step 5, booking</b> <span class="tag done">done</span></td>
+    <td>Holding a time, choosing food and substitutes, booking, cancelling. The Book page. 255 tests.</td>
+    <td><a href="booking.html">booking</a></td>
+  </tr>
+  <tr>
+    <td>Next</td><td><b>Step 6, packing</b> <span class="tag next">next</span></td>
+    <td>The packing queue, swapping in substitutes, the sticky note, marking a bag packed.</td>
+    <td>—</td>
+  </tr>
+  <tr>
+    <td>Later</td><td><b>Steps 7, 8, 9</b> <span class="tag later">later</span></td>
+    <td>The counter, the jobs that run by themselves, and the coordinator's pages.</td>
+    <td>See <a href="#next">part 12</a></td>
+  </tr>
+</table>
+</div>
+
+<h3>The pages you can open today</h3>
+<div class="table-wrap">
+<table>
+  <tr><th>Address</th><th>Who</th><th>What it does</th></tr>
+  <tr><td><code>/</code></td><td>Anyone</td><td>The pickup days, their times, and the food that's in stock.</td></tr>
+  <tr><td><code>/setup</code>, <code>/login</code></td><td>Students</td><td>Set up an account with a setup code, then log in.</td></tr>
+  <tr><td><code>/book</code></td><td>Students</td><td>Choose a time and food, book, see the booking, cancel.</td></tr>
+  <tr><td><code>/staff/setup</code>, <code>/staff/login</code></td><td>Staff</td><td>The same, for volunteers and the coordinator.</td></tr>
+  <tr><td><code>/counter</code></td><td>Staff</td><td>Type a card number twice, get a setup code for the student.</td></tr>
+  <tr><td><code>/stock</code></td><td>Staff</td><td>Count the shelf, add food, tags, hide or show.</td></tr>
+  <tr><td><code>/volunteers</code></td><td>Coordinator</td><td>Add volunteers, give setup codes, switch accounts off and on.</td></tr>
+</table>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="tables"><span class="num">9</span>The 19 tables, in plain words</h2>
+<p>A table is like a spreadsheet: columns say what's kept, and each row is one thing. Here they are in four groups.</p>
+<div class="cards">
+  <div class="card">
+    <h3>People (6)</h3>
+    <p><code>students</code> one row per MUN card: a hash, never the number<br>
+    <code>staff</code> volunteers and the coordinator<br>
+    <code>sessions</code> who's logged in right now<br>
+    <code>setup_codes</code> one-time codes, saved only as hashes<br>
+    <code>login_failures</code> wrong passwords, to slow guessing<br>
+    <code>audit_log</code> who did what, like "Sam made an account"</p>
+  </div>
+  <div class="card">
+    <h3>Food (5)</h3>
+    <p><code>categories</code> Breakfast, Protein, Bakery...<br>
+    <code>items</code> a kind of food, like Oats<br>
+    <code>varieties</code> what's on the shelf, like Quick oats. Stock is counted here.<br>
+    <code>tags</code> vegetarian, halal, gluten-free, contains nuts<br>
+    <code>variety_tags</code> which variety has which tag</p>
+  </div>
+  <div class="card">
+    <h3>Days (4)</h3>
+    <p><code>settings</code> the food bank's numbers, in one row<br>
+    <code>pickup_hours</code> the weekly pattern: Mon and Thu, 3:30–5:30<br>
+    <code>pickup_days</code> one real date, with its own booking times<br>
+    <code>slots</code> one 10-minute time, with how many have booked it</p>
+  </div>
+  <div class="card">
+    <h3>Bookings (4)</h3>
+    <p><code>holds</code> a time kept for one student for 10 minutes<br>
+    <code>bookings</code> one student's pickup, its code and status<br>
+    <code>booking_items</code> the food they booked<br>
+    <code>booking_substitutes</code> their ranked substitutes</p>
+  </div>
+</div>
+<h3>Items and varieties, a tiny example</h3>
+<pre class="code">Item: Oats  (category Breakfast)
+  ├── Variety: Quick oats       stock 6
+  └── Variety: Steel-cut oats   stock 2
+
+<span class="c">A student books one variety. The limit is one Oats, counting both kinds together (I3).</span>
+<span class="c">Any brand or size of quick oats counts as quick oats (U1).</span></pre>
+<p>Packing, walk-ins and extras will need a few new tables. We add each one in the step that needs it, so it's designed when we understand that part best.</p>
+
+<!-- ================================================================ -->
+<h2 id="ideas"><span class="num">10</span>Five ideas that hold it together</h2>
+
+<h3>1. The ID number is never saved, only a keyed hash</h3>
+<p>A <b>hash</b> turns a value into a fixed-looking jumble. The same value always gives the same jumble, but you can't turn the jumble back. A <b>keyed hash</b> (HMAC) mixes in a secret key first:</p>
+<pre class="code">202312345  + secret key  →  3f9a7c...e21b   <span class="c">(64 characters)</span>
+202312345  + secret key  →  3f9a7c...e21b   <span class="good">← same card, same answer: the counter can find the account</span>
+202312345  + wrong key   →  91c04d...7a3f   <span class="bad">← without the key, nobody can match a number</span></pre>
+<p>ID numbers are only 9 digits, so without a key, someone with a copy of the database could try all billion numbers in minutes. The key lives in <code>backend/.env</code>, outside the database, so a stolen database alone gives nothing <span class="rule">P2</span> <span class="rule">P11</span>. Passwords use a different, deliberately slow hash called argon2 <span class="rule">P8</span>.</p>
+
+<h3>2. The database is the last guard</h3>
+<p>The code checks every rule and says what's wrong in words. But code can have bugs. So the most important rules are also <b>database rules</b> that refuse bad data, whatever the code does:</p>
+<pre class="code">CHECK (stock >= 0)                    <span class="c">-- I4: never less than none</span>
+CHECK (booked_count &lt;= capacity)      <span class="c">-- S2: never more students than places</span>
+UNIQUE (student_id) WHERE status IN ('booked', 'packed')
+                                      <span class="c">-- F2, B4: one upcoming booking per student</span></pre>
+<p>Each database rule has a name, and a test checks that the right one refuses.</p>
+
+<h3>3. Locks, for "at the same moment"</h3>
+<p>At 5:00 pm many students press Book together. Say there's one tin left:</p>
+<pre class="code"><span class="bad">Without a lock:</span>
+  Ana reads "1 left"      Ben reads "1 left"
+  Ana takes it: 0 left    Ben takes it: <span class="bad">-1 left, or two bags promised one tin</span>
+
+<span class="good">With a lock:</span>
+  Ana locks the tin's row, reads "1 left", takes it, saves, lets go
+  Ben was waiting. Now he reads "0 left" and sees "Sorry, it has just run out."</pre>
+<p>Locks are always taken in the same order: the time, then the hold or booking, then the food from the lowest number up. If two people locked things in a different order, each could end up waiting for the other forever (a <b>deadlock</b>).</p>
+
+<h3>4. All or nothing</h3>
+<p>Pressing Book changes four tables. A <b>transaction</b> makes them one change: either everything is saved, or nothing is. If the 9th of 9 foods has run out, the place and the first 8 foods are given back by themselves. Nobody has to write code to undo each step.</p>
+
+<h3>5. A test for every rule</h3>
+<p>Every rule has at least one test, written as an example: "a student who picked up on 12 October can't book 8 November". The "at the same moment" tests really use two database connections at once. For the most important ones, we took the protection out on purpose and watched the test fail. That proves the test can catch the problem, not just pass.</p>
+
+<div class="why">
+  <p><b>And one habit: every refusal says why, and what to do.</b> Not "Error 409", but "Booking for Monday, November 9 opens Sunday, November 8 at 5:00 p.m." or "Your next pickup can be on Tuesday, November 10 or later."</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="life"><span class="num">11</span>A booking's life</h2>
+<p>Every booking has a <b>status</b>. Only these moves are allowed <span class="rule">B1</span> <span class="rule">B2</span>:</p>
+<div class="diagram">
+<svg viewBox="0 0 940 300" role="img" aria-label="Booked to packed to picked up. Booked or packed can become cancelled or no-show. No-show and picked up can be fixed into each other.">
+  <defs>
+    <marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+  </defs>
+  <g font-family="system-ui, Segoe UI, sans-serif" font-size="15" text-anchor="middle">
+    <rect x="40" y="40" width="180" height="64" rx="12" fill="#d1fae5" stroke="#059669"/>
+    <text x="130" y="70" font-weight="700">booked</text>
+    <text x="130" y="90" font-size="12" fill="#065f46">step 5, built</text>
+
+    <rect x="380" y="40" width="180" height="64" rx="12" fill="#fef3c7" stroke="#b45309"/>
+    <text x="470" y="70" font-weight="700">packed</text>
+    <text x="470" y="90" font-size="12" fill="#92400e">step 6, next</text>
+
+    <rect x="720" y="40" width="180" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="810" y="70" font-weight="700">picked up</text>
+    <text x="810" y="90" font-size="12" fill="#334155">step 7</text>
+
+    <rect x="200" y="210" width="200" height="64" rx="12" fill="#fee2e2" stroke="#b91c1c"/>
+    <text x="300" y="240" font-weight="700">cancelled</text>
+    <text x="300" y="260" font-size="12" fill="#7f1d1d">by the student: built</text>
+
+    <rect x="560" y="210" width="200" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="660" y="240" font-weight="700">no-show</text>
+    <text x="660" y="260" font-size="12" fill="#334155">step 8, at 6 pm</text>
+
+    <line x1="220" y1="72" x2="376" y2="72" stroke="#64748b" stroke-width="2" marker-end="url(#c)"/>
+    <line x1="560" y1="72" x2="716" y2="72" stroke="#64748b" stroke-width="2" marker-end="url(#c)"/>
+    <line x1="150" y1="104" x2="270" y2="206" stroke="#b91c1c" stroke-width="2" marker-end="url(#c)"/>
+    <line x1="440" y1="104" x2="330" y2="206" stroke="#b91c1c" stroke-width="2" marker-end="url(#c)"/>
+    <line x1="200" y1="104" x2="600" y2="206" stroke="#94a3b8" stroke-width="2" marker-end="url(#c)"/>
+    <line x1="500" y1="104" x2="630" y2="206" stroke="#94a3b8" stroke-width="2" marker-end="url(#c)"/>
+    <path d="M760,226 C850,200 850,140 820,108" fill="none" stroke="#2563eb" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#c)"/>
+    <path d="M790,108 C780,150 780,190 762,212" fill="none" stroke="#2563eb" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#c)"/>
+    <text x="892" y="160" font-size="12" fill="#2563eb">a fix,</text>
+    <text x="892" y="176" font-size="12" fill="#2563eb">logged</text>
+    <text x="892" y="192" font-size="12" fill="#2563eb">(B6)</text>
+  </g>
+</svg>
+</div>
+<p>A cancelled booking can never become picked up, for example. A day the coordinator closes cancels every booking on it too <span class="rule">S7</span>. That's step 9.</p>
+<p>Food moves with the status. Booking takes it off stock. Cancelling or a no-show puts it back <span class="rule">I5</span> <span class="rule">I6</span>.</p>
+
+<!-- ================================================================ -->
+<h2 id="next"><span class="num">12</span>What's next</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>Step</th><th>What it adds</th><th>Main rules</th></tr>
+  <tr>
+    <td><b>6. Packing</b> <span class="tag next">next</span></td>
+    <td>A packing queue for each pickup day. Volunteers mark food that's missing from the shelf, and the system swaps in the student's substitutes in their order. The bag shows what to write on the sticky note. Then "Packed".</td>
+    <td><span class="rule">K1</span> <span class="rule">U4</span> <span class="rule">U5</span> <span class="rule">U7</span> <span class="rule">U8</span></td>
+  </tr>
+  <tr>
+    <td><b>7. The counter</b> <span class="tag later">later</span></td>
+    <td>Finding a booking by its code, checking the card matches, "Picked up". Walk-ins. Extras given out. Choosing at the counter when the substitutes ran out too. Fixing a mistake.</td>
+    <td><span class="rule">P5</span> <span class="rule">B3</span> <span class="rule">W1</span> <span class="rule">E3</span> <span class="rule">U6</span> <span class="rule">B6</span></td>
+  </tr>
+  <tr>
+    <td><b>8. Jobs</b> <span class="tag later">later</span></td>
+    <td>A script that runs every 15 minutes by itself: no-shows after 6 pm (food back on the shelf), deleting old booking details, old logins and unused setup codes.</td>
+    <td><span class="rule">B3</span> <span class="rule">P7</span> <span class="rule">P13</span></td>
+  </tr>
+  <tr>
+    <td><b>9. Coordinator</b> <span class="tag later">later</span></td>
+    <td>Changing the settings, closing a day, moving one day's booking times, weekly totals ("fewer than 5" for small numbers).</td>
+    <td><span class="rule">S7</span> <span class="rule">S9</span> <span class="rule">P12</span></td>
+  </tr>
+</table>
+</div>
+
+<h3>Questions still open</h3>
+<p><b>For you</b>, from step 4. Both are built one way already, and each is a small change:</p>
+<ul>
+  <li>Volunteers can count stock and add food, and only the coordinator adds categories and tags and fixes names. Is that the right split?</li>
+  <li>An extra with none left (like bread at 0) isn't shown to students at all. Is that right, or should it say "none today"?</li>
+</ul>
+<p><b>For the food bank</b>, when we talk to them. These are in <code>CONSTRAINTS.md</code>:</p>
+<ul>
+  <li>How is the 4-week rule checked today? When does new stock arrive? When do volunteers pack?</li>
+  <li>How many students can the counter serve in 10 minutes?</li>
+  <li>Do they ever make an urgent exception for a walk-in?</li>
+  <li>Should students see exact counts ("6 left") or only "available"?</li>
+</ul>
+
+<h3>Known issues we accept for now</h3>
+<ul>
+  <li><b>The 5 pm rush.</b> Times go to whoever is free when booking opens.</li>
+  <li><b>Password resets only at the counter.</b> There's no email to send a reset link to.</li>
+  <li><b>Closures can't reach students.</b> We have no contact details, on purpose.</li>
+  <li><b>Internet down at the counter.</b> We'll plan for it later.</li>
+</ul>
+
+<!-- ================================================================ -->
+<h2 id="run"><span class="num">13</span>How to run it</h2>
+<p>Each server needs its own terminal. The folder name has a space, so keep the quotes.</p>
+<pre class="code"><span class="c"># Terminal 1: the server</span>
+cd "D:\MUN Project\backend"
+.venv\Scripts\python -m uvicorn app.main:app --reload
+
+<span class="c"># Terminal 2: the pages</span>
+cd "D:\MUN Project\frontend"
+npm run dev</pre>
+<p>Then open <a href="http://localhost:5173">http://localhost:5173</a>.</p>
+<p>Your working database has no coordinator yet. Make one in a third terminal, then go to <code>/staff/setup</code> and use the code it prints:</p>
+<pre class="code">cd "D:\MUN Project\backend"
+.venv\Scripts\python -m app.first_coordinator YourName</pre>
+<p>To run the tests (about 30 seconds):</p>
+<pre class="code">cd "D:\MUN Project\backend"
+.venv\Scripts\python -m pytest</pre>
+<p>Booking for a sample day only opens at 5 pm the day before it. To try booking sooner, a day has to be opened early. That's the coordinator's job in step 9. Until then, ask me and I'll open one.</p>
+
+<!-- ================================================================ -->
+<h2 id="pages"><span class="num">14</span>Which page to read for what</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>Page</th><th>Read it to understand</th></tr>
+  <tr><td><a href="how-it-works.html">how-it-works.html</a></td><td>Every rule, with examples. How the food bank works with this system.</td></tr>
+  <tr><td><a href="questions-and-issues.html">questions-and-issues.html</a></td><td>The questions we asked while planning, and what could go wrong.</td></tr>
+  <tr><td><a href="tech-and-stack.html">tech-and-stack.html</a></td><td>Each tool, why we chose it, and what else we could have used. The build order is in part 16.</td></tr>
+  <tr><td><a href="tables.html">tables.html</a></td><td>Each table and each database rule, and why it's in the database or in the code.</td></tr>
+  <tr><td><a href="database-page.html">database-page.html</a></td><td>How a page gets data from the database: routes, React, Newfoundland time.</td></tr>
+  <tr><td><a href="accounts.html">accounts.html</a></td><td>Setup codes, hashing, passwords, login cookies, slowing down guessing.</td></tr>
+  <tr><td><a href="stock.html">stock.html</a></td><td>Counting the shelf while booking is open, and adding food.</td></tr>
+  <tr><td><a href="booking.html">booking.html</a></td><td>Holds, the Book transaction, locks, and cancelling.</td></tr>
+  <tr><td><code>CONSTRAINTS.md</code></td><td>The rules themselves, short. The one place to check a rule.</td></tr>
+  <tr><td><code>DECISIONS.md</code></td><td>Every choice, by date, with the reason. Good for interview answers.</td></tr>
+</table>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="words"><span class="num">15</span>Words used on this page</h2>
+<dl class="words">
+  <dt>Frontend</dt><dd>The part people see and click: the pages in the browser.</dd>
+  <dt>Backend, server</dt><dd>The program that keeps the rules and talks to the database.</dd>
+  <dt>Address, endpoint</dt><dd>A web address the server answers, like <code>GET /api/stock</code>. GET asks for something, POST sends something.</dd>
+  <dt>JSON</dt><dd>The text format the pages and the server send each other, like <code>{"code": "K3P"}</code>.</dd>
+  <dt>Route</dt><dd>The Python function that answers one address.</dd>
+  <dt>Service</dt><dd>The Python code that holds the rules. Routes call services.</dd>
+  <dt>Component</dt><dd>A small piece of a React page, like the countdown or the food list.</dd>
+  <dt>Table, row, column</dt><dd>How the database keeps things: like a spreadsheet.</dd>
+  <dt>Database rule</dt><dd>A rule the database itself enforces, like <code>CHECK (stock &gt;= 0)</code> or <code>UNIQUE</code>.</dd>
+  <dt>Migration</dt><dd>One numbered change to the tables, kept as a file, so any database can be brought up to date.</dd>
+  <dt>Transaction</dt><dd>A group of changes saved together, or not at all.</dd>
+  <dt>Lock</dt><dd>"Wait, I'm using this row." Others wait until the transaction ends.</dd>
+  <dt>Hash</dt><dd>A one-way jumble of a value. The same value gives the same jumble.</dd>
+  <dt>HMAC, keyed hash</dt><dd>A hash mixed with a secret key, so only someone with the key can make one.</dd>
+  <dt>Session, cookie</dt><dd>After logging in, the browser keeps a random ticket (the cookie). The server keeps a hash of it (the session) and knows who you are from it.</dd>
+  <dt>Setup code</dt><dd>A one-time code like <code>K7QM-4TXP</code>, given in person, used to choose a password.</dd>
+  <dt>Hold</dt><dd>A time kept for one student for 10 minutes while they choose food.</dd>
+  <dt>Variety</dt><dd>One kind of an item, like quick oats. Stock is counted per variety.</dd>
+  <dt>Substitute</dt><dd>Food the student would take instead, if something they booked is missing.</dd>
+  <dt>Extra</dt><dd>Food like bread or eggs, given at the counter, not booked online.</dd>
+  <dt>Walk-in</dt><dd>A student who comes without a booking.</dd>
+  <dt>No-show</dt><dd>A booking nobody came for by 6 pm.</dd>
+  <dt>Test</dt><dd>A small program that checks one thing and fails loudly if it's wrong.</dd>
+</dl>
+
+<p class="lead" style="margin-top:40px">Written 7 November 2026, after step 5. The rules this page describes are in CONSTRAINTS.md, and the reason for each choice is in DECISIONS.md.</p>
+
+</main>
+</body>
+</html>
