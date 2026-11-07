@@ -557,3 +557,21 @@ Found in the browser check: after the handover, the bag listed only what was pac
 - Old walk-ins and counter items are deleted after the retention period with the bookings (P7, step 8).
 
 **Open question for the user:** the counter is open 12 pm to 6 pm on pickup days, walk-ins included. Should walk-ins only be served during pickup hours, 3:30 to 5:30?
+
+**Food is shown as cards, each with a photo of the item.** (The user's request, 7 Nov.)
+One photo per item, shared by all its varieties: one photo of oats for quick oats and steel-cut oats. Students see the cards on the home page and when choosing food, and the counter's shelf uses the same cards. An item with no photo shows a simple drawing of a bowl.
+
+**Photos are kept in the database, in their own table, `item_photos`.**
+Any staff member can add, change or remove one on the Stock page, so the food bank can use its own photos. Why the database and not files on the server: one place to back up, and nothing extra to set up when it's hosted. Why a table of its own: reading the food list never loads the pictures. Database rules keep the type to JPEG, PNG or WebP and the size to 2 MB.
+
+**A photo is checked by its first bytes, not by what the browser says it is.**
+Only real JPEG, PNG and WebP pictures are kept. An SVG "picture" is refused, because it can carry a script.
+
+**The browser shrinks a photo before sending it.**
+Phone photos are often 3 to 5 MB. The Stock page redraws it at most 800 pixels wide as a JPEG. That also drops the hidden details phones add to photos, like where the photo was taken.
+
+**A photo's address carries the time it was saved, like `/api/items/3/photo?v=1762700000`.**
+So browsers may keep a photo for a year, and still fetch a new one the moment it changes. Every other `/api` answer is still never kept (`no-store`).
+
+**The sample food has public-domain photos.**
+Found through Openverse, all CC0 or marked public domain, cropped to 640×480 and about 50 KB each. Who took each one is in `backend/app/sample_photos/CREDITS.md`. `python -m app.add_sample_photos` gives an older database its sample photos, without replacing any photo already chosen.
