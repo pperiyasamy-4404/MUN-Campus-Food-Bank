@@ -285,6 +285,7 @@ export type Bag = {
   packed_by: string | null
   can_pack: boolean
   why_not: string | null
+  can_unpack: boolean // packed by mistake: can be undone until the bag is handed over
   food: BagFood[]
   substitutes: BagSubstitute[]
   sticky_note: string[] // once packed: what was written on the bag (U8)

@@ -961,3 +961,7 @@ h2.in-card {
   color: var(--red);
   font-weight: 600;
 }
+
+.undo-box {
+  border-color: var(--red);
+}

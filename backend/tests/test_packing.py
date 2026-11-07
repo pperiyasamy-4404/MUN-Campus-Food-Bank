@@ -18,6 +18,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.models import (
+    AuditLog,
     Booking,
     BookingItem,
     BookingSubstitute,
@@ -39,6 +40,7 @@ from app.services.packing import (
     AlreadyPacked,
     BookedFood,
     Missing,
+    NotPacked,
     PlanChanged,
     SubstituteFood,
     refill,
@@ -472,6 +474,65 @@ def test_a_cancelled_booking_has_nothing_to_pack(db, monday, food, sam):
 
 def test_a_bag_that_does_not_exist(db, monday, sam):
     refused(db, NotFound, lambda: packing.pack(db, 999_999, [], [], [], sam, PACKING))
+
+
+# ---------- undoing Packed (decided 7 Nov) ----------
+
+
+def test_undoing_packed_puts_the_substitutes_back(db, monday, food, sam):
+    bag = book_a_bag(db, monday, food)
+    packing.pack(db, bag.id, missing(food, "sunflower oil"), [], [food["rice"].id], sam, PACKING)
+    assert food["rice"].stock == 4
+
+    packing.unpack(db, bag.id, sam, PACKING + timedelta(minutes=5))
+
+    assert (bag.status, bag.packed_at, bag.packed_by_staff_id) == ("booked", None, None)
+    assert food["rice"].stock == 5
+    assert db.get(BookingItem, (bag.id, food["sunflower oil"].id)).missing == 0
+    assert packing.saved_note(packing.food_in(db, bag), packing.substitutes_of(db, bag)) == []
+    # The shelf really had no sunflower oil, so that mark stays until someone counts it.
+    assert food["sunflower oil"].ran_out_at == PACKING
+    logged = db.scalar(select(AuditLog).where(AuditLog.booking_id == bag.id))
+    assert (logged.action, logged.staff_id) == ("undid_packed", sam.id)
+
+
+def test_a_bag_can_be_packed_again_after_an_undo(db, monday, food, sam):
+    bag = book_a_bag(db, monday, food)
+    packing.pack(db, bag.id, [], [], [], sam, PACKING)
+    packing.unpack(db, bag.id, sam, PACKING)
+
+    packing.pack(db, bag.id, missing(food, "black beans"), [], [food["rice"].id], sam, PACKING)
+
+    assert bag.status == "packed"
+    assert packing.saved_note(packing.food_in(db, bag), packing.substitutes_of(db, bag)) == ["Black beans → White rice"]
+
+
+def test_only_a_packed_bag_can_be_unpacked(db, monday, food, sam):
+    bag = book_a_bag(db, monday, food)
+
+    problem = refused(db, NotPacked, lambda: packing.unpack(db, bag.id, sam, PACKING))
+
+    assert problem.message == f"Bag {bag.code} isn't packed."
+
+
+def test_a_bag_that_was_handed_over_cannot_be_unpacked(db, monday, food, sam):
+    bag = book_a_bag(db, monday, food)
+    packing.pack(db, bag.id, [], [], [], sam, PACKING)
+    # Step 7, the counter, will do this.
+    bag.status, bag.picked_up_at, bag.picked_up_by_staff_id = "picked_up", PACKING, sam.id
+
+    problem = refused(db, NotPacked, lambda: packing.unpack(db, bag.id, sam, PACKING))
+
+    assert problem.message == f"Bag {bag.code} was picked up already, so Packed can't be undone."
+
+
+def test_undo_ends_at_the_no_show_time(db, monday, food, sam):
+    bag = book_a_bag(db, monday, food)
+    packing.pack(db, bag.id, [], [], [], sam, PACKING)
+
+    problem = refused(db, Problem, lambda: packing.unpack(db, bag.id, sam, NO_SHOW))
+
+    assert problem.message == "Pickup for Monday, November 9 is over."
 
 
 # ---------- the queue and its flags (U7) ----------

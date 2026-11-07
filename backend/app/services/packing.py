@@ -1,4 +1,4 @@
-"""Packing the bags: the packing queue, the refill rule, and Packed (K1, U4, U5, U7, U8, B2).
+"""Packing the bags: the packing queue, the refill rule, Packed, and undoing it (K1, U4, U5, U7, U8, B2).
 
 Plain Python with a database session, like the other services. The routes in
 app/routes/packing.py commit.
@@ -23,7 +23,18 @@ from typing import Literal
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import Booking, BookingItem, BookingSubstitute, Item, PickupDay, Settings, Slot, Staff, Variety
+from app.models import (
+    AuditLog,
+    Booking,
+    BookingItem,
+    BookingSubstitute,
+    Item,
+    PickupDay,
+    Settings,
+    Slot,
+    Staff,
+    Variety,
+)
 from app.problems import NotFound, Problem
 from app.services.pickup_days import say_clock, say_day
 from app.services.settings import food_bank_settings
@@ -402,6 +413,64 @@ def pack(
     booking.packed_by_staff_id = staff.id
     db.flush()
     return packed
+
+
+class NotPacked(Problem):
+    """Undo Packed on a bag that isn't packed (any more), or was handed over already."""
+
+    status_code = 409
+
+
+def why_not_unpack(booking: Booking, day: PickupDay, now: datetime) -> Problem | None:
+    """Why Packed can't be undone on this bag right now, or None if it can."""
+    if booking.status == "picked_up":
+        return NotPacked(f"Bag {booking.code} was picked up already, so Packed can't be undone.")
+    if booking.status != "packed":
+        return NotPacked(f"Bag {booking.code} isn't packed.")
+    reason = why_not_pack(day, now)
+    return Problem(reason) if reason else None
+
+
+def unpack(db: Session, booking_id: int, staff: Staff, now: datetime) -> Booking:
+    """Undo Packed, for a bag packed by mistake (decided 7 Nov: packed -> booked, before pickup).
+
+    The bag goes back to "to pack". The substitutes that went in go back on the
+    shelf, so their stock goes up again. The booked food stays promised to this
+    student, so its stock doesn't change. "Ran out" marks stay: the shelf really
+    had none. The undo is logged with who did it, like other fixes (B6).
+
+    Locks in the same order as pack(): the booking, then the food from the lowest id up.
+    """
+    booking = db.scalar(
+        select(Booking).where(Booking.id == booking_id).with_for_update().execution_options(populate_existing=True)
+    )
+    if booking is None:
+        raise NotFound("There's no bag with that number.")
+    problem = why_not_unpack(booking, db.get(PickupDay, booking.pickup_day_id), now)
+    if problem is not None:
+        raise problem
+
+    food, substitutes = food_in(db, booking), substitutes_of(db, booking)
+    used = sorted(line.variety.id for line in substitutes if line.row.replaces_variety_id is not None)
+    db.scalars(
+        select(Variety)
+        .where(Variety.id.in_(used))
+        .order_by(Variety.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).all()
+    for line in substitutes:
+        if line.row.replaces_variety_id is not None:
+            line.variety.stock += 1
+            line.row.replaces_variety_id = None
+    for line in food:
+        line.row.missing = 0
+    booking.status = "booked"
+    booking.packed_at = None
+    booking.packed_by_staff_id = None
+    db.add(AuditLog(at=now, staff_id=staff.id, action="undid_packed", booking_id=booking.id))
+    db.flush()
+    return booking
 
 
 def _ran_out(variety: Variety, now: datetime) -> None:

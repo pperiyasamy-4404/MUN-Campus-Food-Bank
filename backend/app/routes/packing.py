@@ -119,6 +119,8 @@ class Bag(BaseModel):
     packed_by: str | None
     can_pack: bool
     why_not: str | None
+    # Packed by mistake? It can be undone until the bag is handed over (decided 7 Nov).
+    can_unpack: bool
     food: list[BagFood]
     substitutes: list[BagSubstitute]
     # Once packed: what was written on the sticky note (U8).
@@ -143,6 +145,7 @@ def bag_out(booking: Booking, db: DB, now: datetime) -> Bag:
         packed_by=packer.username if packer else None,
         can_pack=problem is None,
         why_not=problem.message if problem else None,
+        can_unpack=packing.why_not_unpack(booking, day, now) is None,
         food=[
             BagFood(
                 variety_id=line.variety.id,
@@ -245,5 +248,13 @@ class PackedIn(Findings):
 @router.post("/packing/bags/{booking_id}/packed")
 def packed(booking_id: int, details: PackedIn, staff: CurrentStaff, db: DB, now: Now) -> Bag:
     packing.pack(db, booking_id, details.missing_food(), details.not_on_shelf, details.uses, staff, now)
+    db.commit()
+    return bag_out(packing.find_bag(db, booking_id), db, now)
+
+
+@router.post("/packing/bags/{booking_id}/unpack")
+def undo_packed(booking_id: int, staff: CurrentStaff, db: DB, now: Now) -> Bag:
+    """Packed by mistake: the bag goes back to "to pack", and its substitutes back on the shelf."""
+    packing.unpack(db, booking_id, staff, now)
     db.commit()
     return bag_out(packing.find_bag(db, booking_id), db, now)

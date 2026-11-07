@@ -25,6 +25,8 @@ export function PackBag() {
   const { forget } = useMe()
   const [load, setLoad] = useState<Load>({ state: 'loading' })
   const [version, setVersion] = useState(0)
+  // Something to tell the volunteer after the bag changes, like "Packed is undone."
+  const [notice, setNotice] = useState<string | null>(null)
   const askAgain = useCallback(() => setVersion((old) => old + 1), [])
 
   useEffect(() => {
@@ -65,16 +67,32 @@ export function PackBag() {
       <p className="lead">
         Pickup {showDate(bag.pickup_date)} at {showClock(bag.starts_at)} · {STATUS_WORDS[bag.status] ?? bag.status}
       </p>
+      {notice && <p className="notice">{notice}</p>}
       {bag.status === 'booked' && bag.can_pack ? (
         <Packer
           key={bag.id}
           bag={bag}
-          onPacked={(packed) => setLoad({ state: 'ready', bag: packed })}
+          onPacked={(packed) => {
+            setNotice(null)
+            setLoad({ state: 'ready', bag: packed })
+          }}
           onChanged={askAgain}
           onLoggedOut={forget}
         />
       ) : (
-        <BagAsItIs bag={bag} />
+        <BagAsItIs
+          bag={bag}
+          onUnpacked={(unpacked) => {
+            setNotice(
+              'Packed is undone. Take the substitutes out and put them back on the shelf, and throw away the ' +
+                'sticky note. The bag is back in the queue, to pack again.',
+            )
+            setLoad({ state: 'ready', bag: unpacked })
+            // The message is at the top, and the Undo button was at the bottom.
+            window.scrollTo(0, 0)
+          }}
+          onLoggedOut={forget}
+        />
       )}
     </div>
   )
@@ -238,7 +256,7 @@ function FoodRow({ line, missing, onChange }: { line: BagFood; missing: number; 
       {line.ran_out_at && (
         <span className="hint pack-hint">
           {/* No full stop after the time: it ends in "a.m." or "p.m." already. */}
-          Another bag found none at {showClock(line.ran_out_at)} If there is some, tap Found it.
+          A volunteer found none on the shelf at {showClock(line.ran_out_at)} If there is some, tap Found it.
         </span>
       )}
     </li>
@@ -311,7 +329,15 @@ function NoteLines({ lines }: { lines: string[] }) {
 
 // ---------- packed already, or can't be packed yet ----------
 
-function BagAsItIs({ bag }: { bag: Bag }) {
+function BagAsItIs({
+  bag,
+  onUnpacked,
+  onLoggedOut,
+}: {
+  bag: Bag
+  onUnpacked: (bag: Bag) => void
+  onLoggedOut: () => void
+}) {
   const packed = bag.packed_at !== null
   return (
     <>
@@ -372,6 +398,60 @@ function BagAsItIs({ bag }: { bag: Bag }) {
           Back to the packing queue
         </Link>
       </p>
+
+      {bag.can_unpack && <UndoPacked bag={bag} onUnpacked={onUnpacked} onLoggedOut={onLoggedOut} />}
     </>
+  )
+}
+
+/** Packed the wrong bag? Undo it, until the bag is handed over (decided 7 Nov). Asks first. */
+function UndoPacked({
+  bag,
+  onUnpacked,
+  onLoggedOut,
+}: {
+  bag: Bag
+  onUnpacked: (bag: Bag) => void
+  onLoggedOut: () => void
+}) {
+  const [asking, setAsking] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [problem, setProblem] = useState<string | null>(null)
+
+  async function undo() {
+    setSending(true)
+    const answer = await send<Bag>(`/api/packing/bags/${bag.id}/unpack`)
+    setSending(false)
+    if (answer.ok) return onUnpacked(answer.data)
+    if (answer.status === 401) return onLoggedOut()
+    setProblem(answer.message)
+  }
+
+  if (!asking) {
+    return (
+      <p className="after-form">
+        Pressed Packed on the wrong bag?{' '}
+        <button type="button" className="link-button" onClick={() => setAsking(true)}>
+          Undo Packed
+        </button>
+      </p>
+    )
+  }
+  return (
+    <div className="card undo-box">
+      <p>
+        <strong>Undo Packed on bag {bag.code}?</strong> It goes back to the queue, to pack again. Its substitutes go
+        back on the shelf. This is logged with your name.
+      </p>
+      <Problem message={problem} />
+      <p className="actions">
+        <button type="button" className="danger" onClick={undo} disabled={sending}>
+          {sending ? 'Undoing...' : 'Yes, undo Packed'}
+        </button>
+        <button type="button" className="link-button" onClick={() => setAsking(false)}>
+          Cancel
+        </button>
+      </p>
+    </div>
   )
 }

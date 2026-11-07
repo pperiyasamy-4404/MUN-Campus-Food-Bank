@@ -54,6 +54,7 @@ def test_only_staff_can_see_the_packing_queue(client, db_with_sample_week):
     log_in(client, db, make_student(db), PACKING)
     assert client.get("/api/packing").status_code == 401
     assert client.post("/api/packing/bags/1/packed", json={}).status_code == 401
+    assert client.post("/api/packing/bags/1/unpack").status_code == 401
 
 
 def test_the_queue_before_packing_starts(client, setup):
@@ -109,6 +110,20 @@ def test_packing_twice_answers_409(client, setup):
 
     assert again.status_code == 409
     assert again.json() == {"detail": f"Bag {setup['bag'].code} is packed already, by Sam at 12:30 p.m."}
+
+
+def test_undoing_packed(client, setup):
+    """A bag packed by mistake goes back to "to pack". Undoing twice answers 409."""
+    path = f"/api/packing/bags/{setup['bag'].id}"
+    assert client.post(f"{path}/packed", json={}).json()["can_unpack"] is True
+
+    undone = client.post(f"{path}/unpack")
+
+    assert undone.status_code == 200
+    assert (undone.json()["status"], undone.json()["can_pack"], undone.json()["can_unpack"]) == ("booked", True, False)
+    again = client.post(f"{path}/unpack")
+    assert again.status_code == 409
+    assert again.json() == {"detail": f"Bag {setup['bag'].code} isn't packed."}
 
 
 def test_a_plan_that_changed_answers_409(client, db, setup):
