@@ -448,3 +448,59 @@ The server allows any shown food that isn't an extra or already on the list (U2)
 
 **Pickup days and food now include their ids.**
 The booking page needs to say which time and which food. Ids aren't secret: the server checks every request.
+
+## 2026-11-07
+
+**A page that explains the whole project so far: project-so-far.html.** (The user asked for it.)
+Read it first. It explains what we're building, how the pieces fit, what each step added, and links to the step pages.
+
+Step 6, packing and substitutes. How it works is in packing.html.
+
+**The refill rule (U4) is one function with no database: `refill()` in app/services/packing.py.**
+It takes the booked food, what's missing and the substitutes, and says what happens to each substitute: use it, or skip it and why. With no database it can be read on its own, and the tests check it against the two examples in how-it-works.html, word for word.
+
+**Nothing is saved until Packed. After each tap, the page asks the server for the plan.**
+"None on the shelf" and "Found it" only change the page. After each tap, the page sends what the volunteer has found so far to `/plan`. The server works out the refill and the sticky note and saves nothing. So a wrong tap is undone by tapping again, and the rule lives in one place, on the server. Why not save each tap: undoing a saved "none on the shelf" would need the stock number it replaced, and nobody knows it any more.
+
+**Pressing Packed is one transaction. It locks the booking, then the food from the lowest id up.**
+It works the plan out again with the food locked. If the plan no longer matches what the page showed, Packed is refused with 409, and the page shows the new plan. That happens if another bag took the last rice, or someone counted the shelf. Two tests run on two connections at the same moment. In the first, two volunteers want the last rice. Without the food lock, both bags got it. In the second, Packed is pressed twice. Without the booking lock, it went through twice. Both tests fail with their lock taken out and pass with it in.
+
+**"None on the shelf" sets that food's stock to 0 and marks it as ran out until someone counts it.**
+The shelf has none, so nobody else can book it. The mark (`varieties.ran_out_at`) flags every bag still to pack that has this food (U7). The stock page also lists the food as needing a count. Counting the shelf clears the mark, because a count is what's really there. Packing doesn't change when the food was last counted.
+
+**The flag reaches the queue within 30 seconds.**
+The queue asks the server again every 30 seconds. When a volunteer opens a flagged bag, the food that ran out is already marked missing, so nobody searches the shelf for it again. If there is some after all, they tap Found it.
+
+**Packing is allowed from the booking close time until the no-show time.**
+K1 says volunteers pack after booking closes and before pickup starts. Before booking closes, students can still cancel, so the list isn't final, and packing is refused. After pickup starts, packing is still allowed. A bag that's late can then be packed while the student waits, because only a packed bag can be picked up (B2). At the no-show time, the day is over.
+
+**Each substitute fills one gap, and gaps are filled in the order the volunteer found them.**
+Any substitute can fill any gap (U4), so the order only decides which line of the sticky note says what. Filling in that order keeps the note's lines the same when another gap is found.
+
+**"A second of the same item" means more of that item than the per-item limit.**
+With the sample limit of 1, that's exactly what U4 says. Food that's missing isn't in the bag, so steel-cut oats can replace quick oats. That's the last line of example 2 in how-it-works.html.
+
+**A hidden substitute is skipped, the same as one with none left.**
+Hidden means the food bank stopped getting it.
+
+**A substitute is skipped when its stock is 0, even if some are on the shelf.**
+Stock counts only what no other bag is waiting for. The last tins on the shelf are promised to bags still to pack, so a substitute can't take them (U3).
+
+**Each bag remembers who packed it, what was missing, and which substitute replaced what.**
+Migration c250b0a6f9de adds `bookings.packed_by_staff_id`, `booking_items.missing`, `booking_substitutes.replaces_variety_id` and `varieties.ran_out_at`. It also adds three database rules:
+- a packed bag always names who packed it
+- `missing` is between 0 and the number booked
+- a substitute can only replace food booked in the same booking (a foreign key on the pair)
+
+So the sticky note can be shown again later, and the counter in step 7 can see what a bag is short.
+
+**A gap nothing could fill goes on the note as "Black beans → choose at the counter".**
+U6: the student chooses from the shelf at pickup. Step 7 records what they chose.
+
+**Open questions for the user:**
+- Packing is allowed until 6 pm, not only until pickup starts at 3:30, so a late bag can still be packed. Is that right?
+- A packed bag can't go back to "to pack" (B2 has no such move). If someone presses Packed by mistake, nothing can undo it yet. Should a volunteer be able to undo Packed before pickup?
+
+**Left for later steps:**
+- The counter (step 7) shows a packed bag's sticky note, and records what a student chose for a gap (U6).
+- A no-show (step 8) or a closed day (step 9) puts a packed bag's food back on the shelf. That means what was really in the bag: the booked food minus what was missing, plus the substitutes that went in.

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Food Bank: packing, explained</title>
+<style>
+  :root {
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc;
+    --blue: #2563eb; --blue-bg: #dbeafe;
+    --green: #059669; --green-bg: #d1fae5;
+    --amber: #b45309; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 980px; margin: 0 auto; padding: 36px 20px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 .num { color: var(--blue); margin-right: 8px; }
+  h3 { font-size: 1.15rem; margin: 30px 0 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--blue); }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
+  .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; background: #fff; font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+  .why { border-left: 4px solid var(--blue); background: #eff6ff; padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .why p { margin: 4px 0; }
+  .short { background: var(--green-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .short p { margin: 2px 0; }
+  .ask { background: var(--amber-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .ask p { margin: 4px 0; }
+  pre.code { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 18px; font: 14px/1.55 ui-monospace, Consolas, monospace; overflow-x: auto; margin: 12px 0; }
+  pre .c { color: #94a3b8; }
+  pre .bad { color: #fca5a5; }
+  pre .good { color: #86efac; }
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; margin: 18px 0; }
+  .diagram svg { display: block; width: 100%; height: auto; }
+  .toc { columns: 2; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 20px 14px 40px; }
+  @media (max-width: 760px) { .toc { columns: 1; } }
+  .steps { counter-reset: step; list-style: none; padding: 0; }
+  .steps li { counter-increment: step; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px 8px 46px; margin: 6px 0; position: relative; }
+  .steps li::before { content: counter(step); position: absolute; left: 12px; top: 8px; width: 24px; height: 24px; border-radius: 50%; background: var(--blue); color: #fff; font-weight: 700; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
+  .example { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+  @media (max-width: 760px) { .example { grid-template-columns: 1fr; } }
+  .box { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+  .box h4 { margin: 0 0 6px; font-size: .95rem; color: var(--muted); }
+  .box p { margin: 4px 0; font-size: .95rem; }
+  .use { color: #065f46; font-weight: 600; }
+  .skip { color: var(--muted); }
+  .gone { color: var(--red); font-weight: 600; }
+  .note { display: inline-block; background: #fde68a; padding: 6px 12px; border-radius: 3px; box-shadow: 2px 3px 0 rgba(0,0,0,.15); font-size: 1.05rem; }
+</style>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Campus Food Bank · Step 6, packing and substitutes · 7 November 2026</p>
+<h1>Packing</h1>
+<p class="lead">On a pickup day, after booking closes, volunteers pack each student's bag. When something isn't on the shelf, the system says which of the student's substitutes goes in instead, and what to write on the sticky note. Other bags that need the same food get a warning. This page explains how.</p>
+
+<ol class="toc">
+  <li><a href="#flow">Queue, bag, Packed</a></li>
+  <li><a href="#when">When packing happens</a></li>
+  <li><a href="#refill">The refill rule</a></li>
+  <li><a href="#tap">Nothing is saved until Packed</a></li>
+  <li><a href="#packed">Pressing Packed: one transaction</a></li>
+  <li><a href="#ranout">"None on the shelf", and the flags</a></li>
+  <li><a href="#note">The sticky note, and bags that go out short</a></li>
+  <li><a href="#tables">What the database remembers</a></li>
+  <li><a href="#addresses">The addresses</a></li>
+  <li><a href="#tests">The tests</a></li>
+  <li><a href="#ask">Two questions for you</a></li>
+  <li><a href="#run">How to try it</a></li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="flow"><span class="num">1</span>Queue, bag, Packed</h2>
+<div class="diagram">
+<svg viewBox="0 0 940 230" role="img" aria-label="The packing queue, one bag, and Packed">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+  </defs>
+  <g font-family="system-ui, Segoe UI, sans-serif" font-size="15" text-anchor="middle">
+    <rect x="20" y="30" width="250" height="130" rx="12" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="145" y="60" font-weight="700">1. The packing queue</text>
+    <text x="145" y="86" font-size="13">Every bag for the day,</text>
+    <text x="145" y="105" font-size="13">earliest pickup first.</text>
+    <text x="145" y="124" font-size="13" fill="#b91c1c">"Ran out: Sunflower oil"</text>
+    <text x="145" y="148" font-size="13" fill="#475569">/packing</text>
+
+    <rect x="345" y="30" width="250" height="130" rx="12" fill="#d1fae5" stroke="#059669"/>
+    <text x="470" y="60" font-weight="700">2. One bag</text>
+    <text x="470" y="86" font-size="13">Put the food in. Tap</text>
+    <text x="470" y="105" font-size="13">"None on the shelf" if it's not there.</text>
+    <text x="470" y="124" font-size="13">The page says what goes in instead.</text>
+    <text x="470" y="148" font-size="13" fill="#475569">/packing/12</text>
+
+    <rect x="670" y="30" width="250" height="130" rx="12" fill="#fef3c7" stroke="#b45309"/>
+    <text x="795" y="60" font-weight="700">3. Packed</text>
+    <text x="795" y="86" font-size="13">Write the sticky note,</text>
+    <text x="795" y="105" font-size="13">press Packed. Everything</text>
+    <text x="795" y="124" font-size="13">is saved at once.</text>
+    <text x="795" y="148" font-size="13" fill="#475569">back to the queue</text>
+
+    <line x1="270" y1="95" x2="341" y2="95" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="595" y1="95" x2="666" y2="95" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+    <path d="M795,160 C795,215 145,215 145,164" fill="none" stroke="#64748b" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a)"/>
+    <text x="470" y="212" font-size="13" fill="#475569">next bag</text>
+  </g>
+</svg>
+</div>
+<p>Volunteers see the booking code (like <b>G2T</b>) and the food. Never anything about the student <span class="rule">P4</span>. A test checks that no answer from these addresses contains the student's hash or the word "student".</p>
+
+<!-- ============================================================ -->
+<h2 id="when"><span class="num">2</span>When packing happens</h2>
+<div class="diagram">
+<svg viewBox="0 0 940 170" role="img" aria-label="Pickup day timeline: booking closes at 12, pickup 3:30 to 5:30, no-show at 6. Packing allowed from 12 to 6.">
+  <g font-family="system-ui, Segoe UI, sans-serif" font-size="14" text-anchor="middle">
+    <line x1="40" y1="80" x2="900" y2="80" stroke="#94a3b8" stroke-width="2"/>
+    <rect x="40" y="62" width="180" height="36" rx="6" fill="#dbeafe"/>
+    <text x="130" y="85" font-size="13">booking open</text>
+    <rect x="220" y="62" width="620" height="36" rx="6" fill="#d1fae5"/>
+    <text x="400" y="85" font-size="13" font-weight="700" fill="#065f46">packing allowed</text>
+    <rect x="560" y="104" width="200" height="22" rx="5" fill="#fef3c7"/>
+    <text x="660" y="120" font-size="12">pickup 3:30 – 5:30</text>
+    <line x1="220" y1="50" x2="220" y2="110" stroke="#0f172a" stroke-width="2"/>
+    <text x="220" y="40">12:00 pm</text>
+    <text x="220" y="150" font-size="12" fill="#475569">booking closes</text>
+    <line x1="840" y1="50" x2="840" y2="110" stroke="#0f172a" stroke-width="2"/>
+    <text x="840" y="40">6:00 pm</text>
+    <text x="840" y="150" font-size="12" fill="#475569">no-show time</text>
+  </g>
+</svg>
+</div>
+<p>Packing starts when booking closes <span class="rule">K1</span>. Before that, students can still cancel, so the list isn't final. Trying earlier gets:</p>
+<pre class="code">Packing for Monday, November 9 starts at 12:00 p.m., when booking closes. Until then, students can still cancel.</pre>
+<p>Volunteers plan to finish by 3:30, but the system lets them go on until the no-show time. Why: only a packed bag can be picked up <span class="rule">B2</span>. If a bag was missed and the student is standing at the counter at 3:40, a volunteer can still pack it. At 6 pm, the day is over.</p>
+<p>The queue shows the <b>packing day</b>: the first pickup day, not closed, whose no-show time hasn't passed. On a Monday that's Monday until 6 pm, then Thursday.</p>
+
+<!-- ============================================================ -->
+<h2 id="refill"><span class="num">3</span>The refill rule</h2>
+<p>This is rule <span class="rule">U4</span>, the one tech-and-stack.html said was the heart of this step:</p>
+<div class="why">
+  <p>Missing food is refilled from the substitute list, best first. A substitute is skipped if there's none of it, or if it would give the student a second of the same item. Refilling stops when the bag is back to its booked size.</p>
+</div>
+<p>It's one function, <code>refill()</code> in <code>app/services/packing.py</code>, and it doesn't touch the database. It only takes lists in and gives an answer back. That makes it the easiest code in the project to read, and the easiest to test. Here it is, shortened:</p>
+<pre class="code"><span class="c"># How much of each item is in the bag now: booked, minus what's missing.</span>
+in_bag = Counter()
+for food in booked:
+    in_bag[food.item_id] += food.quantity - how_many_missing.get(food.variety_id, 0)
+gaps = [one entry per missing thing, in the order the volunteer found them]
+
+for substitute in substitutes, best first:
+    if the volunteer looked and found none:     <span class="skip">not_on_shelf</span>
+    elif every gap is filled already:           <span class="skip">not_needed</span>
+    elif the stock says none left:              <span class="skip">none_left</span>
+    elif in_bag[its item] >= max_per_item:      <span class="skip">already_has_item</span>
+    else:                                       <span class="good">use</span>   <span class="c"># and in_bag[its item] += 1</span></pre>
+
+<h3>Example 1 from how-it-works.html: one thing missing</h3>
+<div class="example">
+  <div class="box">
+    <h4>Booked</h4>
+    <p>Quick oats, Gluten-free pasta, <span class="gone">Sunflower oil (none on the shelf)</span>, Chunk chicken, Black beans</p>
+  </div>
+  <div class="box">
+    <h4>Substitutes</h4>
+    <p>1. White rice: <span class="use">use</span>, in stock and no rice in the bag</p>
+    <p>2. Vegetable oil: <span class="skip">not needed</span></p>
+    <p>3. Red lentils: <span class="skip">not needed</span></p>
+  </div>
+</div>
+<p>Sticky note: <span class="note">Sunflower oil → White rice</span></p>
+
+<h3>Example 2: substitutes that get skipped</h3>
+<div class="example">
+  <div class="box">
+    <h4>Booked</h4>
+    <p>Quick oats, <span class="gone">Gluten-free pasta (none on the shelf)</span>, Sunflower oil, Chunk chicken, Black beans</p>
+  </div>
+  <div class="box">
+    <h4>Substitutes</h4>
+    <p>1. Steel-cut oats: <span class="skip">already has Oats</span> (quick oats are in the bag)</p>
+    <p>2. White rice: <span class="skip">none left</span></p>
+    <p>3. Red lentils: <span class="use">use</span></p>
+  </div>
+</div>
+<p>Sticky note: <span class="note">Gluten-free pasta → Red lentils</span></p>
+<p>Both examples are tests, word for word: <code>test_example_1_one_thing_is_missing</code> and <code>test_example_2_substitutes_that_get_skipped</code>. So is the last line of example 2: if the <i>quick oats</i> had run out instead, steel-cut oats would go in, because missing food isn't in the bag.</p>
+
+<h3>Small choices inside the rule</h3>
+<ul>
+  <li><b>"A second of the same item" means more than the per-item limit.</b> With the sample limit of 1, that's exactly U4's words. If the coordinator ever allows 2 of each item, the rule still makes sense.</li>
+  <li><b>Each substitute fills one gap.</b> Two things missing need two substitutes.</li>
+  <li><b>Gaps are filled in the order the volunteer found them.</b> Any substitute can fill any gap, so this only decides which line of the note says what. Then a line doesn't change when another gap turns up.</li>
+  <li><b>A substitute with stock 0 is skipped, even if a few are on the shelf.</b> Stock counts only what no other bag is waiting for. Those tins are promised to bags still to pack <span class="rule">U3</span>.</li>
+  <li><b>A hidden substitute is skipped.</b> Hidden means the food bank stopped getting it.</li>
+</ul>
+<div class="why">
+  <p><b>Why a function with no database?</b> The rule is the part most likely to be asked about ("what if two things are missing and one substitute is the same item?"). With no database, a test is three lines: food in, answer out. 11 tests check the rule on its own.</p>
+  <p><b>Why not work it out in the page, in TypeScript?</b> Then the rule would exist twice, and the two copies could disagree. The server is the one place it lives.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="tap"><span class="num">4</span>Nothing is saved until Packed</h2>
+<p>Tapping "None on the shelf" or "Found it" only changes the page. After each tap, the page sends the server what the volunteer has found so far, and the server answers with the plan:</p>
+<pre class="code">POST /api/packing/bags/12/plan
+{"missing": [{"variety_id": 31}], "not_on_shelf": []}
+
+<span class="c">← the answer: what happens to each substitute, and the note</span>
+{"substitutes": [{"rank": 1, "variety_id": 61, "outcome": "use", "replaces": "Sunflower oil"}, ...],
+ "sticky_note": ["Sunflower oil → White rice"],
+ "in_bag": 5, "booked": 5,
+ "uses": [61]}</pre>
+<p><code>/plan</code> saves nothing. So if a volunteer taps the wrong line, they tap Found it and the plan goes back. If they tap quickly, the page keeps only the answer for the latest taps.</p>
+<div class="why">
+  <p><b>Why not save each tap?</b> "None on the shelf" sets the food's stock to 0 (part 6). If that were saved at once, undoing it would need the stock number from before, and nobody knows it any more. Saving everything once, at Packed, means there's nothing to undo.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="packed"><span class="num">5</span>Pressing Packed: one transaction</h2>
+<p>Packed sends the same findings, plus <code>uses</code>: the substitutes the page told the volunteer to put in. <code>pack()</code> in <code>app/services/packing.py</code> then does this, all or nothing:</p>
+<ol class="steps">
+  <li><b>Lock the booking.</b> A second press of Packed waits here, then finds the bag packed: "Bag G2T is packed already, by Sam at 12:30 p.m." <span class="rule">B2</span></li>
+  <li><b>Check it can be packed:</b> still "booked", the day isn't closed, and it's between 12 pm and 6 pm.</li>
+  <li><b>Lock the food</b> in the bag and its substitutes, lowest id first, and read the stock again.</li>
+  <li><b>Work the plan out again.</b> If it isn't what the page showed, refuse with 409. The page then asks for the plan again and shows what to put in now.</li>
+  <li><b>Save:</b> how much of each food was missing, which substitute replaced what, each substitute's stock minus one, "ran out" for anything nobody found, and the bag as packed, with who and when.</li>
+</ol>
+<h3>Why step 4: the last rice</h3>
+<p>Two volunteers pack two bags at the same time. Both bags are missing sunflower oil, and both list white rice first. One rice is left, so both pages say "put in rice".</p>
+<pre class="code"><span class="bad">Without the food lock:</span>
+  Mo reads rice: 1 left           Lee reads rice: 1 left
+  Mo saves rice: 0 left           Lee saves rice: 0 left   <span class="bad">← both bags got the one rice</span>
+
+<span class="good">With the lock:</span>
+  Mo locks rice, reads 1, saves 0, lets go
+  Lee was waiting. Now reads 0: the plan says vegetable oil, not rice.
+  Packed is refused (409): <span class="good">"The substitutes changed while you packed..."</span></pre>
+<p>Lee's page shows the new plan, Lee swaps the rice for vegetable oil, and presses Packed again. A test runs exactly this on two database connections. With the lock taken out, it fails because both bags got the rice. A second test presses Packed twice at the same moment. With the booking lock taken out, it fails because the substitute's stock was taken twice.</p>
+<p>The lock order is the same as booking and cancelling: the booking, then the food from the lowest id up. Packing never needs the slot. So packing can't deadlock with them.</p>
+
+<!-- ============================================================ -->
+<h2 id="ranout"><span class="num">6</span>"None on the shelf", and the flags</h2>
+<p>When Packed saves food that nobody found, it does two things to that food:</p>
+<ul>
+  <li><b>Its stock becomes 0.</b> The shelf has none, so nobody else can book it until someone counts it.</li>
+  <li><b>It's marked as ran out</b> (<code>varieties.ran_out_at</code>). Every other bag still to pack that has it gets a flag in the queue <span class="rule">U7</span>.</li>
+</ul>
+<div class="diagram">
+<svg viewBox="0 0 940 200" role="img" aria-label="Packing bag E5M finds no sunflower oil; bags M9G and G2T get flagged; counting the shelf clears the flag">
+  <defs>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+  </defs>
+  <g font-family="system-ui, Segoe UI, sans-serif" font-size="14" text-anchor="middle">
+    <rect x="20" y="40" width="240" height="100" rx="12" fill="#fee2e2" stroke="#b91c1c"/>
+    <text x="140" y="70" font-weight="700">Bag E5M: Packed</text>
+    <text x="140" y="94" font-size="13">Sunflower oil:</text>
+    <text x="140" y="113" font-size="13">none on the shelf</text>
+
+    <rect x="350" y="20" width="240" height="60" rx="10" fill="#fff" stroke="#b91c1c" stroke-width="2"/>
+    <text x="470" y="45" font-weight="700">M9G</text>
+    <text x="470" y="66" font-size="13" fill="#b91c1c">Ran out: Sunflower oil</text>
+    <rect x="350" y="100" width="240" height="60" rx="10" fill="#fff" stroke="#b91c1c" stroke-width="2"/>
+    <text x="470" y="125" font-weight="700">G2T</text>
+    <text x="470" y="146" font-size="13" fill="#b91c1c">Ran out: Sunflower oil</text>
+
+    <rect x="680" y="40" width="240" height="100" rx="12" fill="#d1fae5" stroke="#059669"/>
+    <text x="800" y="70" font-weight="700">Stock page: count it</text>
+    <text x="800" y="94" font-size="13">"Found 3 at the back"</text>
+    <text x="800" y="113" font-size="13">→ flags gone</text>
+
+    <line x1="260" y1="80" x2="346" y2="55" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+    <line x1="260" y1="100" x2="346" y2="125" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+    <line x1="590" y1="90" x2="676" y2="90" stroke="#64748b" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#b)"/>
+    <text x="470" y="190" font-size="13" fill="#475569">The queue asks the server again every 30 seconds, so flags appear by themselves.</text>
+  </g>
+</svg>
+</div>
+<p>When a volunteer opens a flagged bag, that food is already marked "None on the shelf", with "Another bag found none at 12:26 p.m. If there is some, tap Found it." So nobody searches the shelf for it again.</p>
+<p><b>Counting the shelf clears the mark</b>, because a count is what's really there. The stock page lists food that ran out as needing a count, in red: "None on the shelf while packing, Monday, November 9 at 12:26 p.m. Count it to take the flag off other bags."</p>
+
+<!-- ============================================================ -->
+<h2 id="note"><span class="num">7</span>The sticky note, and bags that go out short</h2>
+<p>Every swap goes on a sticky note on the bag <span class="rule">U8</span>, so the student sees what changed. The page shows the exact words, one line per gap:</p>
+<p><span class="note">Black beans → White rice<br>Sunflower oil → Vegetable oil</span></p>
+<p>If the substitutes run out too, the gap stays a gap <span class="rule">U6</span>. The note says so, and the page warns the volunteer:</p>
+<p><span class="note">Sunflower oil → choose at the counter</span></p>
+<pre class="code">The substitutes ran out too, so the bag is 1 short. At pickup, the student chooses something from the shelf instead.</pre>
+<p>The note is saved with the bag, so it can be shown again later: on the packed bag's page now, and at the counter in step 7.</p>
+
+<!-- ============================================================ -->
+<h2 id="tables"><span class="num">8</span>What the database remembers</h2>
+<p>No new tables. Four new columns, in migration <code>c250b0a6f9de</code>:</p>
+<div class="table-wrap">
+<table>
+  <tr><th>Column</th><th>What it holds</th><th>Database rule</th></tr>
+  <tr><td><code>bookings.packed_by_staff_id</code></td><td>Who pressed Packed.</td><td>A packed bag always names who packed it, and only a packed bag does.</td></tr>
+  <tr><td><code>booking_items.missing</code></td><td>How many of this food weren't on the shelf. Usually 0 or 1.</td><td>Between 0 and the number booked.</td></tr>
+  <tr><td><code>booking_substitutes.replaces_variety_id</code></td><td>Empty unless it went in the bag. Then: the booked food it replaced. The note comes from this.</td><td>A foreign key on the pair (booking, food): it can only replace food booked <i>in the same booking</i> <span class="rule">U5</span>.</td></tr>
+  <tr><td><code>varieties.ran_out_at</code></td><td>When a volunteer found none on the shelf. Cleared by the next count.</td><td>—</td></tr>
+</table>
+</div>
+<div class="why">
+  <p><b>Why save the swaps at all?</b> Without them, the note would be lost the moment Packed was pressed. The counter in step 7 needs it ("this bag is one short"). And when a packed bag becomes a no-show (step 8), the food that goes back to the shelf is what was really in the bag, not what was booked.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="addresses"><span class="num">9</span>The addresses</h2>
+<p>All for staff only. Anyone else gets "Please log in."</p>
+<div class="table-wrap">
+<table>
+  <tr><th>Address</th><th>What it does</th></tr>
+  <tr><td><code>GET /api/packing</code></td><td>The packing day, whether packing is allowed now (and why not), and every bag with its flags.</td></tr>
+  <tr><td><code>GET /api/packing/bags/{id}</code></td><td>One bag: its food, substitutes, and once packed, who packed it and the note.</td></tr>
+  <tr><td><code>POST /api/packing/bags/{id}/plan</code></td><td>What goes in instead, for what was found so far. Saves nothing.</td></tr>
+  <tr><td><code>POST /api/packing/bags/{id}/packed</code></td><td>Saves the bag. 409 if it's packed already, or if the plan changed.</td></tr>
+</table>
+</div>
+<p>The pages are <code>frontend/src/pages/Packing.tsx</code> (the queue) and <code>PackBag.tsx</code> (one bag). "Packing" is in the top bar for staff.</p>
+
+<!-- ============================================================ -->
+<h2 id="tests"><span class="num">10</span>The tests</h2>
+<p>52 new tests, 307 in all, every one passing. Highlights:</p>
+<ul>
+  <li><code>tests/test_packing.py</code>: 11 tests of the refill rule on its own, including both examples. Packing between 12 pm and 6 pm only. What Packed saves, with stock before and after. Only the bag's own food <span class="rule">U5</span>. A changed plan saves nothing. A bag is packed once <span class="rule">B2</span>. Flags appear when food runs out and go when it's counted <span class="rule">U7</span>. And the two "same moment" tests from part 5.</li>
+  <li><code>tests/test_packing_api.py</code>: the addresses, used the way the pages use them. Staff only. A bag shows nothing about the student <span class="rule">P4</span>.</li>
+  <li><code>tests/test_database_rules.py</code>: the three new database rules, and deleting a packed booking deletes its swaps too (the retention job in step 8 will do that).</li>
+</ul>
+<p>The pages were also checked in Edge on a phone-sized screen, light and dark, against the test database: four bags, sunflower oil running out, the flags, a bag going out one short, and the stock page.</p>
+
+<!-- ============================================================ -->
+<h2 id="ask"><span class="num">11</span>Two questions for you</h2>
+<div class="ask">
+  <p><b>1. Packing until 6 pm?</b> I let volunteers pack until the no-show time, not just until pickup starts at 3:30, so a missed bag can be packed while the student waits. Is that right, or should packing stop at 3:30?</p>
+  <p><b>2. Undo Packed?</b> Right now a packed bag can't go back to "to pack", because B2 has no such move. If someone presses Packed on the wrong bag, nothing can fix it. Should a volunteer be able to undo Packed, before pickup starts?</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="run"><span class="num">12</span>How to try it</h2>
+<p>Run the two servers as usual (see <a href="project-so-far.html#run">project-so-far.html, part 13</a>). Then <b>Staff log in → Packing</b>.</p>
+<p>To pack, a pickup day needs bookings, and its booking must have closed. In your working database, the sample days only open for booking at 5 pm the day before. So until the coordinator pages exist (step 9), ask me and I'll set up a day with a few bags, ready to pack.</p>
+
+<p class="lead" style="margin-top:40px">Written 7 November 2026. The rules are in CONSTRAINTS.md, and the reason for each choice is in DECISIONS.md, 7 November.</p>
+
+</main>
+</body>
+</html>

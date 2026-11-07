@@ -71,15 +71,15 @@
 <body>
 <main>
 
-<p class="eyebrow">Campus Food Bank · The whole project so far · 7 November 2026</p>
+<p class="eyebrow">Campus Food Bank · The whole project so far · 7 November 2026, after step 6</p>
 <h1>The project so far</h1>
 <p class="lead">Read this page first. It explains the whole project in one place: what we're building, who uses it, how the pieces fit together, what's done, and what's next. The other pages go deeper into one step each. This one links to them.</p>
 
 <div class="stats">
-  <div class="stat"><b>5 of 9</b><span>building steps done</span></div>
-  <div class="stat"><b>255</b><span>tests, all passing</span></div>
+  <div class="stat"><b>6 of 9</b><span>building steps done</span></div>
+  <div class="stat"><b>307</b><span>tests, all passing</span></div>
   <div class="stat"><b>19</b><span>tables in the database</span></div>
-  <div class="stat"><b>32</b><span>commits on GitHub</span></div>
+  <div class="stat"><b>36</b><span>commits on GitHub</span></div>
 </div>
 
 <ol class="toc">
@@ -140,8 +140,8 @@
   <tr>
     <td><b>Volunteer</b></td>
     <td>A username (like a first name) and a password <span class="rule">R3</span>.</td>
-    <td>Make student accounts and give setup codes (the Counter page). Count the shelf and add food (the Stock page).</td>
-    <td>The packing queue (step 6). Handing over bags, walk-ins and extras (step 7).</td>
+    <td>Make student accounts and give setup codes (the Counter page). Count the shelf and add food (the Stock page). Pack bags and swap in substitutes (the Packing page).</td>
+    <td>Handing over bags, walk-ins and extras (step 7).</td>
   </tr>
   <tr>
     <td><b>Coordinator</b></td>
@@ -157,7 +157,7 @@
 <h2 id="journey"><span class="num">3</span>A student's journey, start to end</h2>
 <p>Green is built. Amber is the next step. Grey comes after that.</p>
 <div class="diagram">
-<svg viewBox="0 0 940 470" role="img" aria-label="A student's journey in seven stages, four built, one next, two later">
+<svg viewBox="0 0 940 470" role="img" aria-label="A student's journey in seven stages, five built, one next, one later">
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
   </defs>
@@ -196,19 +196,19 @@
     <text x="160" y="290" font-size="13">They get a booking code,</text>
     <text x="160" y="309" font-size="13" font-weight="700">K3P</text>
 
-    <rect x="330" y="200" width="280" height="120" rx="12" fill="#fef3c7" stroke="#b45309"/>
+    <rect x="330" y="200" width="280" height="120" rx="12" fill="#d1fae5" stroke="#059669"/>
     <text x="470" y="228" font-weight="700">5. Packing, 12 to 3 pm</text>
     <text x="470" y="252" font-size="13">Volunteers pack each bag.</text>
     <text x="470" y="271" font-size="13">Missing food is swapped</text>
     <text x="470" y="290" font-size="13">for the student's substitutes.</text>
-    <text x="470" y="309" font-size="13" font-weight="700" fill="#92400e">Step 6, next</text>
+    <text x="470" y="309" font-size="13" font-weight="700" fill="#065f46">Step 6, built</text>
 
-    <rect x="640" y="200" width="280" height="120" rx="12" fill="#f1f5f9" stroke="#94a3b8"/>
+    <rect x="640" y="200" width="280" height="120" rx="12" fill="#fef3c7" stroke="#b45309"/>
     <text x="780" y="228" font-weight="700">6. Pickup, 3:30 to 5:30 pm</text>
     <text x="780" y="252" font-size="13">They say K3P. The volunteer</text>
     <text x="780" y="271" font-size="13">types the card number, which</text>
     <text x="780" y="290" font-size="13">must match the booking.</text>
-    <text x="780" y="309" font-size="13" font-weight="700" fill="#334155">Step 7</text>
+    <text x="780" y="309" font-size="13" font-weight="700" fill="#92400e">Step 7, next</text>
 
     <line x1="300" y1="260" x2="326" y2="260" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
     <line x1="610" y1="260" x2="636" y2="260" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
@@ -268,7 +268,7 @@
     <text x="632" y="140" font-size="12" fill="#475569">rows</text>
 
     <rect x="345" y="220" width="575" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="6 4"/>
-    <text x="632" y="246" font-weight="700">The tests: pytest, 255 of them</text>
+    <text x="632" y="246" font-weight="700">The tests: pytest, 307 of them</text>
     <text x="632" y="268" font-size="13">They call the server and the rules, against a separate test database, rebuilt every run.</text>
     <line x1="470" y1="220" x2="470" y2="184" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#b)"/>
   </g>
@@ -291,7 +291,7 @@
   </div>
   <div class="card">
     <h3>The tests: pytest</h3>
-    <p>255 small programs that each check one thing, like "a 14th item is refused". They run against a real PostgreSQL test database, never the working one. Each test is undone when it ends, so tests can't affect each other.</p>
+    <p>307 small programs that each check one thing, like "a 14th item is refused". They run against a real PostgreSQL test database, never the working one. Each test is undone when it ends, so tests can't affect each other.</p>
   </div>
 </div>
 
@@ -331,17 +331,17 @@
 │   │   ├── security/       <span class="c">← hashing, passwords, login cookies, wrong tries</span>
 │   │   ├── sample_data.py  <span class="c">← made-up days and food for trying things</span>
 │   │   └── first_coordinator.py  <span class="c">← makes the very first coordinator</span>
-│   ├── migrations/         <span class="c">← Alembic's history of table changes (3 so far)</span>
-│   └── tests/              <span class="c">← the 255 tests, one file per area</span>
+│   ├── migrations/         <span class="c">← Alembic's history of table changes (4 so far)</span>
+│   └── tests/              <span class="c">← the 307 tests, one file per area</span>
 │
 └── frontend/               <span class="c">← the pages (React + TypeScript)</span>
     └── src/
         ├── App.tsx         <span class="c">← every page and its web address</span>
         ├── api.ts          <span class="c">← the code that talks to the server</span>
         ├── Layout.tsx      <span class="c">← the bar at the top, and who may see which page</span>
-        └── pages/          <span class="c">← Book, Counter, Stock, Volunteers, LogIn, SetUp...</span></pre>
+        └── pages/          <span class="c">← Book, Counter, Stock, Packing, PackBag, Volunteers...</span></pre>
 <div class="short">
-  <p><b>To read the code, start here:</b> <code>backend/app/services/booking.py</code>. It's the heart of the system, and every function says which rule it follows. Then read <code>backend/tests/test_booking.py</code> next to it: each test is one rule, written as an example.</p>
+  <p><b>To read the code, start here:</b> <code>backend/app/services/booking.py</code>. It's the heart of the system, and every function says which rule it follows. Then read <code>backend/tests/test_booking.py</code> next to it: each test is one rule, written as an example. After that, <code>refill()</code> in <code>backend/app/services/packing.py</code> is the shortest rule to read: it doesn't touch the database at all.</p>
 </div>
 
 <!-- ================================================================ -->
@@ -431,13 +431,18 @@
     <td><a href="booking.html">booking</a></td>
   </tr>
   <tr>
-    <td>Next</td><td><b>Step 6, packing</b> <span class="tag next">next</span></td>
-    <td>The packing queue, swapping in substitutes, the sticky note, marking a bag packed.</td>
+    <td>7 Nov</td><td><b>Step 6, packing</b> <span class="tag done">done</span></td>
+    <td>The packing queue, swapping in substitutes, the sticky note, "ran out" flags on other bags, marking a bag packed. The Packing pages. 307 tests.</td>
+    <td><a href="packing.html">packing</a></td>
+  </tr>
+  <tr>
+    <td>Next</td><td><b>Step 7, the counter</b> <span class="tag next">next</span></td>
+    <td>Handing over bags, checking the card, walk-ins, extras.</td>
     <td>—</td>
   </tr>
   <tr>
-    <td>Later</td><td><b>Steps 7, 8, 9</b> <span class="tag later">later</span></td>
-    <td>The counter, the jobs that run by themselves, and the coordinator's pages.</td>
+    <td>Later</td><td><b>Steps 8, 9</b> <span class="tag later">later</span></td>
+    <td>The jobs that run by themselves, and the coordinator's pages.</td>
     <td>See <a href="#next">part 12</a></td>
   </tr>
 </table>
@@ -453,6 +458,7 @@
   <tr><td><code>/staff/setup</code>, <code>/staff/login</code></td><td>Staff</td><td>The same, for volunteers and the coordinator.</td></tr>
   <tr><td><code>/counter</code></td><td>Staff</td><td>Type a card number twice, get a setup code for the student.</td></tr>
   <tr><td><code>/stock</code></td><td>Staff</td><td>Count the shelf, add food, tags, hide or show.</td></tr>
+  <tr><td><code>/packing</code></td><td>Staff</td><td>The bags for the pickup day. Open one, mark what's not on the shelf, see what goes in instead and the sticky note, press Packed.</td></tr>
   <tr><td><code>/volunteers</code></td><td>Coordinator</td><td>Add volunteers, give setup codes, switch accounts off and on.</td></tr>
 </table>
 </div>
@@ -500,7 +506,7 @@
 
 <span class="c">A student books one variety. The limit is one Oats, counting both kinds together (I3).</span>
 <span class="c">Any brand or size of quick oats counts as quick oats (U1).</span></pre>
-<p>Packing, walk-ins and extras will need a few new tables. We add each one in the step that needs it, so it's designed when we understand that part best.</p>
+<p>Packing added four columns but no new tables: who packed a bag, what was missing, which substitute replaced what, and when a food ran out. Walk-ins and extras will need new tables. We add each one in the step that needs it, so it's designed when we understand that part best.</p>
 
 <!-- ================================================================ -->
 <h2 id="ideas"><span class="num">10</span>Five ideas that hold it together</h2>
@@ -554,13 +560,13 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
     <text x="130" y="70" font-weight="700">booked</text>
     <text x="130" y="90" font-size="12" fill="#065f46">step 5, built</text>
 
-    <rect x="380" y="40" width="180" height="64" rx="12" fill="#fef3c7" stroke="#b45309"/>
+    <rect x="380" y="40" width="180" height="64" rx="12" fill="#d1fae5" stroke="#059669"/>
     <text x="470" y="70" font-weight="700">packed</text>
-    <text x="470" y="90" font-size="12" fill="#92400e">step 6, next</text>
+    <text x="470" y="90" font-size="12" fill="#065f46">step 6, built</text>
 
-    <rect x="720" y="40" width="180" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8"/>
+    <rect x="720" y="40" width="180" height="64" rx="12" fill="#fef3c7" stroke="#b45309"/>
     <text x="810" y="70" font-weight="700">picked up</text>
-    <text x="810" y="90" font-size="12" fill="#334155">step 7</text>
+    <text x="810" y="90" font-size="12" fill="#92400e">step 7, next</text>
 
     <rect x="200" y="210" width="200" height="64" rx="12" fill="#fee2e2" stroke="#b91c1c"/>
     <text x="300" y="240" font-weight="700">cancelled</text>
@@ -593,12 +599,7 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
 <table>
   <tr><th>Step</th><th>What it adds</th><th>Main rules</th></tr>
   <tr>
-    <td><b>6. Packing</b> <span class="tag next">next</span></td>
-    <td>A packing queue for each pickup day. Volunteers mark food that's missing from the shelf, and the system swaps in the student's substitutes in their order. The bag shows what to write on the sticky note. Then "Packed".</td>
-    <td><span class="rule">K1</span> <span class="rule">U4</span> <span class="rule">U5</span> <span class="rule">U7</span> <span class="rule">U8</span></td>
-  </tr>
-  <tr>
-    <td><b>7. The counter</b> <span class="tag later">later</span></td>
+    <td><b>7. The counter</b> <span class="tag next">next</span></td>
     <td>Finding a booking by its code, checking the card matches, "Picked up". Walk-ins. Extras given out. Choosing at the counter when the substitutes ran out too. Fixing a mistake.</td>
     <td><span class="rule">P5</span> <span class="rule">B3</span> <span class="rule">W1</span> <span class="rule">E3</span> <span class="rule">U6</span> <span class="rule">B6</span></td>
   </tr>
@@ -620,6 +621,11 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
 <ul>
   <li>Volunteers can count stock and add food, and only the coordinator adds categories and tags and fixes names. Is that the right split?</li>
   <li>An extra with none left (like bread at 0) isn't shown to students at all. Is that right, or should it say "none today"?</li>
+</ul>
+<p><b>For you</b>, from step 6 (more in <a href="packing.html#ask">packing.html</a>):</p>
+<ul>
+  <li>Volunteers can pack until 6 pm, not only until pickup starts at 3:30, so a missed bag can still be packed. Is that right?</li>
+  <li>A packed bag can't be undone. Should a volunteer be able to undo Packed on the wrong bag, before pickup?</li>
 </ul>
 <p><b>For the food bank</b>, when we talk to them. These are in <code>CONSTRAINTS.md</code>:</p>
 <ul>
@@ -654,7 +660,7 @@ npm run dev</pre>
 <p>To run the tests (about 30 seconds):</p>
 <pre class="code">cd "D:\MUN Project\backend"
 .venv\Scripts\python -m pytest</pre>
-<p>Booking for a sample day only opens at 5 pm the day before it. To try booking sooner, a day has to be opened early. That's the coordinator's job in step 9. Until then, ask me and I'll open one.</p>
+<p>Booking for a sample day only opens at 5 pm the day before it. To try booking sooner, a day has to be opened early. That's the coordinator's job in step 9. Until then, ask me and I'll open one. The same goes for packing: ask me and I'll set up a day with a few bags, ready to pack.</p>
 
 <!-- ================================================================ -->
 <h2 id="pages"><span class="num">14</span>Which page to read for what</h2>
@@ -669,6 +675,7 @@ npm run dev</pre>
   <tr><td><a href="accounts.html">accounts.html</a></td><td>Setup codes, hashing, passwords, login cookies, slowing down guessing.</td></tr>
   <tr><td><a href="stock.html">stock.html</a></td><td>Counting the shelf while booking is open, and adding food.</td></tr>
   <tr><td><a href="booking.html">booking.html</a></td><td>Holds, the Book transaction, locks, and cancelling.</td></tr>
+  <tr><td><a href="packing.html">packing.html</a></td><td>The packing queue, the refill rule, the sticky note, and the "ran out" flags.</td></tr>
   <tr><td><code>CONSTRAINTS.md</code></td><td>The rules themselves, short. The one place to check a rule.</td></tr>
   <tr><td><code>DECISIONS.md</code></td><td>Every choice, by date, with the reason. Good for interview answers.</td></tr>
 </table>
@@ -702,7 +709,7 @@ npm run dev</pre>
   <dt>Test</dt><dd>A small program that checks one thing and fails loudly if it's wrong.</dd>
 </dl>
 
-<p class="lead" style="margin-top:40px">Written 7 November 2026, after step 5. The rules this page describes are in CONSTRAINTS.md, and the reason for each choice is in DECISIONS.md.</p>
+<p class="lead" style="margin-top:40px">Written 7 November 2026, and brought up to date after step 6. The rules this page describes are in CONSTRAINTS.md, and the reason for each choice is in DECISIONS.md.</p>
 
 </main>
 </body>
