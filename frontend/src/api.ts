@@ -301,3 +301,59 @@ export type PackingPlan = {
   booked: number
   uses: number[] // the substitutes to put in. Sent back with Packed.
 }
+
+// ---------- the counter, for staff (backend/app/routes/counter.py) ----------
+
+export type ShelfFood = {
+  variety_id: number
+  variety: string
+  item_id: number
+  item: string
+  stock: number // left that nobody booked
+}
+
+export type CounterPage = {
+  pickup_date: string | null
+  is_open: boolean
+  why_not: string | null // like "The counter opens when booking closes, at 12:00 p.m."
+  limits: { item_limit: number; max_per_item: number }
+  food: ShelfFood[]
+  extras: ShelfFood[] // one of each extra item (E3)
+}
+
+export type BagAtCounter = {
+  id: number
+  code: string
+  starts_at: string
+  status: string
+  why_not: string | null // like "Bag K3P isn't packed yet..."
+  packed_by: string | null
+  picked_up_at: string | null
+  picked_up_by: string | null
+  contents: { variety: string; item_id: number; item: string; quantity: number }[]
+  sticky_note: string[]
+  short: number // things the substitutes couldn't replace: chosen from the shelf (U6)
+  given_at_counter: { variety: string; item: string; quantity: number; is_extra: boolean }[] // once picked up
+}
+
+export type HandedOver = {
+  code: string
+  picked_up_at: string
+  next_pickup_on: string
+}
+
+export type WalkInCheck = {
+  can_serve: boolean
+  why_not: string | null
+  new_account: boolean // no account for this card yet: recording the walk-in makes one
+  cancels: { pickup_date: string; code: string } | null // W4: their booking for a later day
+}
+
+export type WalkInDone = {
+  served_at: string
+  things: number
+  extras: number
+  new_account: boolean
+  cancelled: { pickup_date: string; code: string } | null
+  next_pickup_on: string
+}

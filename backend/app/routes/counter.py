@@ -8,9 +8,10 @@ from datetime import date, datetime
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 
 from app.deps import DB, CurrentStaff, Now
-from app.models import Booking, PickupDay, Slot, Staff, Student
+from app.models import Booking, CounterItem, Item, PickupDay, Slot, Staff, Student, Variety
 from app.security.inputs import IdNumber
 from app.services import booking as booking_rules
 from app.services import counter, packing
@@ -94,6 +95,13 @@ class InBag(BaseModel):
     quantity: int
 
 
+class GivenAtCounter(BaseModel):
+    variety: str
+    item: str
+    quantity: int
+    is_extra: bool
+
+
 class BagAtCounter(BaseModel):
     id: int
     code: str
@@ -108,6 +116,8 @@ class BagAtCounter(BaseModel):
     sticky_note: list[str]
     # Things the substitutes couldn't replace. The student chooses these from the shelf (U6).
     short: int
+    # Once picked up: what they chose from the shelf, and their extras.
+    given_at_counter: list[GivenAtCounter]
 
 
 def bag_at_counter(booking: Booking, db: DB) -> BagAtCounter:
@@ -130,6 +140,16 @@ def bag_at_counter(booking: Booking, db: DB) -> BagAtCounter:
         ],
         sticky_note=packing.saved_note(food, substitutes),
         short=len(packing.gaps(food, substitutes)),
+        given_at_counter=[
+            GivenAtCounter(variety=variety.name, item=item.name, quantity=row.quantity, is_extra=row.is_extra)
+            for row, variety, item in db.execute(
+                select(CounterItem, Variety, Item)
+                .join(Variety, Variety.id == CounterItem.variety_id)
+                .join(Item, Item.id == CounterItem.item_id)
+                .where(CounterItem.booking_id == booking.id)
+                .order_by(CounterItem.is_extra, Item.name)
+            )
+        ],
     )
 
 

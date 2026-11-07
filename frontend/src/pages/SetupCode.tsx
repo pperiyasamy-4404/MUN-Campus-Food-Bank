@@ -3,12 +3,13 @@ import { send, type IssuedCode } from '../api.ts'
 import { Field, Problem, SetupCodeBox } from '../forms.tsx'
 import { useValues } from '../useValues.ts'
 import { useMe } from '../me.ts'
+import { CounterNav } from './CounterParts.tsx'
 
 // At the counter: the volunteer checks a student's MUN card and gives them a
 // setup code (R1). A new card gets an account. A card that has one gets a new
 // code, which is how a forgotten password is reset.
 
-export function Counter() {
+export function SetupCode() {
   const { forget } = useMe()
   const { values, set, clear } = useValues({ id_number: '', again: '' })
   const [problem, setProblem] = useState<string | null>(null)
@@ -43,6 +44,7 @@ export function Counter() {
 
   return (
     <div className="narrow">
+      <CounterNav />
       <h1>Give a setup code</h1>
       {issued ? (
         <SetupCodeBox

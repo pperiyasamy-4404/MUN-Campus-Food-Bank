@@ -2,14 +2,16 @@ import { BrowserRouter, Link, Route, Routes } from 'react-router'
 import { Layout, StaffOnly, StudentOnly } from './Layout.tsx'
 import { MeProvider } from './MeProvider.tsx'
 import { Book } from './pages/Book.tsx'
-import { Counter } from './pages/Counter.tsx'
+import { HandOver } from './pages/HandOver.tsx'
 import { Home } from './pages/Home.tsx'
 import { StaffLogIn, StudentLogIn } from './pages/LogIn.tsx'
 import { PackBag } from './pages/PackBag.tsx'
 import { Packing } from './pages/Packing.tsx'
+import { SetupCode } from './pages/SetupCode.tsx'
 import { StaffSetUp, StudentSetUp } from './pages/SetUp.tsx'
 import { Stock } from './pages/Stock.tsx'
 import { Volunteers } from './pages/Volunteers.tsx'
+import { WalkIn } from './pages/WalkIn.tsx'
 
 // Every page and its web address. The addresses never hold anything private:
 // no ID numbers, no codes (P10).
@@ -37,7 +39,23 @@ function App() {
               path="counter"
               element={
                 <StaffOnly>
-                  <Counter />
+                  <HandOver />
+                </StaffOnly>
+              }
+            />
+            <Route
+              path="counter/walk-in"
+              element={
+                <StaffOnly>
+                  <WalkIn />
+                </StaffOnly>
+              }
+            />
+            <Route
+              path="counter/setup-code"
+              element={
+                <StaffOnly>
+                  <SetupCode />
                 </StaffOnly>
               }
             />

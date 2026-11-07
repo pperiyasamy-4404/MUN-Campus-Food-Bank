@@ -99,6 +99,7 @@ def test_handing_over_a_bag_from_start_to_end(client, setup):
 
     again = client.post("/api/counter/find", json={"code": code}).json()
     assert (again["status"], again["picked_up_by"]) == ("picked_up", "Sam")
+    assert again["given_at_counter"] == [{"variety": "White bread", "item": "Bread", "quantity": 1, "is_extra": True}]
     assert again["why_not"] == f"Bag {code} was picked up already, at 3:40 p.m."
 
 
