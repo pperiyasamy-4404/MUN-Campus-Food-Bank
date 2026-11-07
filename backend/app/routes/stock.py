@@ -16,6 +16,7 @@ from sqlalchemy import func, select
 from app.deps import DB, CurrentStaff, Now
 from app.models import Category, Item, PickupDay, Staff, Tag, Variety, VarietyTag
 from app.services import stock
+from app.services.photos import photo_urls
 from app.services.pickup_days import NEWFOUNDLAND, BookingStatus, booking_status
 
 router = APIRouter(prefix="/api")
@@ -64,6 +65,7 @@ class ItemRow(BaseModel):
     id: int
     name: str
     is_extra: bool
+    photo_url: str | None
     varieties: list[VarietyRow]
 
 
@@ -116,10 +118,17 @@ def stock_page(staff: CurrentStaff, db: DB, now: Now) -> StockPage:
         varieties_by_item[variety.item_id].append(
             variety_row(variety, tags_by_variety[variety.id], promised.get(variety.id, 0), counters)
         )
+    urls = photo_urls(db, [item.id for item in items])
     items_by_category: dict[int, list[ItemRow]] = defaultdict(list)
     for item in items:
         items_by_category[item.category_id].append(
-            ItemRow(id=item.id, name=item.name, is_extra=item.is_extra, varieties=varieties_by_item[item.id])
+            ItemRow(
+                id=item.id,
+                name=item.name,
+                is_extra=item.is_extra,
+                photo_url=urls.get(item.id),
+                varieties=varieties_by_item[item.id],
+            )
         )
 
     return StockPage(

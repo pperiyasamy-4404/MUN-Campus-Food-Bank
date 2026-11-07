@@ -16,6 +16,7 @@ from app.security.inputs import IdNumber
 from app.services import booking as booking_rules
 from app.services import counter, packing
 from app.services.booking import Choice
+from app.services.photos import photo_urls
 from app.services.pickup_days import NEWFOUNDLAND
 from app.services.settings import food_bank_settings
 
@@ -34,6 +35,7 @@ class ShelfFood(BaseModel):
     variety: str
     item_id: int
     item: str
+    photo_url: str | None
     # Left that nobody booked.
     stock: int
 
@@ -60,6 +62,7 @@ def counter_page(staff: CurrentStaff, db: DB, now: Now) -> CounterPage:
     day = counter.counter_day(db, now)
     why_not = counter.why_counter_closed(db, day, now)
     shelf = counter.on_the_shelf(db)
+    urls = photo_urls(db, list({line.item.id for line in shelf}))
 
     def out(line: counter.ShelfLine) -> ShelfFood:
         return ShelfFood(
@@ -67,6 +70,7 @@ def counter_page(staff: CurrentStaff, db: DB, now: Now) -> CounterPage:
             variety=line.variety.name,
             item_id=line.item.id,
             item=line.item.name,
+            photo_url=urls.get(line.item.id),
             stock=line.variety.stock,
         )
 

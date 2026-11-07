@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.routes import accounts, booking, counter, food, login, packing, pickup_days, stock
+from app.routes import accounts, booking, counter, food, login, packing, photos, pickup_days, stock
 from app.problems import Problem
 from app.services.accounts import TooManyTries
 
@@ -18,6 +18,7 @@ app.include_router(stock.router)
 app.include_router(booking.router)
 app.include_router(packing.router)
 app.include_router(counter.router)
+app.include_router(photos.router)
 
 
 @app.exception_handler(Problem)
@@ -47,6 +48,7 @@ async def never_keep_a_copy(request: Request, call_next):
     """Answers can hold setup codes and who is logged in, so no browser or proxy
     may store a copy. Pressing Back after logging out then shows nothing private."""
     response = await call_next(request)
-    if request.url.path.startswith("/api"):
+    # Unless the address chose its own, like a photo, which holds nothing private.
+    if request.url.path.startswith("/api") and "cache-control" not in response.headers:
         response.headers["Cache-Control"] = "no-store"
     return response

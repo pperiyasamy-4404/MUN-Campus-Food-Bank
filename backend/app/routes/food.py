@@ -8,6 +8,7 @@ from sqlalchemy import func, or_, select
 
 from app.deps import DB
 from app.models import Category, Item, Tag, Variety, VarietyTag
+from app.services.photos import photo_urls
 
 router = APIRouter(prefix="/api")
 
@@ -21,7 +22,10 @@ class VarietyOut(BaseModel):
 
 
 class ItemOut(BaseModel):
+    id: int
     name: str
+    # Where its photo is, if it has one.
+    photo_url: str | None
     varieties: list[VarietyOut]
 
 
@@ -37,8 +41,8 @@ class FoodOut(BaseModel):
     extras: list[CategoryOut]
 
 
-# category name -> item name -> its varieties
-Shelf = dict[str, dict[str, list[VarietyOut]]]
+# category name -> (item id, item name) -> its varieties
+Shelf = dict[str, dict[tuple[int, str], list[VarietyOut]]]
 
 
 @router.get("/food")
@@ -52,6 +56,7 @@ def food_on_the_shelf(db: DB) -> FoodOut:
     rows = db.execute(
         select(
             Category.name.label("category"),
+            Item.id.label("item_id"),
             Item.name.label("item"),
             Item.is_extra,
             Variety.id,
@@ -87,16 +92,20 @@ def food_on_the_shelf(db: DB) -> FoodOut:
             stock=None if row.is_extra else row.stock,
             tags=tags_by_variety[row.id],
         )
-        shelf.setdefault(row.category, {}).setdefault(row.item, []).append(variety)
+        shelf.setdefault(row.category, {}).setdefault((row.item_id, row.item), []).append(variety)
 
-    return FoodOut(bookable=as_categories(bookable), extras=as_categories(extras))
+    urls = photo_urls(db, list({row.item_id for row in rows}))
+    return FoodOut(bookable=as_categories(bookable, urls), extras=as_categories(extras, urls))
 
 
-def as_categories(shelf: Shelf) -> list[CategoryOut]:
+def as_categories(shelf: Shelf, urls: dict[int, str]) -> list[CategoryOut]:
     return [
         CategoryOut(
             name=category,
-            items=[ItemOut(name=item, varieties=varieties) for item, varieties in items.items()],
+            items=[
+                ItemOut(id=item_id, name=item, photo_url=urls.get(item_id), varieties=varieties)
+                for (item_id, item), varieties in items.items()
+            ],
         )
         for category, items in shelf.items()
     ]

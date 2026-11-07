@@ -11,6 +11,7 @@ from sqlalchemy import select
 
 from app.db import SessionLocal
 from app.models import Category, Item, PickupHours, Settings, Tag, Variety, VarietyTag
+from app.services.photos import add_sample_photos
 from app.services.pickup_days import NEWFOUNDLAND, make_pickup_day
 
 # The sample values from CONSTRAINTS.md.
@@ -109,6 +110,7 @@ def main() -> None:
 
         add_food(db, SAMPLE_FOOD, is_extra=False, tags=tags)
         add_food(db, SAMPLE_EXTRAS, is_extra=True, tags=tags)
+        add_sample_photos(db, datetime.now(NEWFOUNDLAND))
 
         dates = next_pickup_dates(4)
         for pickup_date in dates:

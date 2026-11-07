@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, ForeignKey, Identity, Index, UniqueConstraint, text
+from sqlalchemy import CheckConstraint, ForeignKey, Identity, Index, LargeBinary, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -68,6 +68,28 @@ class Variety(Base):
         Index("uq_varieties_item_id_name_lower", "item_id", text("lower(name)"), unique=True),
         # Lets counter_items link to the pair (variety, item), so its copy of the item is always right.
         UniqueConstraint("id", "item_id"),
+    )
+
+
+class ItemPhoto(Base):
+    """One photo for an item, like a bowl of oats, shared by all its varieties.
+
+    Students see it on the food cards. Any staff member can add or change it on
+    the Stock page. In its own table, so reading the food list never loads the pictures.
+    """
+
+    __tablename__ = "item_photos"
+
+    item_id: Mapped[int] = mapped_column(ForeignKey("items.id", ondelete="CASCADE"), primary_key=True)
+    content_type: Mapped[str]
+    data: Mapped[bytes] = mapped_column(LargeBinary)
+    # Goes in the photo's web address, so a browser fetches a changed photo again.
+    updated_at: Mapped[datetime]
+
+    __table_args__ = (
+        CheckConstraint("content_type IN ('image/jpeg', 'image/png', 'image/webp')", name="content_type_is_known"),
+        # 2 MB at most: a phone photo should be shrunk first. Keeps the database small.
+        CheckConstraint("octet_length(data) BETWEEN 1 AND 2097152", name="small_enough"),
     )
 
 
