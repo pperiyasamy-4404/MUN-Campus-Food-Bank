@@ -47,13 +47,13 @@ export function HandOver() {
   const { page } = load
 
   return (
-    <div className="narrow-wide">
+    <div>
       <CounterNav />
       <h1>Hand over a bag</h1>
       {!page.is_open && <p className="notice">{page.why_not}</p>}
 
       {done ? (
-        <div className="code-box" role="status">
+        <div className="code-box narrow-wide" role="status">
           <h2>Bag {done.code} handed over</h2>
           <p>Their next pickup can be on {showDate(done.next_pickup_on)}.</p>
           <button type="button" onClick={nextStudent}>

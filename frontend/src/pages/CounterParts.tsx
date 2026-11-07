@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router'
 import type { ShelfFood } from '../api.ts'
+import { FoodCard, FoodRow } from '../FoodCards.tsx'
 import { byItem, total, whyNotMore, type Chosen } from './counterTools.ts'
 
 // Pieces the counter pages share.
@@ -47,40 +48,57 @@ export function ShelfPicker({
       <p className="shelf-count" role="status">
         {total(chosen)} of {room} chosen
       </p>
-      {byItem(lines).map((group) => (
-        <div key={group.itemId} className="item">
-          <h3 className="item-name">{group.item}</h3>
-          <ul className="choose-list">
-            {group.lines.map((line) => {
-              const count = chosen[line.variety_id] ?? 0
-              const whyNot = whyNotMore(line, chosen, lines, room, maxPerItem, alreadyByItem[line.item_id] ?? 0)
-              return (
-                <li key={line.variety_id} className={count > 0 ? 'choose-row chosen' : 'choose-row'}>
-                  <span className="choose-name">
-                    <strong>{line.variety}</strong>
-                    <span className="muted">{line.stock} left</span>
-                  </span>
-                  <span className="choose-controls">
-                    {whyNot && count === 0 && <span className="why-not">{whyNot}</span>}
-                    {count > 0 && (
-                      <>
-                        <button type="button" className="secondary" onClick={() => change(line, -1)}>
-                          −<span className="visually-hidden"> one {line.variety}</span>
+      <div className="food-grid food-grid-small">
+        {byItem(lines).map((group) => {
+          const ofItem = group.lines.reduce((sum, line) => sum + (chosen[line.variety_id] ?? 0), 0)
+          return (
+            <FoodCard
+              key={group.itemId}
+              name={group.item}
+              photoUrl={group.lines[0].photo_url}
+              highlighted={ofItem > 0}
+              badge={ofItem > 0 ? `✓ ${ofItem}` : undefined}
+            >
+              {group.lines.map((line) => {
+                const count = chosen[line.variety_id] ?? 0
+                const whyNot = whyNotMore(line, chosen, lines, room, maxPerItem, alreadyByItem[line.item_id] ?? 0)
+                return (
+                  <FoodRow
+                    key={line.variety_id}
+                    name={line.variety}
+                    dim={count === 0 && whyNot !== null}
+                    note={<span className="stock-left">{line.stock} left</span>}
+                  >
+                    {count === 0 && whyNot !== null ? (
+                      <span className="why-not">{whyNot}</span>
+                    ) : (
+                      <span className="choose-controls">
+                        {count > 0 && (
+                          <>
+                            <button type="button" className="secondary" onClick={() => change(line, -1)}>
+                              −<span className="visually-hidden"> one {line.variety}</span>
+                            </button>
+                            <span className="count">{count}</span>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          className={count === 0 ? 'add-button' : 'secondary'}
+                          onClick={() => change(line, 1)}
+                          disabled={whyNot !== null}
+                        >
+                          {count === 0 ? 'Add' : '+'}
+                          <span className="visually-hidden"> {line.variety}</span>
                         </button>
-                        <span className="count">{count}</span>
-                      </>
+                      </span>
                     )}
-                    <button type="button" className="secondary" onClick={() => change(line, 1)} disabled={whyNot !== null}>
-                      {count === 0 ? 'Add' : '+'}
-                      <span className="visually-hidden"> {line.variety}</span>
-                    </button>
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
-        </div>
-      ))}
+                  </FoodRow>
+                )
+              })}
+            </FoodCard>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -97,33 +115,41 @@ export function ExtrasPicker({
 }) {
   if (lines.length === 0) return <p className="muted">No extras today.</p>
   return (
-    <div className="shelf">
-      {byItem(lines).map((group) => (
-        <div key={group.itemId} className="item">
-          <h3 className="item-name">{group.item}</h3>
-          <div className="extra-choices" role="group" aria-label={group.item}>
+    <div className="food-grid food-grid-small">
+      {byItem(lines).map((group) => {
+        const pickedId = chosen[group.itemId]
+        return (
+          <FoodCard
+            key={group.itemId}
+            name={group.item}
+            photoUrl={group.lines[0].photo_url}
+            highlighted={pickedId !== undefined}
+            badge={pickedId !== undefined ? '✓ 1' : undefined}
+          >
             {group.lines.map((line) => {
-              const picked = chosen[group.itemId] === line.variety_id
+              const picked = pickedId === line.variety_id
               return (
-                <button
-                  key={line.variety_id}
-                  type="button"
-                  className={picked ? 'extra-choice picked' : 'extra-choice secondary'}
-                  aria-pressed={picked}
-                  onClick={() => {
-                    const next = { ...chosen }
-                    if (picked) delete next[group.itemId]
-                    else next[group.itemId] = line.variety_id
-                    onChange(next)
-                  }}
-                >
-                  {line.variety} <span className="muted">({line.stock} left)</span>
-                </button>
+                <FoodRow key={line.variety_id} name={line.variety} note={<span className="stock-left">{line.stock} left</span>}>
+                  <button
+                    type="button"
+                    className={picked ? 'chosen-button' : 'add-button'}
+                    aria-pressed={picked}
+                    onClick={() => {
+                      const next = { ...chosen }
+                      if (picked) delete next[group.itemId]
+                      else next[group.itemId] = line.variety_id
+                      onChange(next)
+                    }}
+                  >
+                    {picked ? '✓ Added' : 'Add'}
+                    <span className="visually-hidden"> {line.variety}</span>
+                  </button>
+                </FoodRow>
               )
             })}
-          </div>
-        </div>
-      ))}
+          </FoodCard>
+        )
+      })}
     </div>
   )
 }

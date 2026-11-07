@@ -1,8 +1,9 @@
-import { useId, useState, type FormEvent } from 'react'
-import type { StockCategory, StockVariety, TagChoice } from '../api.ts'
+import { useId, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import type { StockCategory, StockItem, StockVariety, TagChoice } from '../api.ts'
+import { FoodPhoto } from '../FoodCards.tsx'
 import { Field, Problem } from '../forms.tsx'
 import { useValues } from '../useValues.ts'
-import { change, type StockTools } from './stockTools.ts'
+import { change, shrinkPhoto, uploadPhoto, type StockTools } from './stockTools.ts'
 
 // The forms on the stock page. Each one sends one change, then asks for the
 // page again, so what's on screen is always what's in the database.
@@ -329,5 +330,56 @@ function AddName({ tools, path, label, example }: { tools: StockTools; path: str
         Add
       </button>
     </form>
+  )
+}
+
+/** The item's photo on the Stock page: add, change or remove it. Students see it on the food cards. */
+export function ItemPhotoEditor({ tools, item, children }: { tools: StockTools; item: StockItem; children: ReactNode }) {
+  const [sending, setSending] = useState(false)
+  const [problem, setProblem] = useState<string | null>(null)
+  const box = useId()
+
+  async function choose(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    setProblem(null)
+    setSending(true)
+    try {
+      const why = await uploadPhoto(tools, item.id, await shrinkPhoto(file))
+      if (why) setProblem(why)
+      else tools.reload()
+    } catch {
+      setProblem('That file is not a photo this browser can read. Try a JPEG or PNG.')
+    }
+    setSending(false)
+  }
+
+  async function remove() {
+    setProblem(null)
+    const answer = await change(tools, `/api/items/${item.id}/photo`, {}, 'DELETE')
+    if (!answer.ok) return setProblem(answer.message)
+    tools.reload()
+  }
+
+  return (
+    <div className="photo-editor">
+      <FoodPhoto url={item.photo_url} name={item.name} />
+      <div className="photo-editor-actions">
+        {children}
+        <span className="photo-links">
+          <label htmlFor={box} className={sending ? 'photo-button busy' : 'photo-button'}>
+            {sending ? 'Saving...' : item.photo_url ? 'Change photo' : 'Add photo'}
+          </label>
+          <input id={box} type="file" accept="image/*" className="visually-hidden" onChange={choose} disabled={sending} />
+          {item.photo_url && (
+            <button type="button" className="link-button small" onClick={remove}>
+              Remove photo
+            </button>
+          )}
+        </span>
+      </div>
+      {problem && <p className="field-error">{problem}</p>}
+    </div>
   )
 }

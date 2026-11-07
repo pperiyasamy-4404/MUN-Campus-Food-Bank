@@ -10,6 +10,7 @@
   --page: light-dark(#f8fafc, #0f172a);
   --card: light-dark(#ffffff, #1e293b);
   --blue: light-dark(#2563eb, #60a5fa);
+  --blue-bg: light-dark(#dbeafe, #1e3a5f);
   --green: light-dark(#065f46, #6ee7b7);
   --green-bg: light-dark(#d1fae5, #064e3b);
   --amber: light-dark(#92400e, #fcd34d);
@@ -27,8 +28,8 @@ body {
 }
 
 main {
-  max-width: 52rem;
-  margin: 2rem auto 4rem;
+  max-width: 66rem;
+  margin: 1.5rem auto 4rem;
   padding: 0 1rem;
 }
 
@@ -38,9 +39,8 @@ h1 {
 }
 
 h2 {
-  margin: 2.5rem 0 0.75rem;
-  padding-top: 1rem;
-  border-top: 2px solid var(--line);
+  margin: 2.2rem 0 0.6rem;
+  font-size: 1.35rem;
 }
 
 h3,
@@ -211,10 +211,11 @@ h4 {
 .top {
   background: var(--card);
   border-bottom: 1px solid var(--line);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
 }
 
 .top nav {
-  max-width: 52rem;
+  max-width: 66rem;
   margin: 0 auto;
   padding: 0.6rem 1rem;
   display: flex;
@@ -226,21 +227,31 @@ h4 {
 .top a {
   color: var(--muted);
   text-decoration: none;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
 }
 
-.top a:hover,
-.top a.active {
+.top a:hover {
   color: var(--ink);
+  background: var(--grey-bg);
 }
 
 .top a.active {
-  text-decoration: underline;
-  text-underline-offset: 0.3rem;
+  color: var(--blue);
+  background: var(--blue-bg);
+  font-weight: 600;
 }
 
 .top .brand {
   color: var(--blue);
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 1.1rem;
+  padding-left: 0;
+  margin-right: 0.4rem;
+}
+
+.top .brand:hover {
+  background: none;
 }
 
 .spacer {
@@ -970,6 +981,7 @@ h2.in-card {
 
 .sub-nav {
   display: flex;
+  width: fit-content;
   flex-wrap: wrap;
   gap: 0.3rem;
   margin: 0 0 0.8rem;
@@ -1043,4 +1055,256 @@ button.extra-choice.picked .muted {
   padding: 0;
   border: none;
   font-size: 1.1rem;
+}
+
+/* ---------- food cards: a photo of each item, its varieties underneath ---------- */
+
+.food-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin: 0.6rem 0 1rem;
+}
+
+.food-grid-small {
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 0.8rem;
+}
+
+.food-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+}
+
+.food-card-chosen {
+  border: 2px solid var(--green);
+}
+
+.food-photo-frame {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--grey-bg);
+}
+
+.food-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.food-photo-none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  background: var(--grey-bg);
+}
+
+.food-badge {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+  background: #059669;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+}
+
+.food-body {
+  padding: 0.7rem 0.9rem 0.4rem;
+}
+
+.food-category {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.food-name {
+  margin: 0.1rem 0 0.3rem;
+  font-size: 1.15rem;
+}
+
+.food-varieties {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.food-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.food-row-dim {
+  opacity: 0.6;
+}
+
+.food-row-about {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.food-row-name {
+  font-weight: 600;
+}
+
+.food-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.food-row-note {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.stock-left {
+  color: var(--green);
+}
+
+.stock-out {
+  color: var(--red);
+}
+
+.food-row-action {
+  flex-shrink: 0;
+}
+
+.food-row-action .why-not {
+  display: block;
+  max-width: 7rem;
+  text-align: right;
+  font-size: 0.8rem;
+}
+
+button.add-button,
+button.chosen-button {
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+}
+
+button.chosen-button {
+  color: #fff;
+  background: #059669;
+  border-color: #059669;
+}
+
+.food-section-title {
+  margin: 1.6rem 0 0.2rem;
+  font-size: 1.2rem;
+}
+
+/* ---------- the home page ---------- */
+
+.hero {
+  padding: 1.6rem 1.5rem;
+  border-radius: 1.2rem;
+  color: #fff;
+  background: linear-gradient(135deg, #1d4ed8, #059669);
+}
+
+.hero h1 {
+  margin: 0 0 0.3rem;
+  font-size: 2rem;
+}
+
+.hero p {
+  margin: 0.2rem 0 0.9rem;
+  max-width: 38rem;
+  font-size: 1.05rem;
+}
+
+.hero .actions a.button {
+  background: #fff;
+  color: #1d4ed8;
+  border-color: #fff;
+}
+
+.hero .actions a.button.ghost {
+  background: transparent;
+  color: #fff;
+}
+
+/* ---------- photos on the stock page ---------- */
+
+.item-header-photo {
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.photo-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.7rem;
+}
+
+.photo-editor .food-photo {
+  width: 6rem;
+  height: 4.5rem;
+  border-radius: 0.6rem;
+}
+
+.photo-editor-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.item-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.item-title h4 {
+  font-size: 1.05rem;
+}
+
+.photo-links {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.photo-button {
+  display: inline-block;
+  padding: 0.2rem 0.7rem;
+  border: 1px solid var(--blue);
+  border-radius: 0.5rem;
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.photo-button.busy {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.photo-editor .field-error {
+  flex-basis: 100%;
 }

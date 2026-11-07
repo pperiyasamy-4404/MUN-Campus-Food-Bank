@@ -58,14 +58,14 @@ export function WalkIn() {
   const { page } = load
 
   return (
-    <div className="narrow-wide">
+    <div>
       <CounterNav />
       <h1>Walk-in</h1>
       <p className="lead">A student without a booking. They take what's on the shelf that nobody booked.</p>
       {!page.is_open && <p className="notice">{page.why_not}</p>}
 
       {done ? (
-        <div className="code-box" role="status">
+        <div className="code-box narrow-wide" role="status">
           <h2>Walk-in recorded</h2>
           <p>
             {done.things} {done.things === 1 ? 'thing' : 'things'}
@@ -83,7 +83,7 @@ export function WalkIn() {
           </button>
         </div>
       ) : checked === null ? (
-        <form onSubmit={check} noValidate autoComplete="off">
+        <form className="narrow" onSubmit={check} noValidate autoComplete="off">
           <Problem message={problem} />
           <Field
             label="ID number on their MUN card"
@@ -98,7 +98,7 @@ export function WalkIn() {
           </button>
         </form>
       ) : !checked.can_serve ? (
-        <div className="refused-box" role="alert">
+        <div className="refused-box narrow-wide" role="alert">
           <h2>Can't be served today</h2>
           <p>{checked.why_not}</p>
           <button type="button" onClick={nextStudent}>

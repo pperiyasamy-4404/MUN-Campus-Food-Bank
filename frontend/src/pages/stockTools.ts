@@ -16,7 +16,7 @@ export async function change<T>(
   tools: StockTools,
   path: string,
   body: object = {},
-  method: 'POST' | 'PUT' | 'PATCH' = 'POST',
+  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'POST',
 ): Promise<Answer<T>> {
   const answer = await send<T>(path, body, method)
   if (!answer.ok && answer.status === 401) tools.loggedOut()
@@ -48,4 +48,41 @@ export function withVariety(page: StockPage, newer: StockVariety): StockPage {
       })),
     })),
   }
+}
+
+/**
+ * A photo from the phone or computer, made ready to send: shrunk to at most
+ * 800 pixels wide and saved as a JPEG. Phone photos are often 3 to 5 MB, and
+ * the server takes 2 MB at most. Drawing it again also drops the hidden details
+ * phones add to photos, like where it was taken.
+ */
+export async function shrinkPhoto(file: File): Promise<Blob> {
+  const picture = await createImageBitmap(file)
+  const scale = Math.min(1, 800 / picture.width)
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.round(picture.width * scale)
+  canvas.height = Math.round(picture.height * scale)
+  canvas.getContext('2d')?.drawImage(picture, 0, 0, canvas.width, canvas.height)
+  picture.close()
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Could not read that photo'))), 'image/jpeg', 0.82),
+  )
+}
+
+/** Send an item's new photo. The answer is a problem in words, or null if it worked. */
+export async function uploadPhoto(tools: StockTools, itemId: number, photo: Blob): Promise<string | null> {
+  let response: Response
+  try {
+    response = await fetch(`/api/items/${itemId}/photo`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'image/jpeg' },
+      body: photo,
+    })
+  } catch {
+    return "Couldn't reach the server. Check your internet connection and try again."
+  }
+  if (response.ok) return null
+  if (response.status === 401) tools.loggedOut()
+  const answer = (await response.json().catch(() => null)) as { detail?: unknown } | null
+  return typeof answer?.detail === 'string' ? answer.detail : 'The photo could not be saved. Please try again.'
 }

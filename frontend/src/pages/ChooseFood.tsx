@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from 'react'
 import { send, type BookingDetails, type Food, type HeldTime, type Limits, type Variety } from '../api.ts'
+import { FoodCard, FoodRow } from '../FoodCards.tsx'
 import { Problem } from '../forms.tsx'
 import { showDayAndClock } from '../time.ts'
 
@@ -122,42 +123,53 @@ export function ChooseFood({
       </p>
 
       {food.bookable.map((category) => (
-        <section className="card" key={category.name}>
-          <h2 className="in-card">{category.name}</h2>
-          {category.items.map((item) => (
-            <div className="item" key={item.name}>
-              <h3 className="item-name">{item.name}</h3>
-              <ul className="choose-list">
-                {item.varieties.map((variety) => {
-                  const line = { variety, item: item.name, itemKey: `${category.name}/${item.name}` }
-                  const have = chosen[variety.id] ?? 0
-                  const notMore = whyNotMore(line)
-                  return (
-                    <li key={variety.id} className={have > 0 ? 'choose-row chosen' : 'choose-row'}>
-                      <span className="choose-name">
-                        <span>{variety.name}</span>
-                        {variety.tags.map((tag) => (
-                          <span key={tag} className="tag">
-                            {tag}
-                          </span>
-                        ))}
-                      </span>
-                      <span className="choose-controls">
+        <section key={category.name} className="food-section">
+          <h2 className="food-section-title">{category.name}</h2>
+          <div className="food-grid">
+            {category.items.map((item) => {
+              const itemKey = `${category.name}/${item.name}`
+              const chosenOfItem = ofItem(itemKey)
+              return (
+                <FoodCard
+                  key={item.id}
+                  name={item.name}
+                  photoUrl={item.photo_url}
+                  highlighted={chosenOfItem > 0}
+                  badge={chosenOfItem > 0 ? `✓ ${chosenOfItem} chosen` : undefined}
+                >
+                  {item.varieties.map((variety) => {
+                    const line = { variety, item: item.name, itemKey }
+                    const have = chosen[variety.id] ?? 0
+                    const notMore = whyNotMore(line)
+                    return (
+                      <FoodRow
+                        key={variety.id}
+                        name={variety.name}
+                        tags={variety.tags}
+                        dim={have === 0 && notMore !== null}
+                        note={
+                          variety.stock === 0 ? (
+                            <span className="stock-out">Out of stock</span>
+                          ) : (
+                            <span className="stock-left">{variety.stock} left</span>
+                          )
+                        }
+                      >
                         {limits.max_per_item === 1 ? (
                           have > 0 ? (
-                            <button type="button" className="secondary" onClick={() => change(line, -1)}>
-                              ✓ Chosen · Remove
+                            <button type="button" className="chosen-button" onClick={() => change(line, -1)}>
+                              ✓ Added<span className="visually-hidden">. Remove {variety.name}</span>
                             </button>
-                          ) : notMore !== null ? (
+                          ) : variety.stock === 0 ? null : notMore !== null ? (
                             // A reason, not a button: it can't be pressed, so it shouldn't look like it can.
                             <span className="why-not">{notMore}</span>
                           ) : (
-                            <button type="button" onClick={() => change(line, 1)}>
-                              Choose
+                            <button type="button" className="add-button" onClick={() => change(line, 1)}>
+                              Add<span className="visually-hidden"> {variety.name}</span>
                             </button>
                           )
                         ) : (
-                          <>
+                          <span className="choose-controls">
                             <button type="button" className="secondary" disabled={have === 0} onClick={() => change(line, -1)} aria-label={`One less ${variety.name}`}>
                               −
                             </button>
@@ -165,15 +177,15 @@ export function ChooseFood({
                             <button type="button" className="secondary" disabled={notMore !== null} onClick={() => change(line, 1)} aria-label={`One more ${variety.name}`}>
                               +
                             </button>
-                          </>
+                          </span>
                         )}
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          ))}
+                      </FoodRow>
+                    )
+                  })}
+                </FoodCard>
+              )
+            })}
+          </div>
         </section>
       ))}
 

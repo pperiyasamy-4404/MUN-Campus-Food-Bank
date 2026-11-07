@@ -27,7 +27,9 @@ export type Variety = {
 }
 
 export type Item = {
+  id: number
   name: string
+  photo_url: string | null // one photo per item, shared by its varieties
   varieties: Variety[]
 }
 
@@ -173,6 +175,7 @@ export type StockItem = {
   id: number
   name: string
   is_extra: boolean
+  photo_url: string | null
   varieties: StockVariety[]
 }
 
@@ -309,6 +312,7 @@ export type ShelfFood = {
   variety: string
   item_id: number
   item: string
+  photo_url: string | null
   stock: number // left that nobody booked
 }
 

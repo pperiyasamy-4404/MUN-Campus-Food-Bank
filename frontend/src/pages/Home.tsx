@@ -16,16 +16,35 @@ export function Home() {
           volunteer at the counter.
         </p>
       )}
-      <h1>Pickup days and food</h1>
-      <p className="lead">
-        The pickup days, their times and the food, straight from the database. Students log in to book. All times
-        are Newfoundland time.
-      </p>
-      {account?.kind === 'student' && (
-        <p className="notice">
-          You're logged in. <Link to="/book">Book a pickup, or see your booking</Link>.
+      <section className="hero">
+        <h1>Campus Food Bank</h1>
+        <p>
+          Free food for MUN students. Book a pickup time, choose your food, and collect your bag at the counter. All
+          times are Newfoundland time.
         </p>
-      )}
+        <p className="actions">
+          {account === null && (
+            <>
+              <Link className="button" to="/login">
+                Log in to book
+              </Link>
+              <Link className="button ghost" to="/setup">
+                First time? Set up your account
+              </Link>
+            </>
+          )}
+          {account?.kind === 'student' && (
+            <Link className="button" to="/book">
+              Book a pickup, or see your booking
+            </Link>
+          )}
+          {account?.kind === 'staff' && (
+            <Link className="button" to="/counter">
+              Go to the counter
+            </Link>
+          )}
+        </p>
+      </section>
       <PickupDayList />
       <FoodList />
     </>

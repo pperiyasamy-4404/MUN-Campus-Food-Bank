@@ -2,7 +2,7 @@ import { useEffect, useId, useState, type FormEvent } from 'react'
 import type { StockItem, StockPage, StockVariety } from '../api.ts'
 import { useMe } from '../me.ts'
 import { showDate, showDayAndClock } from '../time.ts'
-import { AddFood, AddVariety, CategoriesAndTags, Rename, VarietyEditor } from './StockForms.tsx'
+import { AddFood, AddVariety, CategoriesAndTags, ItemPhotoEditor, Rename, VarietyEditor } from './StockForms.tsx'
 import { change, needsCounting, withVariety, type StockTools } from './stockTools.ts'
 
 // The staff stock page (I8, R2): count the shelf before booking opens, and add
@@ -148,9 +148,13 @@ function ItemBlock({
 }) {
   return (
     <div className="item">
-      <div className="item-header">
-        <h4>{item.name}</h4>
-        <Rename tools={tools} path={`/api/items/${item.id}`} current={item.name} />
+      <div className="item-header item-header-photo">
+        <ItemPhotoEditor tools={tools} item={item}>
+          <span className="item-title">
+            <h4>{item.name}</h4>
+            <Rename tools={tools} path={`/api/items/${item.id}`} current={item.name} />
+          </span>
+        </ItemPhotoEditor>
       </div>
       <ul className="stock-list">
         {item.varieties.filter(wanted).map((variety) => (
