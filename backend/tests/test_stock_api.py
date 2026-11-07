@@ -9,7 +9,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from sqlalchemy import select
 
-from app.models import Category, Tag, Variety
+from app.models import Category, Item, Tag, Variety
 from tests.helpers import MONDAY, add, log_in, make_day, make_staff, make_variety, stop_the_clock_at
 
 NOW = datetime(2026, 11, 8, 18, 0, tzinfo=UTC)  # Sunday 2:30 pm in St. John's
@@ -191,27 +191,10 @@ def test_a_name_needs_some_letters(client, db, sam, protein):
     }
 
 
-# ---------- the coordinator only ----------
+# ---------- categories, tags and names (any staff, decided 7 Nov) ----------
 
 
-@pytest.mark.parametrize(
-    "method, address",
-    [
-        ("POST", "/api/categories"),
-        ("POST", "/api/tags"),
-        ("PATCH", "/api/categories/1"),
-        ("PATCH", "/api/items/1"),
-        ("PATCH", "/api/varieties/1"),
-    ],
-)
-def test_only_the_coordinator_adds_categories_and_tags_and_fixes_names(client, db, sam, method, address):
-    response = client.request(method, address, json={"name": "Anything"})
-
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Only the coordinator can do this."}
-
-
-def test_the_coordinator_adds_a_category_and_a_tag(client, db, alex):
+def test_a_volunteer_adds_a_category_and_a_tag(client, db, sam):
     assert client.post("/api/categories", json={"name": "Snacks"}).status_code == 201
     assert client.post("/api/tags", json={"name": "Vegan"}).status_code == 201
 
@@ -219,6 +202,20 @@ def test_the_coordinator_adds_a_category_and_a_tag(client, db, alex):
     assert taken.status_code == 409
     assert taken.json() == {"detail": "There's already a tag called vegan."}
     assert db.scalar(select(Tag.name)) == "Vegan"
+
+
+def test_a_volunteer_fixes_names(client, db, sam):
+    oats = make_variety(db)
+    item = db.get(Item, oats.item_id)
+    category = db.get(Category, item.category_id)
+
+    assert client.patch(f"/api/varieties/{oats.id}", json={"name": "Quick oats"}).status_code == 204
+    assert client.patch(f"/api/items/{item.id}", json={"name": "Oats"}).status_code == 204
+    assert client.patch(f"/api/categories/{category.id}", json={"name": "Breakfast"}).status_code == 204
+
+    assert db.scalar(select(Variety.name).where(Variety.id == oats.id)) == "Quick oats"
+    assert db.scalar(select(Item.name).where(Item.id == item.id)) == "Oats"
+    assert db.scalar(select(Category.name).where(Category.id == category.id)) == "Breakfast"
 
 
 def test_the_coordinator_fixes_a_name(client, db, alex):

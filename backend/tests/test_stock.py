@@ -291,7 +291,7 @@ def test_hiding_and_showing_a_variety(db, pantry, slot):
     assert oats.active is True
 
 
-# ---------- the coordinator only (R3) ----------
+# ---------- categories, tags and names ----------
 
 
 def test_categories_and_tags_are_named_once(db, pantry):

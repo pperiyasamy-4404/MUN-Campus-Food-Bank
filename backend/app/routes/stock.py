@@ -13,7 +13,7 @@ from pydantic import AfterValidator, BaseModel
 from pydantic_core import PydanticCustomError
 from sqlalchemy import func, select
 
-from app.deps import DB, CurrentCoordinator, CurrentStaff, Now
+from app.deps import DB, CurrentStaff, Now
 from app.models import Category, Item, PickupDay, Staff, Tag, Variety, VarietyTag
 from app.services import stock
 from app.services.pickup_days import NEWFOUNDLAND, BookingStatus, booking_status
@@ -259,7 +259,7 @@ def show(variety_id: int, staff: CurrentStaff, db: DB) -> Response:
     return Response(status_code=204)
 
 
-# ---------- the coordinator only ----------
+# ---------- categories, tags and names (any staff, decided 7 Nov) ----------
 
 
 class NewName(BaseModel):
@@ -267,35 +267,35 @@ class NewName(BaseModel):
 
 
 @router.post("/categories", status_code=201)
-def add_category(details: NewName, coordinator: CurrentCoordinator, db: DB) -> Added:
+def add_category(details: NewName, staff: CurrentStaff, db: DB) -> Added:
     category = stock.add_category(db, details.name)
     db.commit()
     return Added(id=category.id)
 
 
 @router.post("/tags", status_code=201)
-def add_tag(details: NewName, coordinator: CurrentCoordinator, db: DB) -> Added:
+def add_tag(details: NewName, staff: CurrentStaff, db: DB) -> Added:
     tag = stock.add_tag(db, details.name)
     db.commit()
     return Added(id=tag.id)
 
 
 @router.patch("/categories/{row_id}", status_code=204)
-def rename_category(row_id: int, details: NewName, coordinator: CurrentCoordinator, db: DB) -> Response:
+def rename_category(row_id: int, details: NewName, staff: CurrentStaff, db: DB) -> Response:
     stock.rename(db, Category, row_id, details.name)
     db.commit()
     return Response(status_code=204)
 
 
 @router.patch("/items/{row_id}", status_code=204)
-def rename_item(row_id: int, details: NewName, coordinator: CurrentCoordinator, db: DB) -> Response:
+def rename_item(row_id: int, details: NewName, staff: CurrentStaff, db: DB) -> Response:
     stock.rename(db, Item, row_id, details.name)
     db.commit()
     return Response(status_code=204)
 
 
 @router.patch("/varieties/{row_id}", status_code=204)
-def rename_variety(row_id: int, details: NewName, coordinator: CurrentCoordinator, db: DB) -> Response:
+def rename_variety(row_id: int, details: NewName, staff: CurrentStaff, db: DB) -> Response:
     stock.rename(db, Variety, row_id, details.name)
     db.commit()
     return Response(status_code=204)

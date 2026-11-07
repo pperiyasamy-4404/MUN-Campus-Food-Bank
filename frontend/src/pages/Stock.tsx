@@ -2,17 +2,17 @@ import { useEffect, useId, useState, type FormEvent } from 'react'
 import type { StockItem, StockPage, StockVariety } from '../api.ts'
 import { useMe } from '../me.ts'
 import { showDate, showDayAndClock } from '../time.ts'
-import { AddFood, AddVariety, CoordinatorTools, Rename, VarietyEditor } from './StockForms.tsx'
+import { AddFood, AddVariety, CategoriesAndTags, Rename, VarietyEditor } from './StockForms.tsx'
 import { change, needsCounting, withVariety, type StockTools } from './stockTools.ts'
 
-// The staff stock page (I8, R2, R3): count the shelf before booking opens, and
-// add new food when donations come in.
+// The staff stock page (I8, R2): count the shelf before booking opens, and add
+// new food when donations come in. Every staff member can do everything here,
+// categories, tags and names too (decided 7 Nov).
 
 type Load = { state: 'loading' } | { state: 'failed' } | { state: 'ready'; page: StockPage }
 
 export function Stock() {
-  const { me, forget } = useMe()
-  const coordinator = me.state === 'ready' && me.me?.kind === 'staff' && me.me.role === 'coordinator'
+  const { forget } = useMe()
   const [load, setLoad] = useState<Load>({ state: 'loading' })
   const [version, setVersion] = useState(0)
   const [onlyToCount, setOnlyToCount] = useState(false)
@@ -40,7 +40,6 @@ export function Stock() {
   const { page } = load
   const tools: StockTools = {
     tags: page.tags,
-    coordinator,
     reload: () => setVersion((old) => old + 1),
     counted: (variety) =>
       setLoad((old) => (old.state === 'ready' ? { state: 'ready', page: withVariety(old.page, variety) } : old)),
@@ -78,7 +77,7 @@ export function Stock() {
 
       <Section title="Food to book" isExtra={false} page={page} tools={tools} onlyToCount={onlyToCount} />
       <Section title="Extras" isExtra page={page} tools={tools} onlyToCount={onlyToCount} />
-      {coordinator && <CoordinatorTools tools={tools} />}
+      <CategoriesAndTags tools={tools} />
     </div>
   )
 }

@@ -205,7 +205,7 @@ export function AddVariety({ tools, itemId, itemName }: { tools: StockTools; ite
   )
 }
 
-/** Tags, hide or show, and (for the coordinator) the name, of one variety. */
+/** Tags, hide or show, and the name, of one variety. */
 export function VarietyEditor({ tools, variety }: { tools: StockTools; variety: StockVariety }) {
   const [tagIds, setTagIds] = useState(variety.tag_ids)
   const [name, setName] = useState(variety.name)
@@ -238,31 +238,28 @@ export function VarietyEditor({ tools, variety }: { tools: StockTools; variety: 
           </button>
         )}
       </p>
-      {tools.coordinator && (
-        <form
-          className="rename"
-          onSubmit={(event) => {
-            event.preventDefault()
-            void run(`/api/varieties/${variety.id}`, { name }, 'PATCH')
-          }}
-        >
-          <Field label="Fix the name" value={name} onChange={setName} />
-          <button type="submit" className="secondary">
-            Save name
-          </button>
-        </form>
-      )}
+      <form
+        className="rename"
+        onSubmit={(event) => {
+          event.preventDefault()
+          void run(`/api/varieties/${variety.id}`, { name }, 'PATCH')
+        }}
+      >
+        <Field label="Fix the name" value={name} onChange={setName} />
+        <button type="submit" className="secondary">
+          Save name
+        </button>
+      </form>
     </div>
   )
 }
 
-/** The coordinator fixes the name of an item or a category. */
+/** Fix the name of an item or a category. Bookings show the new name, because they point to the row. */
 export function Rename({ tools, path, current }: { tools: StockTools; path: string; current: string }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(current)
   const [problem, setProblem] = useState<string | null>(null)
 
-  if (!tools.coordinator) return null
   if (!open) {
     return (
       <button type="button" className="link-button small" onClick={() => setOpen(true)}>
@@ -295,12 +292,12 @@ export function Rename({ tools, path, current }: { tools: StockTools; path: stri
   )
 }
 
-/** Only the coordinator adds categories and tags (R3), so the list stays tidy. */
-export function CoordinatorTools({ tools }: { tools: StockTools }) {
+/** New categories and tags. Any staff member can add them (decided 7 Nov). */
+export function CategoriesAndTags({ tools }: { tools: StockTools }) {
   return (
     <section className="card">
       <h2 className="in-card">Categories and tags</h2>
-      <p className="muted">Only you can add these, so the list stays tidy.</p>
+      <p className="muted">Check the list first, so there's only one of each.</p>
       <div className="two-forms">
         <AddName tools={tools} path="/api/categories" label="New category" example="like Snacks" />
         <AddName tools={tools} path="/api/tags" label="New tag" example="like Vegan" />

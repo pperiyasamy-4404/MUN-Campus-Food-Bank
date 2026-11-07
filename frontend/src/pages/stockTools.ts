@@ -3,7 +3,6 @@ import { send, type Answer, type StockPage, type StockVariety, type TagChoice } 
 /** What every part of the stock page needs from the page itself. */
 export type StockTools = {
   tags: TagChoice[]
-  coordinator: boolean
   /** Ask the server for the whole page again, after adding or changing food. */
   reload: () => void
   /** A saved count changes one row: put the server's answer in its place. */

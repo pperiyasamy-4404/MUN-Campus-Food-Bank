@@ -3,10 +3,9 @@
 Plain Python with a database session, like services/accounts.py. The routes in
 app/routes/stock.py commit.
 
-Who may do what (decided 6 Nov 2026):
-- any staff member: count the shelf, add an item or a variety, choose a
-  variety's tags, hide or show a variety (I8, R2)
-- the coordinator only: add a category or a tag, and fix a name (R3)
+Who may do what: any staff member, volunteers and the coordinator alike, can
+do everything here (I8, R2). On 6 Nov categories, tags and names were for the
+coordinator only. The user decided on 7 Nov that volunteers can do those too.
 """
 
 from dataclasses import dataclass
@@ -133,7 +132,7 @@ def show(db: Session, variety_id: int, shown: bool) -> None:
     _variety(db, variety_id).active = shown
 
 
-# ---------- the coordinator only (R3) ----------
+# ---------- categories, tags and names ----------
 
 
 def add_category(db: Session, name: str) -> Category:
