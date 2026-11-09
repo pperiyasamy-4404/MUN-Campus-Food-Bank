@@ -227,7 +227,7 @@ def _lock_student(db: Session, student_id: int) -> Student:
     )
 
 
-def _picked_up_on(student: Student, day: PickupDay) -> None:
+def count_pickup(student: Student, day: PickupDay) -> None:
     """The date the pickup gap counts from (F1). Kept on the account, so it covers
     walk-ins and outlives booking details deleted after the retention period (P7)."""
     if student.last_pickup_on is None or student.last_pickup_on < day.pickup_date:
@@ -324,7 +324,7 @@ def hand_over(
     booking.status = "picked_up"
     booking.picked_up_at = now
     booking.picked_up_by_staff_id = staff.id
-    _picked_up_on(student, day)
+    count_pickup(student, day)
     db.add(AuditLog(at=now, staff_id=staff.id, action="marked_picked_up", student_id=student.id, booking_id=booking.id))
     db.flush()
     return booking
@@ -470,7 +470,7 @@ def record_walk_in(
     _take_from_shelf(db, found, food, extras, walk_in=walk_in)
 
     # 6.
-    _picked_up_on(student, day)
+    count_pickup(student, day)
     db.add(AuditLog(at=now, staff_id=staff.id, action="recorded_walk_in", student_id=student.id))
     db.flush()
     next_pickup_on = booking_rules.next_pickup_allowed_on(db, student, settings)

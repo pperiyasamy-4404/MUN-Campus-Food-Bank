@@ -5,3 +5,6 @@ __pycache__/
 
 # Secrets and settings for one computer only
 .env
+
+# What the jobs script did on this computer
+jobs.log

@@ -8,6 +8,7 @@ from app.models.counter import CounterItem, WalkIn
 from app.models.days import PickupDay, PickupHours, Settings, Slot
 from app.models.food import Category, Item, ItemPhoto, Tag, Variety, VarietyTag
 from app.models.people import AuditLog, LoginFailure, LoginSession, SetupCode, Staff, Student
+from app.models.totals import WeeklyItemTotal, WeeklyTotal
 
 __all__ = [
     "AuditLog",
@@ -32,4 +33,6 @@ __all__ = [
     "Variety",
     "VarietyTag",
     "WalkIn",
+    "WeeklyItemTotal",
+    "WeeklyTotal",
 ]

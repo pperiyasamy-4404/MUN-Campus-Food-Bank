@@ -2,11 +2,15 @@ from datetime import date, datetime, time, timedelta
 from typing import Literal
 from zoneinfo import ZoneInfo
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import PickupDay, PickupHours, Settings, Slot
 
 NEWFOUNDLAND = ZoneInfo("America/St_Johns")
+
+# How far ahead the jobs script makes pickup days.
+DAYS_AHEAD = timedelta(days=14)
 
 BookingStatus = Literal["not_open_yet", "open", "booking_over", "day_closed"]
 
@@ -53,6 +57,27 @@ def make_pickup_day(db: Session, pickup_date: date) -> PickupDay:
         starts_at += slot_length
     db.flush()
     return day
+
+
+def make_days_ahead(db: Session, now: datetime) -> list[PickupDay]:
+    """Make the pickup days for the next two weeks that aren't made yet (S1).
+
+    From tomorrow, so a day is never made after its booking has opened. A day
+    already made is never touched, even if the coordinator closed it (S7).
+    Two weeks, so the coordinator can close a day ahead of time, and a change to
+    the settings reaches new days within two weeks.
+    """
+    today = now.astimezone(NEWFOUNDLAND).date()
+    weekdays = set(db.scalars(select(PickupHours.weekday)))
+    made_already = set(
+        db.scalars(select(PickupDay.pickup_date).where(PickupDay.pickup_date > today, PickupDay.pickup_date <= today + DAYS_AHEAD))
+    )
+    made = []
+    for ahead in range(1, DAYS_AHEAD.days + 1):
+        on = today + timedelta(days=ahead)
+        if on.isoweekday() in weekdays and on not in made_already:
+            made.append(make_pickup_day(db, on))
+    return made
 
 
 def booking_status(day: PickupDay, now: datetime) -> BookingStatus:

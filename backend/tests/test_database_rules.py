@@ -33,6 +33,8 @@ from app.models import (
     Variety,
     VarietyTag,
     WalkIn,
+    WeeklyItemTotal,
+    WeeklyTotal,
 )
 from app.sample_data import SAMPLE_SETTINGS
 from app.security.passwords import hash_password
@@ -686,3 +688,32 @@ def test_one_walk_in_per_student_per_day(db):
     add(db, WalkIn(student_id=student.id, pickup_day_id=day.id, served_at=NOW, served_by_staff_id=staff.id))
     with refused_by(db, "uq_walk_ins_student_id_pickup_day_id"):
         db.add(WalkIn(student_id=student.id, pickup_day_id=day.id, served_at=NOW, served_by_staff_id=staff.id))
+
+
+# ---------- weekly totals (P7) ----------
+
+
+def _week(**changes) -> WeeklyTotal:
+    counts = {"picked_up": 0, "walk_ins": 0, "no_shows": 0, "cancelled": 0}
+    return WeeklyTotal(**({"week_starts_on": MONDAY} | counts | changes))
+
+
+def test_a_week_starts_on_a_monday(db):
+    add(db, _week())
+    with refused_by(db, "ck_weekly_totals_week_starts_on_a_monday"):
+        db.add(_week(week_starts_on=MONDAY + timedelta(days=1)))
+
+
+@pytest.mark.parametrize("count", ["picked_up", "walk_ins", "no_shows", "cancelled"])
+def test_a_weeks_counts_are_never_negative(db, count):
+    with refused_by(db, f"ck_weekly_totals_{count}_not_negative"):
+        db.add(_week(**{count: -1}))
+
+
+def test_an_items_weekly_total_is_at_least_1_and_belongs_to_a_week(db):
+    item_id = make_variety(db).item_id
+    with refused_by(db, "fk_weekly_item_totals_week_starts_on"):
+        db.add(WeeklyItemTotal(week_starts_on=MONDAY, item_id=item_id, given_out=1))
+    add(db, _week())
+    with refused_by(db, "ck_weekly_item_totals_given_out_at_least_1"):
+        db.add(WeeklyItemTotal(week_starts_on=MONDAY, item_id=item_id, given_out=0))
