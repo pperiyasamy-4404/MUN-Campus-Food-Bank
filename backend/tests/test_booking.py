@@ -382,6 +382,8 @@ def world(engine):
             pickup_date=MONDAY + timedelta(days=900),
             booking_opens_at=OPEN - timedelta(hours=1),
             booking_closes_at=OPEN + timedelta(hours=18),
+            pickup_starts_at=OPEN + timedelta(hours=21),
+            pickup_ends_at=OPEN + timedelta(hours=23),
             no_show_at=OPEN + timedelta(hours=24),
         )
         db.add(day)

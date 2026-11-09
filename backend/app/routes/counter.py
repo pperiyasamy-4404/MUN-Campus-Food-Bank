@@ -50,6 +50,9 @@ class CounterPage(BaseModel):
     is_open: bool
     # Why not, in words, like "Today isn't a pickup day. The next one is Monday, November 9."
     why_not: str | None
+    # Walk-ins only during pickup hours (W3), like "Walk-ins are served from 3:30 p.m. to 5:30 p.m., ..."
+    walk_ins_open: bool
+    walk_ins_why_not: str | None
     limits: CounterLimits
     food: list[ShelfFood]
     # One of each extra item (E3).
@@ -61,6 +64,7 @@ def counter_page(staff: CurrentStaff, db: DB, now: Now) -> CounterPage:
     settings = food_bank_settings(db)
     day = counter.counter_day(db, now)
     why_not = counter.why_counter_closed(db, day, now)
+    walk_ins_why_not = counter.why_walk_ins_closed(db, day, now)
     shelf = counter.on_the_shelf(db)
     urls = photo_urls(db, list({line.item.id for line in shelf}))
 
@@ -78,6 +82,8 @@ def counter_page(staff: CurrentStaff, db: DB, now: Now) -> CounterPage:
         pickup_date=day.pickup_date if day else None,
         is_open=why_not is None,
         why_not=why_not,
+        walk_ins_open=walk_ins_why_not is None,
+        walk_ins_why_not=walk_ins_why_not,
         limits=CounterLimits(item_limit=settings.item_limit, max_per_item=settings.max_per_item),
         food=[out(line) for line in shelf if not line.item.is_extra],
         extras=[out(line) for line in shelf if line.item.is_extra],

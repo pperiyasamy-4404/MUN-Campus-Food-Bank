@@ -63,7 +63,8 @@ def make_student(db) -> Student:
 
 
 def make_day(db, on: date = MONDAY) -> PickupDay:
-    """A pickup day with sample times: opens 5 pm the day before, closes 12 pm, no-show 6 pm."""
+    """A pickup day with sample times: opens 5 pm the day before, closes 12 pm,
+    pickup 3:30 to 5:30 pm, no-show 6 pm."""
     opens = datetime.combine(on - timedelta(days=1), time(20, 30), tzinfo=UTC)
     return add(
         db,
@@ -71,6 +72,8 @@ def make_day(db, on: date = MONDAY) -> PickupDay:
             pickup_date=on,
             booking_opens_at=opens,
             booking_closes_at=opens + timedelta(hours=19),
+            pickup_starts_at=opens + timedelta(hours=22, minutes=30),
+            pickup_ends_at=opens + timedelta(hours=24, minutes=30),
             no_show_at=opens + timedelta(hours=25),
         ),
     )

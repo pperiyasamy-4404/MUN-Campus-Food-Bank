@@ -148,6 +148,8 @@ def test_a_count_and_a_booking_at_the_same_moment(engine):
                 pickup_date=MONDAY + timedelta(days=800),
                 booking_opens_at=NOW,
                 booking_closes_at=NOW + timedelta(hours=19),
+                pickup_starts_at=NOW + timedelta(hours=22),
+                pickup_ends_at=NOW + timedelta(hours=24),
                 no_show_at=NOW + timedelta(hours=25),
             )
             .returning(PickupDay.id)

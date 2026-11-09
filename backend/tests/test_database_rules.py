@@ -122,21 +122,37 @@ def test_each_weekday_appears_once(db):
         db.execute(insert(PickupHours).values(weekday=1, starts_at=time(9, 0), ends_at=time(10, 0)))
 
 
-def test_booking_opens_before_it_closes(db):
-    with refused_by(db, "ck_pickup_days_booking_opens_before_it_closes"):
-        db.add(PickupDay(pickup_date=MONDAY, booking_opens_at=NOW, booking_closes_at=NOW, no_show_at=NOW + timedelta(hours=6)))
+def a_day(**changes) -> PickupDay:
+    """A pickup day with its times in order, except the ones changed. Each change
+    below breaks exactly one rule, so the refusal can only come from that rule."""
+    times = {
+        "booking_opens_at": NOW,
+        "booking_closes_at": NOW + timedelta(hours=19),
+        "pickup_starts_at": NOW + timedelta(hours=22),
+        "pickup_ends_at": NOW + timedelta(hours=24),
+        "no_show_at": NOW + timedelta(hours=25),
+    }
+    return PickupDay(pickup_date=MONDAY, **(times | changes))
 
 
-def test_no_show_time_comes_after_booking_closes(db):
-    with refused_by(db, "ck_pickup_days_no_show_after_booking_closes"):
-        db.add(
-            PickupDay(
-                pickup_date=MONDAY,
-                booking_opens_at=NOW,
-                booking_closes_at=NOW + timedelta(hours=19),
-                no_show_at=NOW + timedelta(hours=18),
-            )
-        )
+def test_a_day_with_its_times_in_order_is_allowed(db):
+    add(db, a_day())
+
+
+@pytest.mark.parametrize(
+    "changes, rule",
+    [
+        ({"booking_closes_at": NOW}, "ck_pickup_days_booking_opens_before_it_closes"),
+        # Packing happens between booking closing and pickup starting (K1).
+        ({"pickup_starts_at": NOW + timedelta(hours=18)}, "ck_pickup_days_pickup_starts_after_booking_closes"),
+        ({"pickup_ends_at": NOW + timedelta(hours=22)}, "ck_pickup_days_pickup_ends_after_it_starts"),
+        # Otherwise the last slots would be no-shows before their time came.
+        ({"no_show_at": NOW + timedelta(hours=23)}, "ck_pickup_days_no_show_after_pickup_ends"),
+    ],
+)
+def test_a_days_times_come_in_order(db, changes, rule):
+    with refused_by(db, rule):
+        db.add(a_day(**changes))
 
 
 def test_one_pickup_day_per_date(db):
@@ -215,6 +231,8 @@ def test_two_bookings_for_the_last_place_at_the_same_moment(engine):
                 pickup_date=MONDAY + timedelta(days=700),
                 booking_opens_at=NOW,
                 booking_closes_at=NOW + timedelta(hours=19),
+                pickup_starts_at=NOW + timedelta(hours=22),
+                pickup_ends_at=NOW + timedelta(hours=24),
                 no_show_at=NOW + timedelta(hours=25),
             )
             .returning(PickupDay.id)

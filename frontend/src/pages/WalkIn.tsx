@@ -62,7 +62,7 @@ export function WalkIn() {
       <CounterNav />
       <h1>Walk-in</h1>
       <p className="lead">A student without a booking. They take what's on the shelf that nobody booked.</p>
-      {!page.is_open && <p className="notice">{page.why_not}</p>}
+      {!page.walk_ins_open && <p className="notice">{page.walk_ins_why_not}</p>}
 
       {done ? (
         <div className="code-box narrow-wide" role="status">
@@ -93,7 +93,7 @@ export function WalkIn() {
             error={fields.id_number}
           />
           <Field label="Type it again" inputMode="numeric" value={values.again} onChange={set('again')} error={fields.again} />
-          <button type="submit" disabled={sending || !page.is_open}>
+          <button type="submit" disabled={sending || !page.walk_ins_open}>
             {sending ? 'Checking...' : 'Check the card'}
           </button>
         </form>

@@ -69,6 +69,7 @@ def test_the_counter_page_lists_the_shelf(client, setup):
     page = client.get("/api/counter").json()
 
     assert (page["pickup_date"], page["is_open"], page["why_not"]) == ("2026-11-09", True, None)
+    assert (page["walk_ins_open"], page["walk_ins_why_not"]) == (True, None)
     assert page["limits"] == {"item_limit": 13, "max_per_item": 1}
     assert [line["variety"] for line in page["food"]] == ["Quick oats"]
     assert [(line["variety"], line["stock"]) for line in page["extras"]] == [("White bread", 3)]
@@ -80,6 +81,17 @@ def test_the_counter_page_says_when_it_opens(client, setup):
     page = client.get("/api/counter").json()
 
     assert (page["is_open"], page["why_not"]) == (False, "The counter opens when booking closes, at 12:00 p.m.")
+    assert (page["walk_ins_open"], page["walk_ins_why_not"]) == (False, page["why_not"])
+
+
+def test_the_counter_page_says_when_walk_ins_are_served(client, setup):
+    """Bags are handed over from 12 pm, walk-ins only during pickup hours (W3)."""
+    stop_the_clock_at(PACKING)
+
+    page = client.get("/api/counter").json()
+
+    assert (page["is_open"], page["walk_ins_open"]) == (True, False)
+    assert page["walk_ins_why_not"] == "Walk-ins are served from 3:30 p.m. to 5:30 p.m., during pickup hours."
 
 
 def test_handing_over_a_bag_from_start_to_end(client, setup):

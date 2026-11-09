@@ -595,6 +595,8 @@ def world(engine):
             pickup_date=MONDAY + timedelta(days=901),
             booking_opens_at=PACKING - timedelta(hours=20),
             booking_closes_at=PACKING - timedelta(hours=1),
+            pickup_starts_at=PACKING + timedelta(hours=3),
+            pickup_ends_at=PACKING + timedelta(hours=4),
             no_show_at=PACKING + timedelta(hours=5),
         )
         db.add_all([staff, category, day])

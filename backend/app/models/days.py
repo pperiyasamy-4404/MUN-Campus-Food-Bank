@@ -89,9 +89,10 @@ class PickupHours(Base):
 class PickupDay(Base):
     """One real pickup date, with its own booking times.
 
-    The times are worked out from the settings when the day is made, then kept
-    here. So the coordinator can move one day's times (S9) or close one day (S7),
-    and changing the settings never moves a day students can already see.
+    The times are worked out from the settings and the weekly pickup hours when
+    the day is made, then kept here. So the coordinator can move one day's times
+    (S9) or close one day (S7), and changing the settings never moves a day
+    students can already see.
     """
 
     __tablename__ = "pickup_days"
@@ -100,13 +101,20 @@ class PickupDay(Base):
     pickup_date: Mapped[date] = mapped_column(unique=True)
     booking_opens_at: Mapped[datetime]
     booking_closes_at: Mapped[datetime]
+    # Pickup hours, like 3:30 to 5:30 pm. Walk-ins are served only in these hours (W3).
+    pickup_starts_at: Mapped[datetime]
+    pickup_ends_at: Mapped[datetime]
     no_show_at: Mapped[datetime]
     closed_at: Mapped[datetime | None]
     closed_reason: Mapped[str | None]
 
     __table_args__ = (
         CheckConstraint("booking_opens_at < booking_closes_at", name="booking_opens_before_it_closes"),
-        CheckConstraint("booking_closes_at < no_show_at", name="no_show_after_booking_closes"),
+        # In order: booking closes, bags are packed (K1), pickup, then no-shows (B3).
+        # Together these also keep the no-show time after booking closes.
+        CheckConstraint("booking_closes_at <= pickup_starts_at", name="pickup_starts_after_booking_closes"),
+        CheckConstraint("pickup_starts_at < pickup_ends_at", name="pickup_ends_after_it_starts"),
+        CheckConstraint("pickup_ends_at <= no_show_at", name="no_show_after_pickup_ends"),
         # A closed day always says why, and a reason only goes with a closed day.
         CheckConstraint("(closed_at IS NULL) = (closed_reason IS NULL)", name="closed_has_a_reason"),
     )

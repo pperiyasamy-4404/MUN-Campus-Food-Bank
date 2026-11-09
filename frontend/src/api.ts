@@ -320,6 +320,9 @@ export type CounterPage = {
   pickup_date: string | null
   is_open: boolean
   why_not: string | null // like "The counter opens when booking closes, at 12:00 p.m."
+  // Walk-ins only during pickup hours (W3).
+  walk_ins_open: boolean
+  walk_ins_why_not: string | null // like "Walk-ins are served from 3:30 p.m. to 5:30 p.m., during pickup hours."
   limits: { item_limit: number; max_per_item: number }
   food: ShelfFood[]
   extras: ShelfFood[] // one of each extra item (E3)

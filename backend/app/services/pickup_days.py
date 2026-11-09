@@ -23,9 +23,9 @@ def newfoundland_moment(on: date, clock: time) -> datetime:
 def make_pickup_day(db: Session, pickup_date: date) -> PickupDay:
     """Make one pickup day and its slots, from the settings and the weekly pickup hours.
 
-    The day's booking times are worked out now and saved on the day, so later
-    changes to the settings don't move it (S5, S9). Slots are made only inside
-    that weekday's pickup hours (S1).
+    The day's booking times and pickup hours are worked out now and saved on the
+    day, so later changes to the settings or the weekly hours don't move it
+    (S5, S9). Slots are made only inside the pickup hours (S1).
     """
     settings = db.get(Settings, 1)
     if settings is None:
@@ -39,15 +39,16 @@ def make_pickup_day(db: Session, pickup_date: date) -> PickupDay:
         pickup_date=pickup_date,
         booking_opens_at=newfoundland_moment(opens_on, settings.booking_opens_time),
         booking_closes_at=newfoundland_moment(pickup_date, settings.booking_closes_time),
+        pickup_starts_at=newfoundland_moment(pickup_date, hours.starts_at),
+        pickup_ends_at=newfoundland_moment(pickup_date, hours.ends_at),
         no_show_at=newfoundland_moment(pickup_date, settings.no_show_time),
     )
     db.add(day)
     db.flush()
 
     slot_length = timedelta(minutes=settings.slot_minutes)
-    starts_at = newfoundland_moment(pickup_date, hours.starts_at)
-    pickup_ends_at = newfoundland_moment(pickup_date, hours.ends_at)
-    while starts_at + slot_length <= pickup_ends_at:
+    starts_at = day.pickup_starts_at
+    while starts_at + slot_length <= day.pickup_ends_at:
         db.add(Slot(pickup_day_id=day.id, starts_at=starts_at, capacity=settings.slot_capacity))
         starts_at += slot_length
     db.flush()

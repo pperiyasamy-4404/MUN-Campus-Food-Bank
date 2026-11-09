@@ -7,6 +7,7 @@ app/routes/counter.py commit.
 The counter is open on a pickup day from when booking closes (the bags are
 being packed) until the no-show time. Two lines run side by side (W3): booked
 bags are handed over by their code, and walk-ins are served from the shelf.
+Walk-ins only during pickup hours, like 3:30 to 5:30 pm (the user's answer, 9 Nov).
 
 Locks, in the same order everywhere: the student, then the slot, then the hold
 or booking, then the food from the lowest id up. Online booking takes the
@@ -90,9 +91,34 @@ def why_counter_closed(db: Session, day: PickupDay | None, now: datetime) -> str
     return None
 
 
+def why_walk_ins_closed(db: Session, day: PickupDay | None, now: datetime) -> str | None:
+    """Why walk-ins can't be served right now, in words. None if they can.
+
+    Only during the day's pickup hours (W3): from the moment pickup starts,
+    and over the moment it ends, like booking (S5).
+    """
+    reason = why_counter_closed(db, day, now)
+    if reason is not None:
+        return reason
+    hours = f"from {say_clock(day.pickup_starts_at)} to {say_clock(day.pickup_ends_at)}, during pickup hours."
+    if now < day.pickup_starts_at:
+        return f"Walk-ins are served {hours}"
+    if now >= day.pickup_ends_at:
+        return f"Walk-ins are over for today. They're served {hours}"
+    return None
+
+
 def _open_day(db: Session, now: datetime) -> PickupDay:
     day = counter_day(db, now)
     reason = why_counter_closed(db, day, now)
+    if reason is not None:
+        raise Problem(reason)
+    return day
+
+
+def _open_for_walk_ins(db: Session, now: datetime) -> PickupDay:
+    day = counter_day(db, now)
+    reason = why_walk_ins_closed(db, day, now)
     if reason is not None:
         raise Problem(reason)
     return day
@@ -343,7 +369,7 @@ def _why_not_walk_in(
 def check_walk_in(db: Session, id_number: str, now: datetime) -> WalkInCheck:
     """Can this card be served as a walk-in now? Saves nothing."""
     settings = food_bank_settings(db)
-    day = _open_day(db, now)
+    day = _open_for_walk_ins(db, now)
     student = db.scalar(select(Student).where(Student.id_hash == id_hash(id_number)))
     if student is None:
         return WalkInCheck(can_serve=True, why_not=None, new_account=True)
@@ -382,9 +408,11 @@ def record_walk_in(
     5. Lock all the food, lowest id first: the cancelled booking's goes back,
        then the walk-in's comes off.
     6. Record the walk-in. The pickup gap counts from today (F1).
+
+    Only during pickup hours (W3).
     """
     settings = food_bank_settings(db)
-    day = _open_day(db, now)
+    day = _open_for_walk_ins(db, now)
 
     # 1.
     hashed = id_hash(id_number)

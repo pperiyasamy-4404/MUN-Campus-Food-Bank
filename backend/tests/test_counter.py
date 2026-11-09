@@ -4,11 +4,12 @@ Handing over a booked bag (P5, B2, B3, U6, E3), walk-ins (W1, W4), and two
 "at the same moment" tests. The web side is in test_counter_api.py.
 
 The pickup day is Monday 9 November 2026. With the sample settings booking
-closes at 12 pm and no-shows are at 6 pm, St. John's time (UTC-3:30 in November).
+closes at 12 pm, pickup is 3:30 to 5:30 pm and no-shows are at 6 pm, St. John's
+time (UTC-3:30 in November).
 """
 
 import threading
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 
 import pytest
 from sqlalchemy import delete, func, select
@@ -23,6 +24,7 @@ from app.models import (
     Hold,
     Item,
     PickupDay,
+    PickupHours,
     Settings,
     Slot,
     Staff,
@@ -52,8 +54,12 @@ from tests.helpers import (
 OPEN = datetime(2026, 11, 8, 21, 0, tzinfo=UTC)  # Sunday 5:30 pm: booking for Monday is open
 MORNING = datetime(2026, 11, 9, 13, 0, tzinfo=UTC)  # Monday 9:30 am
 PACKING = datetime(2026, 11, 9, 16, 0, tzinfo=UTC)  # Monday 12:30 pm
+PICKUP_STARTS = datetime(2026, 11, 9, 19, 0, tzinfo=UTC)  # Monday 3:30 pm
 COUNTER = datetime(2026, 11, 9, 19, 10, tzinfo=UTC)  # Monday 3:40 pm
+PICKUP_ENDS = datetime(2026, 11, 9, 21, 0, tzinfo=UTC)  # Monday 5:30 pm
+LATE = datetime(2026, 11, 9, 21, 15, tzinfo=UTC)  # Monday 5:45 pm
 NO_SHOW = datetime(2026, 11, 9, 21, 30, tzinfo=UTC)  # Monday 6:00 pm
+A_MOMENT = timedelta(microseconds=1)
 TUESDAY = datetime(2026, 11, 10, 16, 0, tzinfo=UTC)  # not a pickup day
 
 
@@ -157,6 +163,51 @@ def test_a_closed_day_has_no_counter(db, monday):
     problem = refused(db, Problem, lambda: counter.check_walk_in(db, ID_NUMBER, COUNTER))
 
     assert problem.message == "Monday, November 9 is closed: Snow day"
+
+
+@pytest.mark.parametrize(
+    "now, message",
+    [
+        (PACKING, "Walk-ins are served from 3:30 p.m. to 5:30 p.m., during pickup hours."),
+        (LATE, "Walk-ins are over for today. They're served from 3:30 p.m. to 5:30 p.m., during pickup hours."),
+        (NO_SHOW, "Pickup for Monday, November 9 is over."),
+    ],
+)
+def test_walk_ins_are_served_only_during_pickup_hours(db, monday, food, sam, now, message):
+    checked = refused(db, Problem, lambda: counter.check_walk_in(db, ID_NUMBER, now))
+    recorded = refused(
+        db, Problem, lambda: counter.record_walk_in(db, ID_NUMBER, [Choice(food["rice"].id)], [], False, sam, now)
+    )
+
+    assert checked.message == recorded.message == message
+    assert db.scalar(select(func.count()).select_from(WalkIn)) == 0
+
+
+@pytest.mark.parametrize(
+    "now, served",
+    [(PICKUP_STARTS - A_MOMENT, False), (PICKUP_STARTS, True), (PICKUP_ENDS - A_MOMENT, True), (PICKUP_ENDS, False)],
+)
+def test_walk_ins_start_the_moment_pickup_starts_and_stop_the_moment_it_ends(db, monday, now, served):
+    assert (counter.why_walk_ins_closed(db, monday, now) is None) == served
+
+
+def test_walk_in_hours_are_the_days_own(db, monday, food, sam):
+    """Changing the weekly pickup hours doesn't move a day that's already made."""
+    db.get(PickupHours, 1).starts_at = time(15, 0)
+    db.flush()
+
+    problem = refused(db, Problem, lambda: counter.check_walk_in(db, ID_NUMBER, PICKUP_STARTS - timedelta(minutes=15)))
+
+    assert problem.message == "Walk-ins are served from 3:30 p.m. to 5:30 p.m., during pickup hours."
+
+
+def test_a_late_student_still_gets_their_bag_after_walk_ins_end(db, monday, food, sam):
+    """Only walk-ins stop at 5:30. A booked bag waits for its student until the no-show time."""
+    bag = packed(db, monday, card_holder(db), food, "quick oats")
+
+    counter.hand_over(db, bag.code, ID_NUMBER, [], [], sam, LATE)
+
+    assert bag.status == "picked_up"
 
 
 # ---------- handing over a booked bag (P5, B2, B3) ----------
@@ -426,12 +477,16 @@ def world(engine):
             pickup_date=FAR_DAY,
             booking_opens_at=FAR_NOW - timedelta(hours=26),
             booking_closes_at=FAR_NOW - timedelta(hours=3),
+            pickup_starts_at=FAR_NOW - timedelta(hours=1),
+            pickup_ends_at=FAR_NOW + timedelta(hours=1),
             no_show_at=FAR_NOW + timedelta(hours=2),
         )
         later = PickupDay(
             pickup_date=FAR_DAY + timedelta(days=3),
             booking_opens_at=FAR_NOW - timedelta(hours=1),
             booking_closes_at=FAR_NOW + timedelta(days=3),
+            pickup_starts_at=FAR_NOW + timedelta(days=3, hours=3),
+            pickup_ends_at=FAR_NOW + timedelta(days=3, hours=5),
             no_show_at=FAR_NOW + timedelta(days=3, hours=6),
         )
         db.add_all([staff, category, today, later])

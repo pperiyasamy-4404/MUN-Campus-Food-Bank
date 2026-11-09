@@ -3,7 +3,7 @@ from datetime import UTC, date, datetime, time, timedelta
 import pytest
 from sqlalchemy import select
 
-from app.models import Settings, Slot
+from app.models import PickupHours, Settings, Slot
 from app.services.pickup_days import NEWFOUNDLAND, booking_status, make_pickup_day
 from tests.helpers import make_day
 
@@ -24,6 +24,8 @@ def test_a_monday_in_november(db_with_sample_week):
 
     assert day.booking_opens_at == utc(2026, 11, 8, 20, 30)  # Sunday 5 pm
     assert day.booking_closes_at == utc(2026, 11, 9, 15, 30)  # Monday 12 pm
+    assert day.pickup_starts_at == utc(2026, 11, 9, 19, 0)  # Monday 3:30 pm
+    assert day.pickup_ends_at == utc(2026, 11, 9, 21, 0)  # Monday 5:30 pm
     assert day.no_show_at == utc(2026, 11, 9, 21, 30)  # Monday 6 pm
 
 
@@ -43,6 +45,7 @@ def test_a_monday_in_summer(db_with_sample_week):
     """In summer Newfoundland is UTC-2:30, so 5 pm is 19:30 UTC."""
     day = make_pickup_day(db_with_sample_week, date(2026, 7, 6))
     assert day.booking_opens_at == utc(2026, 7, 5, 19, 30)
+    assert day.pickup_starts_at == utc(2026, 7, 6, 18, 0)  # 3:30 pm
 
 
 def test_booking_opens_on_the_day_the_clocks_go_back(db_with_sample_week):
@@ -68,9 +71,11 @@ def test_changing_the_settings_does_not_move_a_day_already_made(db_with_sample_w
     db = db_with_sample_week
     day = make_pickup_day(db, date(2026, 11, 9))
     db.get(Settings, 1).booking_opens_time = time(18, 0)
+    db.get(PickupHours, 1).starts_at = time(15, 0)
     db.flush()
     db.refresh(day)
     assert day.booking_opens_at == utc(2026, 11, 8, 20, 30)
+    assert day.pickup_starts_at == utc(2026, 11, 9, 19, 0)
 
 
 # Booking opens and closes on the dot (S5). make_day uses the sample times:
