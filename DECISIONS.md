@@ -589,3 +589,28 @@ They're copied from the weekly hours when the day is made, like the day's bookin
 
 **The database keeps a day's times in order: booking closes, pickup starts, pickup ends, no-shows.**
 Three new rules. Booking must close before pickup starts, because bags are packed in between (K1). No-shows come after pickup ends, otherwise the last slots would be no-shows before their time came. The old rule "no-show after booking closes" follows from the new three, so it could never be the only rule broken, and it was dropped. For step 9: the coordinator's settings page has to check these too. If the settings and the weekly hours don't fit together, making a new day is refused.
+
+**Step 8, the jobs: one script, every 15 minutes, that does whatever is due.** (Explained in jobs.html.)
+`backend/app/jobs.py`, run with `python -m app.jobs`, or by Windows Task Scheduler through `backend/run_jobs.cmd`. In order: make pickup days, no-shows, delete old booking details after saving their totals, delete the old activity log, delete quiet accounts, tidy up. Each job looks at what's due now, not at when it last ran, so a missed run is caught up by the next one and a second run does nothing. Only one run at a time, kept by a PostgreSQL advisory lock. Each no-show, each day's deletion and each account deletion is its own short transaction, so nobody booking waits long. A failing job doesn't stop the others, and the script then ends with an error. It prints only numbers, and a database error is printed without its detail lines, which can show a row's values (P10).
+
+**No-shows give back what was really in the bag.**
+A bag never packed gives back what was booked. A packed bag gives back the booked food that was on the shelf plus the substitutes that went in. The no-show time saved is the day's, even if the job runs late. A closed day has no no-shows (B3 updated): closing a day will cancel its bookings in step 9. The job locks the student, then the booking, then the food, like the counter. A test runs Hand over at 5:59 against the job at 6:00 on two connections. With the booking lock taken out, the job tried to make a picked-up bag a no-show and the test failed.
+
+**B6 fixes are their own page: Counter → Fix a pickup.**
+It lists the days that are over and still have bags on record, with each day's no-shows and picked-up bags. Fixes start at the no-show time (B6 updated). To picked up: the bag's food comes off the stock count again (stopping at 0), the pickup gap counts from that day, and it's recorded as picked up by whoever fixed it, at the time of the fix. A bag never packed can't be fixed to picked up. To no-show: the bag's food goes back, and so does anything given with it at the counter, whose rows are deleted because it didn't happen. The pickup gap then counts from the last real pickup still on record. Both are logged (`fixed_no_show_to_picked_up`, `fixed_picked_up_to_no_show`). The page says when booking opens for the next pickup day, the time to fix by. Found in the browser check: after a fix, the "Are you sure?" box stayed open and asked the opposite question. Fixed.
+
+**After the retention period, a day's totals are saved, then its details deleted, in one transaction (P7 updated).**
+Two new tables, `weekly_totals` (picked up, walk-ins, no-shows, cancelled) and `weekly_item_totals` (how many of each item went out), by week starting on Monday. Why save them just before deleting, not every evening: until then they can be worked out from the details, and a B6 fix changes them by itself. Each day is either in the details or in the totals, never both, so step 9 can add the two together. Why by week: the coordinator sees weeks (P12). Why by item, not variety: what a food bank orders by. The day's row is locked first, so two runs can't count a day twice. Deleted: bookings with their food, substitutes and counter food, and walk-ins with theirs. Kept: the pickup day and its slots, which say nothing about anyone. Details are deleted once 90 days have passed in St. John's: Monday 9 November 2026's on Monday 8 February 2027. The activity log goes after the same 90 days (choice G).
+
+**P13: an account with no pickup for a year is deleted, with its logins and setup codes (P13 updated).**
+A year is 365 days, counted from the last pickup, or from when the account was made (in Newfoundland time) if it never had one. Kept while it has a booking or walk-in on record, or a setup code that hasn't run out: someone is using it. Each account is locked and checked again just before it's deleted, so a student pressing Book at that moment keeps their account. Log lines about them stay until the log's own 90 days, without saying who.
+
+**Tidying up deletes what ran out:** logins, setup codes, wrong tries older than the 15-minute window, and holds once their pickup day is over (not as soon as they run out, so a student is still told "your time ran out").
+
+**Pickup days are made two weeks ahead, from tomorrow.** A day already made is never touched, even a closed one, and today is never made because its booking would already have opened. Why two weeks: settings changes reach new days within two weeks, and the coordinator can close a day up to two weeks ahead. The first run on the working database made Thursday 19 and Monday 23 November.
+
+**A known limit, listed in CONSTRAINTS.md:** a fix to no-show sets the pickup gap from the last pickup still on record. If the only earlier pickup is older than 90 days, the year rule counts from when the account was made, so the account can be deleted early. Rare.
+
+**Open questions for the user:**
+- Run the jobs every 15 minutes on the laptop with Windows Task Scheduler, against the working database?
+- Two weeks ahead for pickup days, as built?

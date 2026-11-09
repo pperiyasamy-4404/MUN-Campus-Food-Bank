@@ -19,13 +19,13 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 - **P4** Volunteers never see the ID number or its hash. They see a booking code and the items.
 - **P5** Booking online doesn't prove eligibility. At pickup, the volunteer types the number from the student's MUN card and the system checks that it matches the booking.
 - **P6** To book, view or cancel, the student logs in with their ID number and password.
-- **P7** Booking details are deleted after the retention period. Only totals are kept, such as pickups per week and items given out.
+- **P7** Booking details are deleted after the retention period. Only totals are kept, such as pickups per week and items given out. Each day's totals are saved just before its details are deleted.
 - **P8** Passwords are stored only as a hash, never as text. The setup page asks students not to reuse their MUN password.
 - **P9** Wrong passwords are limited per ID number, so nobody can guess a password by trying many. It slows tries down instead of locking the account, so nobody can lock a student out on purpose.
 - **P10** The ID number never appears in web addresses, logs or error messages. A test checks this.
 - **P11** The secret key is backed up somewhere safe, outside the database. Without it, no card can be matched to an account.
 - **P12** The coordinator sees totals by week, and any number under 5 shows as "fewer than 5".
-- **P13** Accounts with no pickup for a year are deleted.
+- **P13** Accounts with no pickup for a year are deleted. An account that never had a pickup counts from when it was made. An account is kept while it has a booking or walk-in on record, or a setup code that hasn't run out.
 
 ### How often
 
@@ -86,9 +86,9 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 
 - **B1** A booking goes booked → packed → picked up, or ends as cancelled or no-show.
 - **B2** Only these moves are allowed: booked → packed, packed → booked (a volunteer undoing Packed on the wrong bag, before it's handed over, logged), packed → picked up, booked or packed → cancelled, booked or packed → no-show, and a fix between no-show and picked up (B6). For example, a cancelled booking can't be marked picked up.
-- **B3** Volunteers mark a booking picked up when they hand over the bag. Only a volunteer's click counts: students can't mark their own pickup. A booking that isn't picked up by the no-show time becomes a no-show. The system does this by itself.
+- **B3** Volunteers mark a booking picked up when they hand over the bag. Only a volunteer's click counts: students can't mark their own pickup. A booking that isn't picked up by the no-show time becomes a no-show. The system does this by itself. A closed day has no no-shows.
 - **B4** Clicking "Book" twice creates only one booking.
-- **B6** A volunteer can fix a mistake afterwards: change a no-show to picked up, or back. Every fix is logged with who made it. Fixes should be made before the next booking window opens, so the pickup gap and the stock count are right in time.
+- **B6** A volunteer can fix a mistake afterwards: change a no-show to picked up, or back. Every fix is logged with who made it. Fixes should be made before the next booking window opens, so the pickup gap and the stock count are right in time. Fixes start once the day is over, at the no-show time. A bag that was never packed can't be fixed to picked up.
 
 ### Roles
 
@@ -134,6 +134,7 @@ Problems we know about and accept for now.
 - **Internet down at the counter.** Volunteers can't check cards or the pickup gap. We'll plan for this later.
 - **First visit in person.** A new student can't book online until they've been to the counter for an account. They can take food as a walk-in on that visit.
 - **A stranger guessing can delay a reset on a new phone.** If someone keeps guessing a student's password, the student's usual phone still gets in. A phone that has never logged in to the account shares the stranger's wrong-try count, so it may wait up to 15 minutes to use a new setup code. It needs someone who knows the ID number and keeps guessing.
+- **A fix to no-show can shorten the year rule.** Fixing a bag to no-show sets the pickup gap from the last pickup still on record. If the only earlier pickup is older than the retention period, its record is gone, and the year rule (P13) counts from when the account was made. Rare: the student would get a new account at the counter.
 
 ## Before going live
 

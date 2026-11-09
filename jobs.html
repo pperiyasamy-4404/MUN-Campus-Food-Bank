@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Food Bank: the jobs, explained</title>
+<style>
+  :root {
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc;
+    --blue: #2563eb; --blue-bg: #dbeafe;
+    --green: #059669; --green-bg: #d1fae5;
+    --amber: #b45309; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 980px; margin: 0 auto; padding: 36px 20px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 .num { color: var(--blue); margin-right: 8px; }
+  h3 { font-size: 1.15rem; margin: 30px 0 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--blue); }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
+  .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; background: #fff; font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+  .why { border-left: 4px solid var(--blue); background: #eff6ff; padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .why p { margin: 4px 0; }
+  .ask { background: var(--amber-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .ask p { margin: 4px 0; }
+  .limit { background: var(--red-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .limit p { margin: 4px 0; }
+  pre.code { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 18px; font: 14px/1.55 ui-monospace, Consolas, monospace; overflow-x: auto; margin: 12px 0; }
+  pre .c { color: #94a3b8; }
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; margin: 18px 0; }
+  .diagram svg { display: block; width: 100%; height: auto; }
+  .toc { columns: 2; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 20px 14px 40px; }
+  @media (max-width: 760px) { .toc { columns: 1; } }
+  .steps { counter-reset: step; list-style: none; padding: 0; }
+  .steps li { counter-increment: step; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px 8px 46px; margin: 6px 0; position: relative; }
+  .steps li::before { content: counter(step); position: absolute; left: 12px; top: 8px; width: 24px; height: 24px; border-radius: 50%; background: var(--blue); color: #fff; font-weight: 700; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<main>
+<p class="eyebrow">Campus Food Bank · Step 8, the jobs · 9 November 2026</p>
+<h1>Things that happen by themselves</h1>
+<p class="lead">Some things must happen even when nobody clicks anything. At 6 pm, a bag nobody collected becomes a no-show and its food goes back on the shelf. After 90 days, booking details are deleted and only totals are kept. An account with no pickup for a year is deleted. A small script does all of this every 15 minutes. And when a volunteer forgets to press Hand over, a new page lets them fix it.</p>
+
+<ol class="toc">
+  <li><a href="#timeline">A bag's life after pickup day</a></li>
+  <li><a href="#script">The jobs script</a></li>
+  <li><a href="#noshows">No-shows at 6 pm</a></li>
+  <li><a href="#fixes">Fixing a pickup marked wrong</a></li>
+  <li><a href="#totals">After 90 days: totals, then delete</a></li>
+  <li><a href="#accounts">Accounts with no pickup for a year</a></li>
+  <li><a href="#tidy">Tidying up, and making days ahead</a></li>
+  <li><a href="#tables">What the database remembers</a></li>
+  <li><a href="#addresses">The addresses and pages</a></li>
+  <li><a href="#tests">The tests</a></li>
+  <li><a href="#ask">Two questions for you</a></li>
+  <li><a href="#run">How to try it</a></li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="timeline"><span class="num">1</span>A bag's life after pickup day</h2>
+<div class="diagram">
+<svg viewBox="0 0 940 250" role="img" aria-label="Timeline: 6 pm no-shows; fixes until the next booking window; 90 days later totals are saved and details deleted; a year with no pickup deletes the account.">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+  </defs>
+  <g font-family="system-ui, Segoe UI, sans-serif" font-size="14" text-anchor="middle">
+    <line x1="30" y1="120" x2="910" y2="120" stroke="#64748b" stroke-width="3" marker-end="url(#a)"/>
+    <circle cx="90" cy="120" r="9" fill="#2563eb"/>
+    <text x="90" y="98" font-weight="700">Mon 6 pm</text>
+    <rect x="20" y="140" width="150" height="80" rx="10" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="95" y="166" font-weight="700">No-shows</text>
+    <text x="95" y="186" font-size="12">food back on the shelf</text>
+    <text x="95" y="203" font-size="12">B3, I6</text>
+    <circle cx="300" cy="120" r="9" fill="#b45309"/>
+    <text x="300" y="98" font-weight="700">Until Wed 5 pm</text>
+    <rect x="215" y="140" width="170" height="80" rx="10" fill="#fef3c7" stroke="#b45309"/>
+    <text x="300" y="166" font-weight="700">Fix mistakes</text>
+    <text x="300" y="186" font-size="12">no-show ↔ picked up</text>
+    <text x="300" y="203" font-size="12">B6, logged</text>
+    <circle cx="560" cy="120" r="9" fill="#059669"/>
+    <text x="560" y="98" font-weight="700">Mon 8 Feb (90 days)</text>
+    <rect x="470" y="140" width="180" height="80" rx="10" fill="#d1fae5" stroke="#059669"/>
+    <text x="560" y="166" font-weight="700">Totals saved,</text>
+    <text x="560" y="186" font-weight="700">details deleted</text>
+    <text x="560" y="203" font-size="12">P7</text>
+    <circle cx="800" cy="120" r="9" fill="#b91c1c"/>
+    <text x="800" y="98" font-weight="700">A year, no pickup</text>
+    <rect x="715" y="140" width="170" height="80" rx="10" fill="#fee2e2" stroke="#b91c1c"/>
+    <text x="800" y="166" font-weight="700">Account deleted</text>
+    <text x="800" y="186" font-size="12">logins and codes too</text>
+    <text x="800" y="203" font-size="12">P13</text>
+    <text x="470" y="40" font-size="13" fill="#475569">A pickup on Monday 9 November 2026, with the sample settings.</text>
+  </g>
+</svg>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="script"><span class="num">2</span>The jobs script</h2>
+<p>One small program, <code>backend/app/jobs.py</code>. It runs every 15 minutes, does whatever is due, and stops. On a laptop, Windows Task Scheduler can start it, through <code>backend/run_jobs.cmd</code>. On a real server, the server's own scheduler does.</p>
+<ol class="steps">
+  <li>Make the pickup days for the next two weeks.</li>
+  <li>No-shows: bookings not picked up by 6 pm.</li>
+  <li>Booking details older than 90 days: save their totals, then delete them.</li>
+  <li>The activity log older than 90 days.</li>
+  <li>Accounts with no pickup for a year. This comes after 3, so old details can't keep an account alive.</li>
+  <li>Tidy up: logins, setup codes, wrong tries and holds that ran out.</li>
+</ol>
+<p>What it prints each time, only numbers (P10):</p>
+<pre class="code">Jobs, Monday, November 9 at 6:15 p.m.:
+  2 no-shows. Their food is back on the shelf.</pre>
+
+<div class="why">
+  <p><b>It looks at what's due now, not at when it last ran.</b> Example: the laptop was off from 5 pm to 9 pm. The 9 pm run finds Monday's bags still "packed" after 6 pm, and makes them no-shows then. Nothing is missed, and a second run straight after finds nothing to do.</p>
+  <p><b>One run at a time.</b> If a run is still going when the next one starts, the new one does nothing. A PostgreSQL "advisory lock" (a named lock that isn't on any row) makes sure.</p>
+  <p><b>Small transactions.</b> Each no-show, each day's deletion and each account is saved on its own. So a student booking, or a volunteer counting the shelf, never waits long. If one piece fails, the others still happen, and the script ends with an error so the scheduler shows it.</p>
+  <p><b>Why not a timer inside the web server?</b> It would only run while the server runs, and a restart would forget what was waiting. <b>Why not a job queue like Celery?</b> It needs another service running (a message broker). For a few small jobs every 15 minutes, a plain script is simpler. (The same choice as in <a href="tech-and-stack.html#jobs">tech-and-stack.html, part 12</a>.)</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="noshows"><span class="num">3</span>No-shows at 6 pm</h2>
+<p>A booking still "booked" or "packed" at the no-show time becomes a no-show <span class="rule">B3</span>. Its food goes back on the shelf, so others can book it <span class="rule">I6</span>. What goes back is what was <b>really in the bag</b>:</p>
+<div class="table-wrap">
+<table>
+  <tr><th>The bag</th><th>What goes back on the stock count</th></tr>
+  <tr><td>Never packed. Booked: quick oats, sunflower oil. Substitute: lentils.</td><td>Quick oats and sunflower oil. Not the lentils: substitutes are only taken from stock when they go in a bag <span class="rule">U3</span>.</td></tr>
+  <tr><td>Packed. The oil wasn't on the shelf, so lentils went in instead.</td><td>Quick oats and lentils. Not the oil: it never went in the bag.</td></tr>
+</table>
+</div>
+<ul>
+  <li>The no-show time saved is the day's (6 pm), even if the job runs at 9 pm.</li>
+  <li>A day the coordinator closed has no no-shows: nobody is a no-show on a day the food bank was closed. Closing a day will cancel its bookings (step 9).</li>
+  <li>Walk-ins stop at 5:30, but a booked bag waits for its student until 6 pm.</li>
+</ul>
+<h3>Hand over at 5:59, and the job at 6:00</h3>
+<p>A volunteer presses Hand over one second before 6 pm, just as the job starts. Both want the same bag. The job takes the same locks as the counter, in the same order: the student, then the booking, then the food. So it waits until the hand-over is saved, then reads the bag again, sees "picked up", and leaves it alone.</p>
+<p>A test runs exactly this on two database connections. With the lock taken out, the job tried to mark a picked-up bag as a no-show, and the test failed.</p>
+
+<!-- ============================================================ -->
+<h2 id="fixes"><span class="num">4</span>Fixing a pickup marked wrong</h2>
+<p>Volunteers are busy, and mistakes happen <span class="rule">B6</span>. A new page, <b>Counter → Fix a pickup</b>, lists the bags of pickup days that are over: who picked up, and who was a no-show.</p>
+<div class="table-wrap">
+<table>
+  <tr><th>The mistake</th><th>The fix</th><th>What changes</th></tr>
+  <tr>
+    <td>Sam handed over bag K3P at 5:50 but forgot to press Hand over. At 6 pm it became a no-show.</td>
+    <td><b>They did take it</b> → picked up</td>
+    <td>The bag's food comes off the stock count again. The 28 days count from that pickup day. Recorded as picked up by whoever fixed it, at the time of the fix.</td>
+  </tr>
+  <tr>
+    <td>Bag M3T was marked picked up, but the student never took it.</td>
+    <td><b>They didn't take it</b> → no-show</td>
+    <td>The bag's food goes back on the stock count, and so does anything given with it at the counter (the bread). The 28 days count from their last real pickup still on record, if any.</td>
+  </tr>
+</table>
+</div>
+<ul>
+  <li>The page asks first, and every fix is logged with who made it. The log also keeps who pressed Hand over.</li>
+  <li>Fixes start once the day is over, at 6 pm. Before that, a bag that wasn't handed over isn't a no-show yet.</li>
+  <li>A bag that was never packed can't be fixed to picked up: "Bag T5J was never packed, so it can't have been handed over."</li>
+  <li>The page says when to fix by: "Fix mistakes before Wednesday, November 11 at 5:00 p.m., when booking opens for the next pickup day." After that, the stock count might already have been used for new bookings.</li>
+  <li>If the shelf count is already lower than what's in the bag, it stops at 0. The shelf can't have less than none.</li>
+</ul>
+<div class="limit">
+  <p><b>A small known limit.</b> Fixing a bag to "no-show" sets the 28 days from the student's last pickup still on record. If their only earlier pickup was more than 90 days ago, its record is already deleted. Then the year rule counts from when their account was made, which can be earlier. Example: account made 14 months ago, last pickup 5 months ago, today's pickup fixed to no-show. The no-show keeps the account for its 90 days, then it's deleted: 3 months after the fix, instead of 7. It needs that exact mix, so it should be very rare. The student would just get a new account at the counter next time.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="totals"><span class="num">5</span>After 90 days: totals, then delete</h2>
+<p>We promised to delete booking details after the retention period (90 days with the sample settings), and keep only totals <span class="rule">P7</span>. So on Monday 8 February 2027, Monday 9 November 2026's details go. In one transaction:</p>
+<ol class="steps">
+  <li>Work out the day's totals from its details.</li>
+  <li>Add them to that week's row in <code>weekly_totals</code> and <code>weekly_item_totals</code>.</li>
+  <li>Delete the day's bookings, with their food, substitutes and counter food, and its walk-ins with theirs.</li>
+</ol>
+<p>Example. On Monday 9 November: one bag handed over (quick oats; lentils instead of the oil; bread at the counter), one no-show, one cancelled booking, and a walk-in who took 2 rice. The week of 9 November then holds:</p>
+<pre class="code">weekly_totals       picked_up 1   walk_ins 1   no_shows 1   cancelled 1
+weekly_item_totals  Oats 1   Lentils 1   Bread 1   Rice 2
+<span class="c">No oil: it never went out. Nothing for the no-show or the cancelled booking.</span></pre>
+<p>Thursday's details go 3 days later, and its numbers are added to the same week.</p>
+<div class="why">
+  <p><b>Why save the totals just before deleting, and not every evening?</b> Until the details are deleted, the totals can be worked out from them, and a fix (B6) changes them correctly by itself. Saving them every evening would mean changing saved totals after every fix. This way each day is counted exactly once: either it's still in the details, or it's in the totals, never both. The coordinator's page (step 9) will add the two together.</p>
+  <p><b>Why by week?</b> The coordinator sees totals by week <span class="rule">P12</span>. Keeping less detail than that would be keeping more than we need.</p>
+  <p><b>Why by item, not variety?</b> "12 oats" is what a food bank orders by. Varieties come and go.</p>
+  <p><b>What if two runs reach the same day?</b> The day's row is locked first. The second run waits, then finds nothing left to count, and adds zeros.</p>
+</div>
+<p>The pickup day itself and its slots are kept: they say nothing about anyone. The activity log is deleted after the same 90 days, because it says who was served when (tables.html, choice G).</p>
+
+<!-- ============================================================ -->
+<h2 id="accounts"><span class="num">6</span>Accounts with no pickup for a year</h2>
+<p>An account whose last pickup was more than a year ago is deleted <span class="rule">P13</span>, with its logins and setup codes. An account that never had a pickup counts from the day it was made, in Newfoundland time. Example, on Wednesday 10 November 2027: last pickup Monday 9 November 2026 is deleted. Last pickup Tuesday 10 November 2026 is kept.</p>
+<p>Kept anyway, because someone is clearly using the account:</p>
+<ul>
+  <li>It has a booking or a walk-in still on record. Example: a student who never picked up, booking for next week.</li>
+  <li>It has a setup code that hasn't run out. Example: a volunteer gave them a new code five minutes ago.</li>
+</ul>
+<p>Each account is locked and checked again just before it's deleted. If the student pressed Book at that moment, one waits for the other, and the new booking keeps the account.</p>
+<p>The activity log keeps its lines about them until the log's own 90 days are up, but those lines no longer say who.</p>
+
+<!-- ============================================================ -->
+<h2 id="tidy"><span class="num">7</span>Tidying up, and making days ahead</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>Deleted</th><th>When</th><th>Why that's safe</th></tr>
+  <tr><td>Logins (sessions)</td><td>Once they've run out</td><td>A login that ran out is refused anyway.</td></tr>
+  <tr><td>Setup codes</td><td>Once they've run out</td><td>Trying one says the same as before: "doesn't match, or the code has run out".</td></tr>
+  <tr><td>Wrong tries</td><td>Older than 15 minutes</td><td>Only the last 15 minutes are counted <span class="rule">P9</span>.</td></tr>
+  <tr><td>Holds</td><td>Once their pickup day is over</td><td>Kept until then, so a student whose 10 minutes ran out is still told "your time ran out".</td></tr>
+</table>
+</div>
+<h3>Pickup days, two weeks ahead</h3>
+<p>Each run makes the pickup days from tomorrow to two weeks from today, on the weekdays with pickup hours (Mondays and Thursdays). A day already made is never touched, even a closed one. Today is never made: its booking would already have opened.</p>
+<div class="why">
+  <p><b>Why two weeks?</b> A made day keeps its own times, so a change to the settings reaches new days within two weeks. And the coordinator can close a day up to two weeks ahead (step 9). <b>Why not further ahead?</b> Settings changes would take longer to reach students.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="tables"><span class="num">8</span>What the database remembers</h2>
+<p>Two new tables, 24 in all, in migration <code>661761c56987</code>:</p>
+<div class="table-wrap">
+<table>
+  <tr><th>Table</th><th>What it holds</th><th>Database rules</th></tr>
+  <tr><td><code>weekly_totals</code></td><td>One row per week: booked bags picked up, walk-ins, no-shows, cancelled. Only numbers.</td><td>The week starts on a Monday. No count below 0.</td></tr>
+  <tr><td><code>weekly_item_totals</code></td><td>How many of each item went out that week.</td><td>Belongs to a week. At least 1.</td></tr>
+</table>
+</div>
+<p>Earlier today, for walk-in hours, migration <code>fcb637478c41</code> gave each pickup day its own pickup hours (see <a href="counter.html#when">counter.html, part 2</a>).</p>
+
+<!-- ============================================================ -->
+<h2 id="addresses"><span class="num">9</span>The addresses and pages</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>Address</th><th>Who</th><th>What it does</th></tr>
+  <tr><td><code>GET /api/fixes</code></td><td>Staff</td><td>Pickup days that are over, and one day's no-shows and picked-up bags. <code>?day=2026-11-09</code> picks the day.</td></tr>
+  <tr><td><code>POST /api/fixes/{id}/picked-up</code></td><td>Staff</td><td>No-show → picked up.</td></tr>
+  <tr><td><code>POST /api/fixes/{id}/no-show</code></td><td>Staff</td><td>Picked up → no-show.</td></tr>
+  <tr><td><code>/counter/fix</code></td><td>Staff</td><td>The page: Counter → Fix a pickup.</td></tr>
+</table>
+</div>
+<p>The answers have the bag's code only, never anything about the student <span class="rule">P4</span>. The code is in <code>backend/app/services/no_shows.py</code> (no-shows and fixes), <code>totals.py</code> and <code>retention.py</code>, and the script in <code>backend/app/jobs.py</code>.</p>
+
+<!-- ============================================================ -->
+<h2 id="tests"><span class="num">10</span>The tests</h2>
+<p>56 new tests, 439 in all, every one passing.</p>
+<ul>
+  <li><code>tests/test_no_shows.py</code>: what goes back on the shelf for a bag never packed and a packed one; not before 6 pm; picked-up, cancelled and closed-day bookings left alone; once only; both fixes, a fix made twice, a bag never packed, the 28 days after a fix; and the "Hand over at 5:59" race on two connections.</li>
+  <li><code>tests/test_retention.py</code>: 90 days to the minute (midnight in St. John's); the totals example above; two days in one week; a day counted once; the log; the year rule, with an account made at 11:30 pm Newfoundland time that's already the next day in UTC; what keeps an account; tidying up.</li>
+  <li><code>tests/test_jobs.py</code>: days made two weeks ahead; a closed day left alone; a whole run, then a second run that finds nothing; one run at a time; a failing job not stopping the others; no settings.</li>
+  <li><code>tests/test_fixes_api.py</code> and <code>tests/test_database_rules.py</code>: the page's answers, staff only, nothing about the student; the new tables' rules.</li>
+</ul>
+<p>The fix page was also clicked through in Edge on a phone-sized screen, light and dark, against the test database. That found one bug, now fixed: after a fix, the "Are you sure?" box stayed open and asked the opposite question.</p>
+
+<!-- ============================================================ -->
+<h2 id="ask"><span class="num">11</span>Two questions for you</h2>
+<div class="ask">
+  <p><b>1. Run the jobs on your laptop every 15 minutes?</b> I can add a Windows Task Scheduler task that runs <code>backend\run_jobs.cmd</code> every 15 minutes, against your working database (fake data only). Or you can run it by hand when you want to see it work.</p>
+  <p><b>2. Two weeks ahead for pickup days?</b> As built. Longer lets the coordinator close days further ahead. Shorter makes settings changes reach students sooner.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="run"><span class="num">12</span>How to try it</h2>
+<p>Run the jobs once, from the backend folder:</p>
+<pre class="code">cd "D:\MUN Project\backend"
+.venv\Scripts\python -m app.jobs</pre>
+<p>The first run on your working database made Thursday 19 and Monday 23 November. To see a no-show, a pickup day has to be over with a bag nobody collected. Ask me and I'll set one up on the test database, like the check above.</p>
+<p>To run it every 15 minutes with Task Scheduler (question 1), the command would be:</p>
+<pre class="code">schtasks /Create /TN "Campus Food Bank jobs" /SC MINUTE /MO 15 /TR "\"D:\MUN Project\backend\run_jobs.cmd\""
+<span class="c">Each run adds a few lines to backend\jobs.log. Remove it again with:</span>
+schtasks /Delete /TN "Campus Food Bank jobs" /F</pre>
+</main>
+</body>
+</html>
