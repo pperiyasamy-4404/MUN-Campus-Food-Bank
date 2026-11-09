@@ -5,7 +5,7 @@ import { byItem, total, whyNotMore, type Chosen } from './counterTools.ts'
 
 // Pieces the counter pages share.
 
-/** The three things done at the counter. */
+/** The things done at the counter. */
 export function CounterNav() {
   return (
     <nav className="sub-nav" aria-label="Counter">
@@ -14,6 +14,7 @@ export function CounterNav() {
       </NavLink>
       <NavLink to="/counter/walk-in">Walk-in</NavLink>
       <NavLink to="/counter/setup-code">Setup code</NavLink>
+      <NavLink to="/counter/fix">Fix a pickup</NavLink>
     </nav>
   )
 }

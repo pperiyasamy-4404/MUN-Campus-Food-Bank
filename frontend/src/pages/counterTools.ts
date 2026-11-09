@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { CounterPage, ShelfFood } from '../api.ts'
+import type { CounterPage, FixPage, ShelfFood } from '../api.ts'
 
 // What the counter pages share: the shelf from the server, and the picking rules.
 
@@ -76,4 +76,31 @@ export function asChoices(chosen: Chosen): { variety_id: number; quantity: numbe
   return Object.entries(chosen)
     .filter(([, quantity]) => quantity > 0)
     .map(([id, quantity]) => ({ variety_id: Number(id), quantity }))
+}
+
+export type FixLoad = { state: 'loading' } | { state: 'failed' } | { state: 'ready'; page: FixPage }
+
+/** The fix page for one pickup day, or the newest one. A new version asks the server again. */
+export function useFixPage(day: string | null, version: number, onLoggedOut: () => void): FixLoad {
+  const [load, setLoad] = useState<FixLoad>({ state: 'loading' })
+  useEffect(() => {
+    let stillWanted = true
+    fetch(day ? `/api/fixes?day=${day}` : '/api/fixes')
+      .then(async (response) => {
+        if (response.status === 401) {
+          if (stillWanted) onLoggedOut()
+          return
+        }
+        if (!response.ok) throw new Error(`The server answered ${response.status}`)
+        const page = (await response.json()) as FixPage
+        if (stillWanted) setLoad({ state: 'ready', page })
+      })
+      .catch(() => {
+        if (stillWanted) setLoad({ state: 'failed' })
+      })
+    return () => {
+      stillWanted = false
+    }
+  }, [day, version, onLoggedOut])
+  return load
 }

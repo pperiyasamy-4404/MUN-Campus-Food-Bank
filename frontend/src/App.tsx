@@ -2,6 +2,7 @@ import { BrowserRouter, Link, Route, Routes } from 'react-router'
 import { Layout, StaffOnly, StudentOnly } from './Layout.tsx'
 import { MeProvider } from './MeProvider.tsx'
 import { Book } from './pages/Book.tsx'
+import { FixPickup } from './pages/FixPickup.tsx'
 import { HandOver } from './pages/HandOver.tsx'
 import { Home } from './pages/Home.tsx'
 import { StaffLogIn, StudentLogIn } from './pages/LogIn.tsx'
@@ -48,6 +49,14 @@ function App() {
               element={
                 <StaffOnly>
                   <WalkIn />
+                </StaffOnly>
+              }
+            />
+            <Route
+              path="counter/fix"
+              element={
+                <StaffOnly>
+                  <FixPickup />
                 </StaffOnly>
               }
             />

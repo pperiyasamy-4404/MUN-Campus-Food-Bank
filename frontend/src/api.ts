@@ -364,3 +364,22 @@ export type WalkInDone = {
   cancelled: { pickup_date: string; code: string } | null
   next_pickup_on: string
 }
+
+// ---------- fixing a pickup marked wrong (backend/app/routes/fixes.py) ----------
+
+export type FixBag = {
+  id: number
+  code: string
+  starts_at: string
+  status: 'no_show' | 'picked_up'
+  picked_up_at: string | null
+  picked_up_by: string | null
+  why_not: string | null // like "Bag K3P was never packed, so it can't have been handed over."
+}
+
+export type FixPage = {
+  days: string[] // pickup days that are over and still have bags on record, newest first
+  day: string | null // the one shown
+  fix_before: string | null // when booking opens for the next pickup day, if still to come (B6)
+  bags: FixBag[]
+}
