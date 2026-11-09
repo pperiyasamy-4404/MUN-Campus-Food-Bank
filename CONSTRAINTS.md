@@ -79,7 +79,7 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 ### Walk-ins
 
 - **W1** Walk-ins are recorded in the same system. The volunteer checks the student's card and enters the ID number, the system checks the pickup gap, the volunteer selects the items given on the Walk-in screen, and the pickup is done. A walk-in who hasn't reached the pickup gap is refused. There's no override. This keeps the pickup gap fair (nobody can walk in one week and book online the next) and keeps the stock count right without recounting.
-- **W3** Walk-ins are served in their own line, by their own volunteers, side by side with online pickups. They don't use slots.
+- **W3** Walk-ins are served in their own line, by their own volunteers, side by side with online pickups. They don't use slots. They are served only during pickup hours (3:30 to 5:30 pm with the sample hours). A student with a booking can still collect their bag until the no-show time.
 - **W4** If a walk-in already has an upcoming booking, the volunteer cancels the booking and serves them now.
 
 ### Booking life

@@ -77,7 +77,7 @@
 
 <div class="stats">
   <div class="stat"><b>7 of 9</b><span>building steps done</span></div>
-  <div class="stat"><b>358</b><span>tests, all passing</span></div>
+  <div class="stat"><b>383</b><span>tests, all passing</span></div>
   <div class="stat"><b>21</b><span>tables in the database</span></div>
   <div class="stat"><b>43</b><span>commits on GitHub</span></div>
 </div>
@@ -226,7 +226,7 @@
   </g>
 </svg>
 </div>
-<p>A student who comes without a booking is a <b>walk-in</b>. They're served in their own line, and the system still checks the 28 days <span class="rule">W1</span>, with no exception. Built in step 7 too.</p>
+<p>A student who comes without a booking is a <b>walk-in</b>. They're served in their own line, only during pickup hours <span class="rule">W3</span>, and the system still checks the 28 days <span class="rule">W1</span>, with no exception. Built in step 7 too.</p>
 
 <!-- ================================================================ -->
 <h2 id="pieces"><span class="num">4</span>The four pieces, and how they talk</h2>
@@ -268,7 +268,7 @@
     <text x="632" y="140" font-size="12" fill="#475569">rows</text>
 
     <rect x="345" y="220" width="575" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="6 4"/>
-    <text x="632" y="246" font-weight="700">The tests: pytest, 358 of them</text>
+    <text x="632" y="246" font-weight="700">The tests: pytest, 383 of them</text>
     <text x="632" y="268" font-size="13">They call the server and the rules, against a separate test database, rebuilt every run.</text>
     <line x1="470" y1="220" x2="470" y2="184" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#b)"/>
   </g>
@@ -291,7 +291,7 @@
   </div>
   <div class="card">
     <h3>The tests: pytest</h3>
-    <p>358 small programs that each check one thing, like "a 14th item is refused". They run against a real PostgreSQL test database, never the working one. Each test is undone when it ends, so tests can't affect each other.</p>
+    <p>383 small programs that each check one thing, like "a 14th item is refused". They run against a real PostgreSQL test database, never the working one. Each test is undone when it ends, so tests can't affect each other.</p>
   </div>
 </div>
 
@@ -332,7 +332,7 @@
 │   │   ├── sample_data.py  <span class="c">← made-up days and food for trying things</span>
 │   │   └── first_coordinator.py  <span class="c">← makes the very first coordinator</span>
 │   ├── migrations/         <span class="c">← Alembic's history of table changes (5 so far)</span>
-│   └── tests/              <span class="c">← the 358 tests, one file per area</span>
+│   └── tests/              <span class="c">← the 383 tests, one file per area</span>
 │
 └── frontend/               <span class="c">← the pages (React + TypeScript)</span>
     └── src/
@@ -626,7 +626,8 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
 <h3>Questions still open</h3>
 <p><b>Answered 7 Nov</b>, from step 4: volunteers can add categories and tags and fix names too (now built), and an extra with none left isn't shown to students (as built).</p>
 <p><b>Answered 7 Nov</b>, from step 6: volunteers can pack until 6 pm (as built), and a volunteer can undo Packed on the wrong bag until it's handed over (now built). For step 7: a walk-in who hasn't reached 28 days is refused, with no override. Students keep seeing exact counts like "6 left".</p>
-<p><b>For you</b>, from step 7 (more in <a href="counter.html#ask">counter.html</a>): the counter is open 12 pm to 6 pm on pickup days. Should walk-ins only be served during pickup hours, 3:30 to 5:30?</p>
+<p><b>Answered 9 Nov</b>, from step 7: walk-ins are served only during pickup hours, 3:30 to 5:30 (now built, see <a href="counter.html#when">counter.html</a>). Booked bags can still be handed over until 6 pm.</p>
+<p><b>For you:</b> nothing open right now.</p>
 <p><b>For the food bank</b>, when we talk to them. These are in <code>CONSTRAINTS.md</code>:</p>
 <ul>
   <li>How is the 4-week rule checked today? When does new stock arrive? When do volunteers pack?</li>

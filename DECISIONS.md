@@ -578,3 +578,14 @@ Found through Openverse and Wikimedia Commons, cropped to 640×480 and about 40 
 
 **Better photos for seven items, and canned food shows a can.** (The user's request, 7 Nov.)
 New photos for oats (a pile of rolled oats), peanut butter (an open jar), cooking oil (bottles of oil), pasta (dry penne), rice (a bowl of dry rice), canned tuna (a can of chunk light tuna in water) and canned chicken. The first set was all public domain, and that set had no cans at all. So now some photos are CC BY: free to use as long as the photographer is credited, which `CREDITS.md` does. There is no free photo of a can of chicken anywhere we looked (Openverse, Wikimedia Commons), so canned chicken shows a plain can with its label out of view. A volunteer can take a photo of the real can and put it in on the Stock page.
+
+## 2026-11-09
+
+**Walk-ins are served only during pickup hours, 3:30 to 5:30 pm with the sample hours.** (The user's answer to the step 7 question.)
+W3 in CONSTRAINTS.md now says so. Walk-ins start the moment pickup starts and stop the moment it ends, like booking opening and closing on the dot. Handing over a booked bag keeps its hours, 12 pm to 6 pm: a student who comes late, at 5:45, still gets their bag, because a booking waits until the no-show time. The Walk-in page says when walk-ins are served, and its Check button stays greyed out outside those hours.
+
+**Each pickup day keeps its own pickup hours: `pickup_starts_at` and `pickup_ends_at` on `pickup_days`.**
+They're copied from the weekly hours when the day is made, like the day's booking and no-show times. Why: changing the weekly hours never moves a day that's already made, with its slots. Why not read the weekly hours each time: the walk-in hours of a day already made would change, but its slots wouldn't. The migration gave the four days already in the working database the hours of their weekday.
+
+**The database keeps a day's times in order: booking closes, pickup starts, pickup ends, no-shows.**
+Three new rules. Booking must close before pickup starts, because bags are packed in between (K1). No-shows come after pickup ends, otherwise the last slots would be no-shows before their time came. The old rule "no-show after booking closes" follows from the new three, so it could never be the only rule broken, and it was dropped. For step 9: the coordinator's settings page has to check these too. If the settings and the weekly hours don't fit together, making a new day is refused.
