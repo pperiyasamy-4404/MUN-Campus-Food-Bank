@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Food Bank: the coordinator, explained</title>
+<style>
+  :root {
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc;
+    --blue: #2563eb; --blue-bg: #dbeafe;
+    --green: #059669; --green-bg: #d1fae5;
+    --amber: #b45309; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 980px; margin: 0 auto; padding: 36px 20px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 .num { color: var(--blue); margin-right: 8px; }
+  h3 { font-size: 1.15rem; margin: 30px 0 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--blue); }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
+  .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; background: #fff; font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+  .why { border-left: 4px solid var(--blue); background: #eff6ff; padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .why p { margin: 4px 0; }
+  .ask { background: var(--amber-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .ask p { margin: 4px 0; }
+  .limit { background: var(--red-bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; }
+  .limit p { margin: 4px 0; }
+  pre.code { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 18px; font: 14px/1.55 ui-monospace, Consolas, monospace; overflow-x: auto; margin: 12px 0; }
+  pre .c { color: #94a3b8; }
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; margin: 18px 0; }
+  .diagram svg { display: block; width: 100%; height: auto; }
+  .toc { columns: 2; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 20px 14px 40px; }
+  @media (max-width: 760px) { .toc { columns: 1; } }
+  .steps { counter-reset: step; list-style: none; padding: 0; }
+  .steps li { counter-increment: step; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px 8px 46px; margin: 6px 0; position: relative; }
+  .steps li::before { content: counter(step); position: absolute; left: 12px; top: 8px; width: 24px; height: 24px; border-radius: 50%; background: var(--blue); color: #fff; font-weight: 700; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<main>
+<p class="eyebrow">Campus Food Bank · Step 9, the coordinator · 10 November 2026</p>
+<h1>The coordinator's pages</h1>
+<p class="lead">The last step of the build order. The coordinator can now close a day for snow or the Christmas break, move one day's booking times, change the food bank's numbers, and see what each week added up to, without ever seeing a number small enough to point at someone. Under one new menu item, <b>Coordinator</b>, with the Volunteers page moved in beside them.</p>
+
+<ol class="toc">
+  <li><a href="#pages">The four pages</a></li>
+  <li><a href="#close">Closing a day</a></li>
+  <li><a href="#race">Closing while someone presses Book</a></li>
+  <li><a href="#reopen">Opening a day again</a></li>
+  <li><a href="#later">Closing a date further ahead</a></li>
+  <li><a href="#move">Moving one day's booking times</a></li>
+  <li><a href="#settings">The settings</a></li>
+  <li><a href="#totals">Weekly totals, and "fewer than 5"</a></li>
+  <li><a href="#students">What students see</a></li>
+  <li><a href="#addresses">The addresses and files</a></li>
+  <li><a href="#tests">The tests and the browser check</a></li>
+  <li><a href="#ask">Questions for you</a></li>
+  <li><a href="#run">How to try it</a></li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="pages"><span class="num">1</span>The four pages</h2>
+<p>Only the coordinator sees them <span class="rule">R3</span>. The server checks every request on its own: a volunteer who types the address gets "Only the coordinator can do this."</p>
+<div class="table-wrap">
+<table>
+  <tr><th>Page</th><th>Address</th><th>What it does</th><th>Rules</th></tr>
+  <tr><td>Pickup days</td><td><code>/coordinator</code></td><td>Close a day, open it again, move its booking times. Close a date further ahead.</td><td><span class="rule">S7</span> <span class="rule">S9</span></td></tr>
+  <tr><td>Weekly totals</td><td><code>/coordinator/totals</code></td><td>Pickups, walk-ins, no-shows, cancellations and food given out, by week.</td><td><span class="rule">P7</span> <span class="rule">P12</span></td></tr>
+  <tr><td>Settings</td><td><code>/coordinator/settings</code></td><td>The food bank's numbers and the weekly pickup hours.</td><td><span class="rule">R3</span></td></tr>
+  <tr><td>Volunteers</td><td><code>/coordinator/volunteers</code></td><td>Unchanged from step 3. The old address <code>/volunteers</code> still works: it sends you on.</td><td><span class="rule">R3</span></td></tr>
+</table>
+</div>
+<p>Every change on these pages is written in the activity log with who made it <span class="rule">R4</span>: <code>closed_day</code>, <code>reopened_day</code>, <code>moved_booking_times</code>, <code>changed_settings</code>. The log needed one new column, <code>pickup_day_id</code>, to say which day (migration <code>d19b90ad39dc</code>).</p>
+
+<!-- ============================================================ -->
+<h2 id="close"><span class="num">2</span>Closing a day</h2>
+<p>Snow on Thursday. The coordinator opens Pickup days, presses <b>Close this day</b> on Thursday, and types the reason students will see: "Snow storm". Before anything happens, the page says what it will do:</p>
+<pre class="code">This cancels 2 bookings, 1 of them packed. Unpack those bags: their food goes
+back on the stock count. Those students can book another day.</pre>
+<p>Then, in one transaction <span class="rule">S7</span>:</p>
+<ol class="steps">
+  <li>Lock the day. If it's closed already, or over (past 6 pm), refuse.</li>
+  <li>Lock all its slots. From here on, nobody can book it (part 3 says why).</li>
+  <li>Cancel every booking still to come, packed or not, with the reason <code>day_closed</code>. Each one's place in its slot goes back.</li>
+  <li>Put the food back on the stock count: what was really in each bag.</li>
+  <li>Mark the day closed, with the reason, and log it.</li>
+</ol>
+<div class="table-wrap">
+<table>
+  <tr><th>The bag</th><th>What goes back on the stock count</th></tr>
+  <tr><td>Ana's, not packed yet. Booked: quick oats, rice.</td><td>Quick oats and rice.</td></tr>
+  <tr><td>Ben's, packed. No sunflower oil on the shelf, so lentils went in.</td><td>Quick oats and lentils. Not the oil: the shelf had none, so it stays at 0.</td></tr>
+</table>
+</div>
+<p>It's the same rule as no-shows and walk-ins: <code>packing.bag_contents()</code>, written in step 6, says what's in a bag. A bag already handed over stays handed over, and a walk-in already served stays served.</p>
+<div class="why">
+  <p><b>Why cancel packed bags too?</b> Nobody can collect them on a closed day. Cancelled, their food is counted again for the next day.</p>
+  <p><b>Why do those students book again freely?</b> A cancellation never counts toward the 28 days <span class="rule">F3</span>. Ana can book Monday straight away.</p>
+  <p><b>Why must the reason be there?</b> Students see it, and a closed day with no reason looks like a fault. It's up to 200 characters, and the page asks not to put anyone's name in it.</p>
+  <p><b>Why not let the job make them no-shows instead?</b> A no-show can count toward the pickup gap, and nobody failed to show. The no-show job already skips closed days (step 8).</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="race"><span class="num">3</span>Closing while someone presses Book</h2>
+<p>The coordinator presses Close at the same moment a student presses Book. Without care, this could happen: Book reads "Thursday is open", closing reads "these are the bookings", both save, and a booking is left on a closed day.</p>
+<p>The fix is a <b>lock</b> (a row only one transaction can change at a time; the other waits). Book has always locked the slot before looking at the day. Closing now locks every slot of the day before looking at the bookings. So one of them always goes first:</p>
+<div class="diagram">
+<svg viewBox="0 0 940 300" role="img" aria-label="Two cases. Closing first: Book waits for the slot, then sees the day closed and is refused. Book first: closing waits for the slot, then finds the new booking and cancels it.">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+  </defs>
+  <g font-family="system-ui, Segoe UI, sans-serif" font-size="14">
+    <text x="20" y="30" font-weight="700" font-size="15">Closing goes first</text>
+    <rect x="20" y="45" width="410" height="44" rx="8" fill="#fee2e2" stroke="#b91c1c"/>
+    <text x="32" y="72">Close: lock slots → cancel bookings → save</text>
+    <rect x="20" y="105" width="150" height="44" rx="8" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="32" y="132">Book: waits…</text>
+    <line x1="170" y1="127" x2="440" y2="127" stroke="#94a3b8" stroke-dasharray="5 4" marker-end="url(#a)"/>
+    <text x="30" y="180" fill="#475569" font-size="13">then Book reads the day: "Thursday is closed: Snow storm"</text>
+    <text x="30" y="200" fill="#475569" font-size="13">No booking. The food is untouched.</text>
+
+    <text x="490" y="30" font-weight="700" font-size="15">Book goes first</text>
+    <rect x="490" y="45" width="430" height="44" rx="8" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="502" y="72">Book: lock slot → take the tin → save the booking</text>
+    <rect x="490" y="105" width="150" height="44" rx="8" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="502" y="132">Close: waits…</text>
+    <line x1="640" y1="127" x2="910" y2="127" stroke="#94a3b8" stroke-dasharray="5 4" marker-end="url(#a)"/>
+    <text x="500" y="180" fill="#475569" font-size="13">then Close finds the new booking and cancels it</text>
+    <text x="500" y="200" fill="#475569" font-size="13">with the others. The tin goes back.</text>
+
+    <rect x="20" y="230" width="900" height="50" rx="10" fill="#d1fae5" stroke="#059669"/>
+    <text x="470" y="261" text-anchor="middle" font-weight="700">Either way: no booking is left on a closed day.</text>
+  </g>
+</svg>
+</div>
+<p>Both cases are tests that run on two real database connections at once. With the slot lock taken out of closing, both tests fail: a booking stayed "booked" on the closed day. With it, both pass.</p>
+<div class="why">
+  <p><b>Why lock the slots and not the day?</b> Book already locks the slot, in the order used everywhere: the student, then the slot, then the booking, then the food. Closing takes the same order (day, slots, bookings, food), so the two can wait for each other but never forever (a deadlock). Making Book also lock the day would add a lock to every booking, for something that happens a few times a year.</p>
+  <p><b>One small change to Book:</b> after locking the slot, it now reads the day again from the database (<code>_day_as_it_is_now</code>), so it can't use an old copy from earlier in the same request.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="reopen"><span class="num">4</span>Opening a day again</h2>
+<p>A day closed by mistake can be opened again, <b>if closing it didn't cancel any bookings</b>, and the day isn't over.</p>
+<div class="why">
+  <p><b>Why not always?</b> A student can't book the same day twice: a database rule (one booking per student per day) stops cancelling and booking again to change the food <span class="rule">S6</span>. So if Thursday is opened again after its 2 bookings were cancelled, those 2 students couldn't book Thursday any more, while everyone else could take their places. That's unfair, so the day stays closed, and the page says why:</p>
+  <p><i>"Closing Thursday, November 12 cancelled 2 bookings, so it stays closed: those students couldn't book it again."</i></p>
+  <p><b>Why not bring the bookings back?</b> Their food may be gone by then, and their times taken. Asking first is safer: the Close button says how many bookings it will cancel before anything happens.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="later"><span class="num">5</span>Closing a date further ahead</h2>
+<p>Days are made two weeks ahead, but the Christmas break is known in November. Under the days, <b>Close a later date</b> takes any pickup date up to a year ahead, like Monday 21 December. The day is made now, from today's settings, and closed straight away. The jobs script never touches a day that's made, so when its time comes it's still closed.</p>
+<p>A Tuesday is refused ("isn't a pickup day"), and so is today or a date in the past.</p>
+
+<!-- ============================================================ -->
+<h2 id="move"><span class="num">6</span>Moving one day's booking times</h2>
+<p>Example: the website is down at 5 pm Sunday, when booking for Monday opens. The coordinator moves Monday's opening to 7 pm, so the rush starts when the site is back <span class="rule">S9</span>. Only Monday changes. The settings and every other day stay as they were. Bookings already made stay.</p>
+<div class="table-wrap">
+<table>
+  <tr><th>The check</th><th>What the coordinator reads</th></tr>
+  <tr><td>Booking opens before it closes.</td><td>Booking has to open before it closes.</td></tr>
+  <tr><td>The new close time is still to come.</td><td>The new close time has passed already. Choose a later one.</td></tr>
+  <tr><td>Booking closes by the time pickup starts, so bags can be packed <span class="rule">K1</span>.</td><td>Booking has to close by the time pickup starts, Monday, November 16 at 3:30 p.m., so the bags can be packed</td></tr>
+  <tr><td>Only until booking closes.</td><td>Booking for Monday, November 9 is over, and packing has started.</td></tr>
+</table>
+</div>
+<div class="why">
+  <p><b>Why only until booking closes?</b> After that, volunteers are packing. Opening booking again would let students cancel bags that are already packed. Cancelling was never built for packed bags, because it never happens otherwise.</p>
+  <p><b>The time boxes</b> are St. John's time, wherever the computer is. The browser sends "2026-11-15T19:00" with no time zone, and the server reads it as St. John's <span class="rule">T1</span>.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="settings"><span class="num">7</span>The settings</h2>
+<p>All of CONSTRAINTS.md's sample values, plus the weekly pickup hours, on one page in three groups:</p>
+<ul>
+  <li><b>For new pickup days:</b> pickup days and hours, when booking opens and closes, the no-show time, slot length, students per slot. These are copied onto each day when it's made. <b>Days already made keep their times</b>, and the page lists them. To change one of those, move its booking times or close it.</li>
+  <li><b>Used straight away:</b> the pickup gap, the time to choose food, the food limits, setup codes, wrong password tries, and whether a no-show counts.</li>
+  <li><b>Privacy:</b> how long booking details are kept. A shorter time deletes more at the next jobs run, after saving totals.</li>
+</ul>
+<p>Two kinds of check, so every mistake gets a sentence:</p>
+<h3>Each box on its own</h3>
+<p>A whole number in a range, like "Enter a whole number from 5 to 120." for slot length. The top of each range catches a slip, like 2800 for 28. The message appears under that box.</p>
+<h3>Boxes that have to fit together</h3>
+<div class="table-wrap">
+<table>
+  <tr><th>The rule</th><th>Example message</th></tr>
+  <tr><td>Most of one item ≤ things per booking</td><td>The most of one item can't be more than the item limit.</td></tr>
+  <tr><td>Details kept at least as long as the pickup gap</td><td>Booking details have to be kept at least as long as the pickup gap. Otherwise a pickup could be deleted while it still counts.</td></tr>
+  <tr><td>Booking closes by the time pickup starts, every pickup weekday</td><td>Monday: booking closes at 4:00 p.m., after pickup starts at 3:30 p.m. It has to close first, so the bags can be packed.</td></tr>
+  <tr><td>No-shows after pickup ends, every pickup weekday</td><td>Thursday: pickup ends at 6:30 p.m., after the no-show time, 6:00 p.m. No-shows have to come after pickup ends.</td></tr>
+  <tr><td>Pickup hours hold at least one slot</td><td>Monday: the pickup hours are shorter than one 10-minute slot.</td></tr>
+  <tr><td>Booking opens at most 13 days before</td><td>Booking can open at most 13 days before, because days are made two weeks ahead.</td></tr>
+  <tr><td>At least one pickup weekday</td><td>Choose at least one pickup day of the week. To stop for a while, close the days instead.</td></tr>
+</table>
+</div>
+<div class="why">
+  <p><b>Why check these here, when the database has rules too?</b> The database's rules are the safety net, but they only say "refused by ck_settings_…". These say what to change. And some can't be database rules at all: the hours are in one table and the closing time in another.</p>
+  <p><b>Why at most 13 days?</b> A day is made two weeks ahead. If booking opened 20 days before, the day would be made after its booking had already opened.</p>
+  <p><b>Why save everything at once?</b> The rules are between settings. Saving one box at a time, a change of two related boxes would be refused halfway.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="totals"><span class="num">8</span>Weekly totals, and "fewer than 5"</h2>
+<p>One row per week, Monday to Sunday, newest first: bags picked up, walk-ins, no-shows, cancelled, and how much of each item went out.</p>
+<div class="table-wrap">
+<table>
+  <tr><th>Week of</th><th>Bags picked up</th><th>Walk-ins</th><th>No-shows</th><th>Cancelled</th><th>Food given out</th></tr>
+  <tr><td>Monday, November 9</td><td>7</td><td>fewer than 5</td><td>fewer than 5</td><td>fewer than 5</td><td>Oats 7, Rice fewer than 5</td></tr>
+  <tr><td>Monday, October 26</td><td>12</td><td>5</td><td>fewer than 5</td><td>fewer than 5</td><td>Oats 11, Pasta fewer than 5</td></tr>
+</table>
+</div>
+<p><b>Where a week's numbers come from.</b> In step 8, a day's totals are saved into <code>weekly_totals</code> just before its details are deleted, in the same transaction. So every day is in exactly one place: the saved totals, or its details. The page adds the two together. A day counts once it's over, at its no-show time. Until its details are deleted, a fix on the Fix a pickup page changes its week's totals too.</p>
+<div class="why">
+  <p><b>Why "fewer than 5"?</b> <span class="rule">P12</span> A small number can point at someone. "2 walk-ins in the week of December 21" might be two people the coordinator knows were on campus.</p>
+  <p><b>Why 0 too?</b> P12 says any number under 5. If 0 showed as 0, then "fewer than 5" would mean "1 to 4", which tells a little more.</p>
+  <p><b>Why on the server?</b> The browser never receives the real small number: the answer itself says <code>"fewer than 5"</code>. Hiding it in the page would still send it, and anyone could read it in the browser's developer tools.</p>
+  <p><b>The order of the food list</b> is biggest first, and then the small ones A to Z. Sorting the small ones by their real number would give away which was 4 and which was 1.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="students"><span class="num">9</span>What students see</h2>
+<p>We have no way to contact students (a known issue). But a student whose day was closed sees this on their booking page, until that day is over:</p>
+<pre class="code">The food bank closed Thursday, November 12, so your booking for that day was
+cancelled. You can book another day.
+Why: Snow storm</pre>
+<p>The list of pickup days already showed "Day closed" and the reason, since step 2.</p>
+
+<!-- ============================================================ -->
+<h2 id="addresses"><span class="num">10</span>The addresses and files</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>Address</th><th>Does</th></tr>
+  <tr><td><code>GET /api/coordinator/days</code></td><td>Days not over yet, each with its bookings and why each change can or can't be made.</td></tr>
+  <tr><td><code>POST /api/coordinator/days/2026-11-12/close</code></td><td>Close, with <code>{"reason": "Snow storm"}</code>. A date not made yet is made first.</td></tr>
+  <tr><td><code>POST /api/coordinator/days/2026-11-12/reopen</code></td><td>Open it again.</td></tr>
+  <tr><td><code>PUT /api/coordinator/days/2026-11-16/booking-times</code></td><td>Move booking times, with <code>opens_at</code> and <code>closes_at</code>.</td></tr>
+  <tr><td><code>GET</code> and <code>PUT /api/settings</code></td><td>Read and save every setting at once.</td></tr>
+  <tr><td><code>GET /api/totals</code></td><td>The weekly totals, small numbers hidden.</td></tr>
+</table>
+</div>
+<p>A date in an address says nothing about anyone, so it's fine there <span class="rule">P10</span>.</p>
+<p><b>Server:</b> the rules are in <code>app/services/day_changes.py</code> (close, reopen, move), <code>app/services/settings.py</code> (what fits together, saving) and <code>app/services/totals.py</code> (<code>weeks()</code>). The addresses are in <code>app/routes/days.py</code>, <code>settings.py</code> and <code>totals.py</code>.<br>
+<b>Pages:</b> <code>ManageDays.tsx</code>, <code>Totals.tsx</code>, <code>Settings.tsx</code>, with <code>CoordinatorParts.tsx</code> (the menu) and <code>coordinatorTools.ts</code> (loading a page, showing weekdays).</p>
+
+<!-- ============================================================ -->
+<h2 id="tests"><span class="num">11</span>The tests and the browser check</h2>
+<p>54 new tests, <b>493 in all</b>, all passing:</p>
+<ul>
+  <li><code>test_day_changes.py</code>: what closing puts back, packed bags, bags already handed over, a closed day can't be held or booked, closed days have no no-shows, the reason, closing twice, later dates, opening again, moving times, and the two races in part 3.</li>
+  <li><code>test_settings.py</code>: every rule between settings, saving and logging, days already made keep their times, each box's own message, coordinator only.</li>
+  <li><code>test_totals.py</code>: saved weeks plus days on record, a day counts once it's over, "fewer than 5" for every small number, the order of the food list.</li>
+  <li><code>test_days_api.py</code>: the page's answers, coordinator only, what the student sees, St. John's time in the time boxes.</li>
+</ul>
+<p><b>Writing the tests found a slip:</b> two settings messages ended "3:30 p.m.." with two full stops. Fixed.</p>
+<p><b>The browser check</b> (Edge, on the test database) clicked through every page: closing Thursday with 2 bookings, a wrong close time, the Christmas date closed and opened again, a Tuesday refused, totals, settings refused and then saved, and the student's message on a phone, in light and dark. <b>It found a bug:</b> after closing a day, the Close form stayed open under the day. Fixed: a form now closes itself once its change is saved. And the pickup hours boxes were spread across the page on a wide screen. Fixed.</p>
+
+<!-- ============================================================ -->
+<h2 id="ask"><span class="num">12</span>Questions for you</h2>
+<div class="ask">
+  <p><b>1. "Students per slot" only reaches new days.</b> Like every day-making setting, raising it from 1 to 2 changes days made from now on, so up to two weeks later. Is that fine, or should a change also reach days already made whose booking hasn't opened yet?</p>
+  <p><b>2. A closed day that cancelled bookings stays closed</b> (part 4). Agree?</p>
+  <p><b>3. 0 shows as "fewer than 5"</b> (part 8). Agree, or should 0 show as 0?</p>
+  <p><b>4. Still open from step 8:</b> run the jobs every 15 minutes with Windows Task Scheduler on your laptop? And two weeks ahead for pickup days? Nothing has been set up without asking.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="run"><span class="num">13</span>How to try it</h2>
+<p>The new migration is already applied to your working database. Start the two servers as usual (each in its own terminal):</p>
+<pre class="code">cd "D:\MUN Project\backend"
+.venv\Scripts\python -m uvicorn app.main:app --reload
+
+cd "D:\MUN Project\frontend"
+npm run dev</pre>
+<p>Log in as the coordinator at <code>/staff/login</code> and choose <b>Coordinator</b> in the top bar. If you haven't made a coordinator yet:</p>
+<pre class="code">cd "D:\MUN Project\backend"
+.venv\Scripts\python -m app.first_coordinator Alex
+<span class="c">It prints a setup code. Use it at /staff/setup to choose a password.</span></pre>
+<p>Weekly totals will be empty until a pickup day with bookings is over. Closing a day and the settings work straight away.</p>
+</main>
+</body>
+</html>

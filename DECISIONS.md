@@ -614,3 +614,38 @@ A year is 365 days, counted from the last pickup, or from when the account was m
 **Open questions for the user:**
 - Run the jobs every 15 minutes on the laptop with Windows Task Scheduler, against the working database?
 - Two weeks ahead for pickup days, as built?
+
+## 2026-11-10
+
+**Step 9, the coordinator: four pages under one Coordinator menu.** (Explained in coordinator.html.)
+Pickup days (`/coordinator`), Weekly totals, Settings, and Volunteers, which moved to `/coordinator/volunteers` (the old address sends you on). Only the coordinator can use them (R3), and the server checks every request. Every change is logged with who made it: `closed_day`, `reopened_day`, `moved_booking_times`, `changed_settings`. The activity log got a `pickup_day_id` column to say which day (migration d19b90ad39dc, applied to the working database).
+
+**Closing a day (S7) cancels every booking still to come, packed or not, and puts back what was really in each bag.**
+The same `packing.bag_contents()` as no-shows and walk-ins: a packed bag gives back the booked food that was on the shelf plus the substitutes that went in. Each place in its slot goes back. The reason is required, up to 200 characters, because students see it. Bags already handed over and walk-ins already served stay. A day can be closed until its no-show time. Why cancel packed bags: nobody can collect them, and cancelled, their food is counted for the next day. Why cancelled and not no-show: nobody failed to show, and a no-show can count toward the pickup gap.
+
+**Closing locks the day, then all its slots, then its bookings, then the food.**
+Book locks the slot before it looks at the day, so a student pressing Book while the day closes either finishes first, and is cancelled with the others, or waits and then sees the day is closed. Both cases are tests on two connections. With the slot lock taken out of closing, both failed (a booking stayed "booked" on a closed day). Book and Hold now read the day again after locking the slot (`_day_as_it_is_now`), so they never use an old copy. Why lock the slots and not make Book lock the day: Book already locks the slot, and every booking would pay for a lock needed a few times a year.
+
+**A closed day can be opened again only if closing it cancelled no bookings, and it isn't over.** (Decision made by Claude, flagged to the user.)
+A student can't book the same day twice (the one-booking-per-student-per-day rule, S6). Opened again, the students whose bookings were cancelled couldn't book it, while everyone else could take their places. Why not bring the bookings back: their food and times may be gone. Instead, the Close button says how many bookings it will cancel before anything happens.
+
+**A date further ahead, up to a year, can be closed before its day is made**, like the Christmas break. The day is made from today's settings, then closed. The jobs never touch a made day, so it stays closed. A non-pickup weekday, today or the past is refused.
+
+**Moving one day's booking times (S9) is allowed only until booking closes.**
+After that, volunteers are packing, and opening booking again would let students cancel packed bags, which cancelling was never built for. The new close time must still be to come, and no later than the pickup start (K1). The page's date-and-time boxes send St. John's time with no time zone, and the server reads them that way (T1).
+
+**The settings page saves everything at once, and checks the rules between settings with a sentence for each.**
+Each box on its own: a whole number in a range, with its own message ("Enter a whole number from 5 to 120."); the top of each range catches slips like 2800 for 28. Between boxes: most of one item ≤ the item limit; details kept at least as long as the pickup gap; same-day booking opens before it closes; booking opens at most 13 days before (days are made 14 days ahead, so a day must exist before its booking opens); at least one pickup weekday; for every pickup weekday, booking closes by the time pickup starts, pickup ends by the no-show time, and the hours hold at least one slot. Why save at once: the rules are between settings, so changing two related boxes one at a time would be refused halfway. Day-making settings reach only days made from now on, as decided in step 8; the page lists the days already made.
+
+**Weekly totals: the saved weeks plus the days still on record, newest first, with any number under 5 sent as "fewer than 5" (P12).**
+A day counts once it's over, at its no-show time. Each day is in either the saved totals or its details, never both (step 8), so the two add up. Hidden on the server, so the real number never reaches the browser. 0 is hidden too: P12 says any number under 5, and showing 0 would make "fewer than 5" mean 1 to 4. Food is listed biggest first, then the small ones A to Z, so their order says nothing. Weeks with no bookings and no walk-ins aren't listed. Cancellations include those from closed days.
+
+**Students whose day was closed are told on their booking page**, with the reason, until that day is over (`closed_day` in `/api/my-booking`). We still can't contact them any other way (known issue).
+
+**Found by the tests and the browser check:** two settings messages ended in "p.m.." (fixed); after closing a day, its Close form stayed open (fixed: a form closes itself once its change is saved); the pickup hours boxes spread across a wide screen (fixed). 493 tests pass.
+
+**Open questions for the user:**
+- "Students per slot" and other day-making settings reach only new days, up to two weeks later. Fine, or should a change also reach days whose booking hasn't opened?
+- A closed day that cancelled bookings stays closed. Agree?
+- 0 shows as "fewer than 5". Agree?
+- Still open from step 8: Windows Task Scheduler every 15 minutes, and two weeks ahead.

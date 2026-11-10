@@ -71,15 +71,15 @@
 <body>
 <main>
 
-<p class="eyebrow">Campus Food Bank · The whole project so far · 7 November 2026, after step 7</p>
+<p class="eyebrow">Campus Food Bank · The whole project so far · 10 November 2026, after step 9</p>
 <h1>The project so far</h1>
 <p class="lead">Read this page first. It explains the whole project in one place: what we're building, who uses it, how the pieces fit together, what's done, and what's next. The other pages go deeper into one step each. This one links to them.</p>
 
 <div class="stats">
-  <div class="stat"><b>8 of 9</b><span>building steps done</span></div>
-  <div class="stat"><b>439</b><span>tests, all passing</span></div>
+  <div class="stat"><b>9 of 9</b><span>building steps done</span></div>
+  <div class="stat"><b>493</b><span>tests, all passing</span></div>
   <div class="stat"><b>24</b><span>tables in the database</span></div>
-  <div class="stat"><b>52</b><span>commits on GitHub</span></div>
+  <div class="stat"><b>55</b><span>commits on GitHub</span></div>
 </div>
 
 <ol class="toc">
@@ -146,8 +146,8 @@
   <tr>
     <td><b>Coordinator</b></td>
     <td>A username and password. The very first one is made by a script on the server.</td>
-    <td>Everything a volunteer can do, plus: add volunteers, and switch them off and on.</td>
-    <td>Change the settings, close a day, see weekly totals (step 9).</td>
+    <td>Everything a volunteer can do, plus the Coordinator pages: close a day, move one day's booking times, change the settings, see weekly totals, and add volunteers and switch them off and on.</td>
+    <td>Nothing more.</td>
   </tr>
 </table>
 </div>
@@ -268,7 +268,7 @@
     <text x="632" y="140" font-size="12" fill="#475569">rows</text>
 
     <rect x="345" y="220" width="575" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="6 4"/>
-    <text x="632" y="246" font-weight="700">The tests: pytest, 439 of them</text>
+    <text x="632" y="246" font-weight="700">The tests: pytest, 493 of them</text>
     <text x="632" y="268" font-size="13">They call the server and the rules, against a separate test database, rebuilt every run.</text>
     <line x1="470" y1="220" x2="470" y2="184" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#b)"/>
   </g>
@@ -291,7 +291,7 @@
   </div>
   <div class="card">
     <h3>The tests: pytest</h3>
-    <p>439 small programs that each check one thing, like "a 14th item is refused". They run against a real PostgreSQL test database, never the working one. Each test is undone when it ends, so tests can't affect each other.</p>
+    <p>493 small programs that each check one thing, like "a 14th item is refused". They run against a real PostgreSQL test database, never the working one. Each test is undone when it ends, so tests can't affect each other.</p>
   </div>
 </div>
 
@@ -332,7 +332,7 @@
 │   │   ├── sample_data.py  <span class="c">← made-up days and food for trying things</span>
 │   │   └── first_coordinator.py  <span class="c">← makes the very first coordinator</span>
 │   ├── migrations/         <span class="c">← Alembic's history of table changes (5 so far)</span>
-│   └── tests/              <span class="c">← the 439 tests, one file per area</span>
+│   └── tests/              <span class="c">← the 493 tests, one file per area</span>
 │
 └── frontend/               <span class="c">← the pages (React + TypeScript)</span>
     └── src/
@@ -451,8 +451,13 @@
     <td><a href="jobs.html">jobs</a></td>
   </tr>
   <tr>
-    <td>Next</td><td><b>Step 9, coordinator</b> <span class="tag next">next</span></td>
-    <td>Settings, closing a day, weekly totals.</td>
+    <td>10 Nov</td><td><b>Step 9, coordinator</b> <span class="tag done">done</span></td>
+    <td>Close a day (or a date up to a year ahead), open it again, move one day's booking times, the Settings page, weekly totals with "fewer than 5". Students see why their day was closed. 493 tests.</td>
+    <td><a href="coordinator.html">coordinator</a></td>
+  </tr>
+  <tr>
+    <td>Next</td><td><b>Your answers, then before going live</b> <span class="tag next">next</span></td>
+    <td>The open questions, then what CONSTRAINTS.md lists before going live.</td>
     <td>See <a href="#next">part 12</a></td>
   </tr>
 </table>
@@ -614,7 +619,7 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
   </g>
 </svg>
 </div>
-<p>A cancelled booking can never become picked up, for example. One more move isn't drawn: a volunteer can undo Packed on the wrong bag, which takes it from packed back to booked, until it's handed over. A day the coordinator closes cancels every booking on it too <span class="rule">S7</span>. That's step 9.</p>
+<p>A cancelled booking can never become picked up, for example. One more move isn't drawn: a volunteer can undo Packed on the wrong bag, which takes it from packed back to booked, until it's handed over. A day the coordinator closes cancels every booking on it too <span class="rule">S7</span>, packed or not, and puts back what was in each bag. Built in step 9.</p>
 <p>Food moves with the status. Booking takes it off stock. Cancelling or a no-show puts it back <span class="rule">I5</span> <span class="rule">I6</span>.</p>
 
 <!-- ================================================================ -->
@@ -623,9 +628,9 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
 <table>
   <tr><th>Step</th><th>What it adds</th><th>Main rules</th></tr>
   <tr>
-    <td><b>9. Coordinator</b> <span class="tag next">next</span></td>
-    <td>Changing the settings, closing a day, moving one day's booking times, weekly totals ("fewer than 5" for small numbers).</td>
-    <td><span class="rule">S7</span> <span class="rule">S9</span> <span class="rule">P12</span></td>
+    <td><b>Your answers</b> <span class="tag next">next</span></td>
+    <td>All nine steps of the build order are built. Next, the questions below, then what CONSTRAINTS.md lists before going live: a privacy review and where it's hosted, accessibility, and students without smartphones. And a README for GitHub.</td>
+    <td>See <code>CONSTRAINTS.md</code></td>
   </tr>
 </table>
 </div>
@@ -635,6 +640,7 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
 <p><b>Answered 7 Nov</b>, from step 6: volunteers can pack until 6 pm (as built), and a volunteer can undo Packed on the wrong bag until it's handed over (now built). For step 7: a walk-in who hasn't reached 28 days is refused, with no override. Students keep seeing exact counts like "6 left".</p>
 <p><b>Answered 9 Nov</b>, from step 7: walk-ins are served only during pickup hours, 3:30 to 5:30 (now built, see <a href="counter.html#when">counter.html</a>). Booked bags can still be handed over until 6 pm.</p>
 <p><b>For you</b>, from step 8 (more in <a href="jobs.html#ask">jobs.html</a>): should the jobs run every 15 minutes on your laptop, with Windows Task Scheduler? And are two weeks ahead right for making pickup days?</p>
+<p><b>For you</b>, from step 9 (more in <a href="coordinator.html#ask">coordinator.html</a>): should a change to "students per slot" also reach days already made whose booking hasn't opened? Should a closed day that cancelled bookings stay closed (as built)? Should 0 show as "fewer than 5" (as built)?</p>
 <p><b>For the food bank</b>, when we talk to them. These are in <code>CONSTRAINTS.md</code>:</p>
 <ul>
   <li>How is the 4-week rule checked today? When does new stock arrive? When do volunteers pack?</li>
@@ -660,7 +666,7 @@ cd "D:\MUN Project\backend"
 cd "D:\MUN Project\frontend"
 npm run dev</pre>
 <p>Then open <a href="http://localhost:5173">http://localhost:5173</a>.</p>
-<p>Your working database has no coordinator yet. Make one in a third terminal, then go to <code>/staff/setup</code> and use the code it prints:</p>
+<p>If your working database has no coordinator yet, make one in a third terminal, then go to <code>/staff/setup</code> and use the code it prints:</p>
 <pre class="code">cd "D:\MUN Project\backend"
 .venv\Scripts\python -m app.first_coordinator YourName</pre>
 <p>To run the jobs once (no-shows, deleting old details, making pickup days ahead), see <a href="jobs.html#run">jobs.html, part 12</a>:</p>
@@ -669,7 +675,7 @@ npm run dev</pre>
 <p>To run the tests (about 30 seconds):</p>
 <pre class="code">cd "D:\MUN Project\backend"
 .venv\Scripts\python -m pytest</pre>
-<p>Booking for a sample day only opens at 5 pm the day before it. To try booking sooner, a day has to be opened early. That's the coordinator's job in step 9. Until then, ask me and I'll open one. The same goes for packing and the counter: ask me and I'll set up today as a pickup day with a few bags.</p>
+<p>Booking for a sample day only opens at 5 pm the day before it. To try booking sooner, the coordinator can move that day's booking times on the Pickup days page <span class="rule">S9</span>. The same goes for packing and the counter: ask me and I'll set up today as a pickup day with a few bags.</p>
 
 <!-- ================================================================ -->
 <h2 id="pages"><span class="num">14</span>Which page to read for what</h2>
@@ -687,6 +693,7 @@ npm run dev</pre>
   <tr><td><a href="packing.html">packing.html</a></td><td>The packing queue, the refill rule, the sticky note, and the "ran out" flags.</td></tr>
   <tr><td><a href="counter.html">counter.html</a></td><td>Handing over a bag with the card check, walk-ins, extras, and the student's lock.</td></tr>
   <tr><td><a href="jobs.html">jobs.html</a></td><td>What happens by itself: no-shows, fixing a pickup, totals and deleting after 90 days, the year rule.</td></tr>
+  <tr><td><a href="coordinator.html">coordinator.html</a></td><td>Closing a day and the lock that keeps Book out, moving booking times, the settings and their checks, weekly totals and "fewer than 5".</td></tr>
   <tr><td><code>CONSTRAINTS.md</code></td><td>The rules themselves, short. The one place to check a rule.</td></tr>
   <tr><td><code>DECISIONS.md</code></td><td>Every choice, by date, with the reason. Good for interview answers.</td></tr>
 </table>

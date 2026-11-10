@@ -24,7 +24,7 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 - **P9** Wrong passwords are limited per ID number, so nobody can guess a password by trying many. It slows tries down instead of locking the account, so nobody can lock a student out on purpose.
 - **P10** The ID number never appears in web addresses, logs or error messages. A test checks this.
 - **P11** The secret key is backed up somewhere safe, outside the database. Without it, no card can be matched to an account.
-- **P12** The coordinator sees totals by week, and any number under 5 shows as "fewer than 5".
+- **P12** The coordinator sees totals by week, and any number under 5, 0 included, shows as "fewer than 5". The server hides it, so the real number never reaches the browser.
 - **P13** Accounts with no pickup for a year are deleted. An account that never had a pickup counts from when it was made. An account is kept while it has a booking or walk-in on record, or a setup code that hasn't run out.
 
 ### How often
@@ -39,9 +39,9 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 - **S2** A slot never goes over its capacity, even when many people book at once.
 - **S5** Booking for a pickup day opens at the booking open time and closes at the booking close time. All of a day's slots open together. With the sample settings, Monday's slots can be booked from Sunday 5 pm until Monday 12 pm, and Thursday's from Wednesday 5 pm until Thursday 12 pm.
 - **S6** Students can cancel until the booking close time. The cancelled slot can be booked by someone else straight away. A student who cancels can't book again for that same pickup day.
-- **S7** The coordinator can close a day for a holiday, bad weather or the Christmas break. Every booking that day is cancelled, even if it's already packed, and those students can book again. Packed bags are unpacked so the shelf matches the stock count.
+- **S7** The coordinator can close a day for a holiday, bad weather or the Christmas break, with a reason students see. Every booking that day is cancelled, even if it's already packed, and those students can book again. Packed bags are unpacked so the shelf matches the stock count. Bags already handed over and walk-ins already served stay recorded. A day can be closed until its no-show time, and a date up to a year ahead can be closed before its day is made. A closed day can be opened again only if closing it cancelled no bookings, because those students couldn't book that day again.
 - **S8** The student picks a slot first and then chooses items. The slot is held for them for the slot hold time, with a countdown on screen. If they don't book in that time, the slot is free again straight away and they start over. A student can hold only one slot at a time. Before holding, the system checks the pickup gap, that they have no other upcoming booking, and that they didn't cancel for this day. It checks again when they press Book.
-- **S9** The coordinator can move one day's booking open and close times, for example if the website was down, without changing the settings for other days.
+- **S9** The coordinator can move one day's booking open and close times, for example if the website was down, without changing the settings for other days. Only until booking closes, because packing starts then. Booking must still close by the time pickup starts.
 
 ### Items and stock
 
