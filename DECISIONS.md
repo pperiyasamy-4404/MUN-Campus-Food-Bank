@@ -665,3 +665,12 @@ Found and fixed:
 - **A screen reader wasn't told when a page opened, and every tab was called "Campus Food Bank".** New `PageHeading.tsx`: each page's heading names the tab ("Pickup days · Campus Food Bank") and takes the focus when the page or a booking stage opens, but only when nothing else has the focus, so it never jumps out of a box someone is typing in.
 - **The Stock page scrolled sideways on a small phone.** The hidden photo pickers were full width: the rule for all boxes (width 100%) beat the "visually hidden" rule. That rule now always wins.
 Not done: a real screen reader (NVDA) and real users. Automatic checks find only part of what matters.
+
+**A one-command demo (10 November), for showing the project to someone.**
+`backend/app/demo.py`, run with `python -m app.demo` from `backend/`, then open http://localhost:8000. It shows every page with something on it, without anyone having to book, pack and hand over first.
+- **It uses the test database, never the working one.** The tests empty the test database on every run anyway, so nothing is lost, and no new database (which needs the PostgreSQL admin password) has to be made. It refuses to start if the two addresses are the same.
+- **Its clock is set to the coming Thursday at 4 pm and runs on from there**, the same way the tests stop the clock (`get_now`). At 4 pm packing, the counter and walk-ins are all open. The story is made through the real rules (book, pack, hand over, no-show, move booking times), not by writing rows straight into tables, so the demo can't show a state the system itself could never reach.
+- **Made-up students only**: ID numbers 202300001 to 202300006, one shared password, printed at the start. Alex is the coordinator, Sam a volunteer.
+- **It serves the built website itself** (`frontend/dist`, made by `npm run build`), so one command is enough. Only the demo does this: where the real site is hosted isn't decided yet.
+- Nothing runs the jobs script in the demo, so the 6 pm no-shows aren't marked unless it's run by hand.
+Also: `app.sample_data` now makes the same week of pickup days the jobs script makes (it made 4 days, from before the "one week ahead" answer), and its filling part is shared with the demo.

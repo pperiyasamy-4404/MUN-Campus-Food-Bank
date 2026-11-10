@@ -5,14 +5,14 @@ Run from backend/:  .venv\\Scripts\\python -m app.sample_data
 Everything here is made up. The real items and rules come from the Campus Food Bank later.
 """
 
-from datetime import date, datetime, time, timedelta
+from datetime import UTC, datetime, time
 
 from sqlalchemy import select
 
 from app.db import SessionLocal
 from app.models import Category, Item, PickupHours, Settings, Tag, Variety, VarietyTag
 from app.services.photos import add_sample_photos
-from app.services.pickup_days import NEWFOUNDLAND, make_pickup_day
+from app.services.pickup_days import make_days_ahead
 
 # The sample values from CONSTRAINTS.md.
 SAMPLE_SETTINGS = dict(
@@ -84,37 +84,31 @@ def add_food(db, food: dict, is_extra: bool, tags: dict[str, Tag]) -> None:
                     db.add(VarietyTag(variety_id=variety.id, tag_id=tags[tag_name].id))
 
 
-def next_pickup_dates(count: int) -> list[date]:
-    """The next pickup dates from today, in Newfoundland."""
-    day =datetime.now(NEWFOUNDLAND).date()
-    weekdays = {weekday for weekday, _, _ in SAMPLE_PICKUP_HOURS}
-    found = []
-    while len(found) < count:
-        day += timedelta(days=1)
-        if day.isoweekday() in weekdays:
-            found.append(day)
-    return found
+def add_sample_data(db, now: datetime) -> None:
+    """The sample settings, pickup hours, tags, food and photos, without any pickup days.
+
+    The demo (app.demo) uses this too, with its own clock.
+    """
+    db.add(Settings(**SAMPLE_SETTINGS))
+    for weekday, starts_at, ends_at in SAMPLE_PICKUP_HOURS:
+        db.add(PickupHours(weekday=weekday, starts_at=starts_at, ends_at=ends_at))
+    tags = {name: Tag(name=name) for name in TAGS}
+    db.add_all(tags.values())
+    db.flush()
+
+    add_food(db, SAMPLE_FOOD, is_extra=False, tags=tags)
+    add_food(db, SAMPLE_EXTRAS, is_extra=True, tags=tags)
+    add_sample_photos(db, now)
 
 
 def main() -> None:
+    now = datetime.now(UTC)
     with SessionLocal.begin() as db:
         if db.scalar(select(Settings)) is not None:
             raise SystemExit("The database already has data. Sample data goes into an empty database only.")
-
-        db.add(Settings(**SAMPLE_SETTINGS))
-        for weekday, starts_at, ends_at in SAMPLE_PICKUP_HOURS:
-            db.add(PickupHours(weekday=weekday, starts_at=starts_at, ends_at=ends_at))
-        tags = {name: Tag(name=name) for name in TAGS}
-        db.add_all(tags.values())
-        db.flush()
-
-        add_food(db, SAMPLE_FOOD, is_extra=False, tags=tags)
-        add_food(db, SAMPLE_EXTRAS, is_extra=True, tags=tags)
-        add_sample_photos(db, datetime.now(NEWFOUNDLAND))
-
-        dates = next_pickup_dates(4)
-        for pickup_date in dates:
-            make_pickup_day(db, pickup_date)
+        add_sample_data(db, now)
+        # The same week of pickup days the jobs script makes (S1).
+        dates = [day.pickup_date for day in make_days_ahead(db, now)]
 
     print("Sample data added. Pickup days:", ", ".join(f"{d:%a %d %b}" for d in dates))
 
