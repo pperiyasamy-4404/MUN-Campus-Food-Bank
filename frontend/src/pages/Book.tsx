@@ -4,6 +4,7 @@ import { Problem } from '../forms.tsx'
 import { useMe } from '../me.ts'
 import { showClock, showDate, showDayAndClock } from '../time.ts'
 import { ChooseFood } from './ChooseFood.tsx'
+import { PageHeading } from '../PageHeading.tsx'
 
 // A student's booking page, in three stages (S8):
 //   1. choose a time: it's held for them for 10 minutes
@@ -155,7 +156,7 @@ function ChooseTime({
 
   return (
     <>
-      <h1>Book a pickup</h1>
+      <PageHeading>Book a pickup</PageHeading>
       <p className="lead">
         Choose a time first. It's kept for you for {holdMinutes} minutes while you choose your food. All times are
         Newfoundland time.
@@ -242,7 +243,7 @@ function YourBooking({
 
   return (
     <div className="narrow-wide">
-      <h1>Your booking</h1>
+      <PageHeading>Your booking</PageHeading>
       <section className="code-box">
         <h2>Your code</h2>
         <p className="code">{booking.code}</p>

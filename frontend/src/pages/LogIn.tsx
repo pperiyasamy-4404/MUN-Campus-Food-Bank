@@ -5,6 +5,7 @@ import { Field, Problem } from '../forms.tsx'
 import { useValues } from '../useValues.ts'
 import { useMe } from '../me.ts'
 import { AlreadyLoggedIn } from './AlreadyLoggedIn.tsx'
+import { PageHeading } from '../PageHeading.tsx'
 
 // Logging in, for students (ID number) and for staff (username).
 
@@ -50,7 +51,7 @@ function LogIn({ who }: { who: 'student' | 'staff' }) {
 
   return (
     <div className="narrow">
-      <h1>{student ? 'Log in' : 'Staff log in'}</h1>
+      <PageHeading>{student ? 'Log in' : 'Staff log in'}</PageHeading>
       <form onSubmit={logIn} noValidate>
         <Problem message={problem} />
         {student ? (

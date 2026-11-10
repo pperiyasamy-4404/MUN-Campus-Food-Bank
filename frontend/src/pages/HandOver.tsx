@@ -6,6 +6,7 @@ import { useMe } from '../me.ts'
 import { showClock, showDate } from '../time.ts'
 import { CounterNav, ExtrasPicker, ShelfPicker } from './CounterParts.tsx'
 import { asChoices, total, useCounterPage, type Chosen } from './counterTools.ts'
+import { PageHeading } from '../PageHeading.tsx'
 
 // Handing over a booked bag (P5, B3, U6, E3). The student says their code, the
 // volunteer finds the bag, adds any extras they ask for, types the number on
@@ -49,7 +50,7 @@ export function HandOver() {
   return (
     <div>
       <CounterNav />
-      <h1>Hand over a bag</h1>
+      <PageHeading>Hand over a bag</PageHeading>
       {!page.is_open && <p className="notice">{page.why_not}</p>}
 
       {done ? (

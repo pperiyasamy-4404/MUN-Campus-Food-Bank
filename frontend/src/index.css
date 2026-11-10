@@ -5,12 +5,15 @@
 
   /* light-dark(): the first colour in light mode, the second in dark mode */
   --ink: light-dark(#0f172a, #e2e8f0);
-  --muted: light-dark(#475569, #94a3b8);
+  /* Dark mode's muted grey is light enough to read on the grey chips too (4.5:1, WCAG AA). */
+  --muted: light-dark(#475569, #a7b3c4);
   --line: light-dark(#e2e8f0, #334155);
   --page: light-dark(#f8fafc, #0f172a);
   --card: light-dark(#ffffff, #1e293b);
   --blue: light-dark(#2563eb, #60a5fa);
   --blue-bg: light-dark(#dbeafe, #1e3a5f);
+  /* Blue text on --blue-bg: darker in light mode, so it's easy to read. */
+  --blue-on-bg: light-dark(#1d4ed8, #60a5fa);
   --green: light-dark(#065f46, #6ee7b7);
   --green-bg: light-dark(#d1fae5, #064e3b);
   --amber: light-dark(#92400e, #fcd34d);
@@ -36,6 +39,12 @@ main {
 h1 {
   margin: 0.2rem 0 0.5rem;
   line-height: 1.2;
+}
+
+/* A page heading takes the focus when a page opens (PageHeading.tsx), for
+   screen readers. It isn't something to click, so it gets no focus ring. */
+h1[tabindex='-1']:focus {
+  outline: none;
 }
 
 h2 {
@@ -237,7 +246,7 @@ h4 {
 }
 
 .top a.active {
-  color: var(--blue);
+  color: var(--blue-on-bg);
   background: var(--blue-bg);
   font-weight: 600;
 }
@@ -506,11 +515,16 @@ button.link-button {
   color: var(--muted);
 }
 
-/* Read out by screen readers, but not shown. */
+/* Read out by screen readers, but not shown. !important, so the general
+   rule for boxes (input: width 100%) can't make a hidden one full width and
+   push the page sideways on a phone. */
 .visually-hidden {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  border: 0 !important;
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
@@ -1152,8 +1166,10 @@ button.extra-choice.picked .muted {
   border-top: 1px solid var(--line);
 }
 
-.food-row-dim {
-  opacity: 0.6;
+/* Out of stock: the name goes grey. Not faded with opacity, which made the
+   tags and "Out of stock" too faint to read. */
+.food-row-dim .food-row-name {
+  color: var(--muted);
 }
 
 .food-row-about {

@@ -5,6 +5,7 @@ import { useMe } from '../me.ts'
 import { showDate, showDayAndClock } from '../time.ts'
 import { CoordinatorNav } from './CoordinatorParts.tsx'
 import { useStaffData, WEEKDAYS } from './coordinatorTools.ts'
+import { PageHeading } from '../PageHeading.tsx'
 
 // The food bank's numbers and weekly pickup hours (R3). Some are used straight
 // away. The ones that make pickup days are copied onto each day when it's
@@ -20,7 +21,7 @@ export function Settings() {
   return (
     <div>
       <CoordinatorNav />
-      <h1>Settings</h1>
+      <PageHeading>Settings</PageHeading>
       <SettingsForm page={load.data} onLoggedOut={forget} />
     </div>
   )

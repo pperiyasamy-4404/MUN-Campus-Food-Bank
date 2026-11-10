@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import type { Me } from '../api.ts'
 import { useMe } from '../me.ts'
+import { PageHeading } from '../PageHeading.tsx'
 
 /**
  * Shown on the login and setup pages when someone is already logged in here.
@@ -14,7 +15,7 @@ export function AlreadyLoggedIn({ me }: { me: Me }) {
   const staff = me.kind === 'staff'
   return (
     <div className="narrow">
-      <h1>You're logged in</h1>
+      <PageHeading>You're logged in</PageHeading>
       {staff ? (
         <>
           <p>

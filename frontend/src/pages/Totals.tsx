@@ -3,6 +3,7 @@ import { useMe } from '../me.ts'
 import { showDate } from '../time.ts'
 import { CoordinatorNav } from './CoordinatorParts.tsx'
 import { useStaffData } from './coordinatorTools.ts'
+import { PageHeading } from '../PageHeading.tsx'
 
 // Weekly totals for the coordinator (P12): only numbers, by week. Any number
 // from 1 to 4 arrives from the server as "fewer than 5", so the page never has
@@ -19,7 +20,7 @@ export function Totals() {
   return (
     <div>
       <CoordinatorNav />
-      <h1>Weekly totals</h1>
+      <PageHeading>Weekly totals</PageHeading>
       <p className="lead">
         What each week added up to, Monday to Sunday. A pickup day counts once it's over, at its no-show time. Any number
         from 1 to 4 shows as “fewer than 5”, so nobody can be picked out. Weeks with no bookings and no walk-ins aren't

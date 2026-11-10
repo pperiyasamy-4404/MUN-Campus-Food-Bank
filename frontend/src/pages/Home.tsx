@@ -3,6 +3,7 @@ import { FoodList } from '../FoodList.tsx'
 import { PickupDayList } from '../PickupDayList.tsx'
 import { useAccount } from '../me.ts'
 import { showDay } from '../time.ts'
+import { PageHeading } from '../PageHeading.tsx'
 
 export function Home() {
   const account = useAccount()
@@ -17,7 +18,7 @@ export function Home() {
         </p>
       )}
       <section className="hero">
-        <h1>Campus Food Bank</h1>
+        <PageHeading>Campus Food Bank</PageHeading>
         <p>
           Free food for MUN students. Book a pickup time, choose your food, and collect your bag at the counter. All
           times are Newfoundland time.

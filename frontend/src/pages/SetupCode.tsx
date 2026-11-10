@@ -4,6 +4,7 @@ import { Field, Problem, SetupCodeBox } from '../forms.tsx'
 import { useValues } from '../useValues.ts'
 import { useMe } from '../me.ts'
 import { CounterNav } from './CounterParts.tsx'
+import { PageHeading } from '../PageHeading.tsx'
 
 // At the counter: the volunteer checks a student's MUN card and gives them a
 // setup code (R1). A new card gets an account. A card that has one gets a new
@@ -45,7 +46,7 @@ export function SetupCode() {
   return (
     <div className="narrow">
       <CounterNav />
-      <h1>Give a setup code</h1>
+      <PageHeading>Give a setup code</PageHeading>
       {issued ? (
         <SetupCodeBox
           title={issued.new_account ? 'New account made' : 'New setup code for an existing account'}

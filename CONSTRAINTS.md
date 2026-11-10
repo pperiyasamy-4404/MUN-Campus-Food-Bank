@@ -141,7 +141,7 @@ Problems we know about and accept for now.
 ## Before going live
 
 - A privacy review, and deciding where the system is hosted (where the data actually lives).
-- Accessibility (screen readers, large text), and students without smartphones.
+- Accessibility (screen readers, large text), and students without smartphones. Automatic checks (axe, WCAG 2.1 AA) pass on every page in light and dark, booking works with the keyboard only, and every page fits a 320-pixel screen (10 November). Still to do: try it with a real screen reader (NVDA), and with students who use one.
 
 ## Not in the prototype
 

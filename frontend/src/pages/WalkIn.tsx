@@ -6,6 +6,7 @@ import { showDate } from '../time.ts'
 import { useValues } from '../useValues.ts'
 import { CounterNav, ExtrasPicker, ShelfPicker } from './CounterParts.tsx'
 import { asChoices, total, useCounterPage, type Chosen } from './counterTools.ts'
+import { PageHeading } from '../PageHeading.tsx'
 
 // A walk-in (W1, W3, W4): a student served without a booking, in their own line.
 // 1. Check their MUN card: the pickup gap, with no exception.
@@ -60,7 +61,7 @@ export function WalkIn() {
   return (
     <div>
       <CounterNav />
-      <h1>Walk-in</h1>
+      <PageHeading>Walk-in</PageHeading>
       <p className="lead">A student without a booking. They take what's on the shelf that nobody booked.</p>
       {!page.walk_ins_open && <p className="notice">{page.walk_ins_why_not}</p>}
 

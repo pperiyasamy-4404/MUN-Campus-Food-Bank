@@ -5,6 +5,7 @@ import { Field, NewPasswordFields, Problem } from '../forms.tsx'
 import { useValues } from '../useValues.ts'
 import { useMe } from '../me.ts'
 import { AlreadyLoggedIn } from './AlreadyLoggedIn.tsx'
+import { PageHeading } from '../PageHeading.tsx'
 
 // Choosing a password with a setup code from the counter (R1) or the coordinator (R3).
 // The same page resets a forgotten password: it's just a new code.
@@ -56,7 +57,7 @@ function SetUp({ who }: { who: 'student' | 'staff' }) {
 
   return (
     <div className="narrow">
-      <h1>{student ? 'Set up your account' : 'Choose your staff password'}</h1>
+      <PageHeading>{student ? 'Set up your account' : 'Choose your staff password'}</PageHeading>
       <p className="lead">
         {student
           ? 'Use the setup code you got at the food bank counter. You can do this right there, or later at home.'

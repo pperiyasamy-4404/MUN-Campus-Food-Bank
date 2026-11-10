@@ -4,6 +4,7 @@ import type { PackingQueue, QueueBag } from '../api.ts'
 import { useMe } from '../me.ts'
 import { showClock, showDate } from '../time.ts'
 import { STATUS_WORDS } from './packingTools.ts'
+import { PageHeading } from '../PageHeading.tsx'
 
 // The packing queue (K1, U7): every bag for the pickup day being packed, by
 // pickup time, so the earliest ones are packed first. It asks the server again
@@ -50,7 +51,7 @@ export function Packing() {
   if (day === null) {
     return (
       <div>
-        <h1>Packing</h1>
+        <PageHeading>Packing</PageHeading>
         <p className="muted">No pickup days are coming up.</p>
       </div>
     )
@@ -60,7 +61,7 @@ export function Packing() {
 
   return (
     <div>
-      <h1>Packing for {showDate(day.pickup_date)}</h1>
+      <PageHeading>Packing for {showDate(day.pickup_date)}</PageHeading>
       {/* No full stop after a time: it ends in "a.m." or "p.m." already. */}
       <p className="lead">
         Pack the earliest bags first. Packing starts when booking closes, at {showClock(day.packing_starts_at)}

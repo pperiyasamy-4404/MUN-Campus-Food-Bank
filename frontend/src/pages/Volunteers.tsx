@@ -5,6 +5,7 @@ import { useValues } from '../useValues.ts'
 import { useMe } from '../me.ts'
 import { showDay, showDayAndClock } from '../time.ts'
 import { CoordinatorNav } from './CoordinatorParts.tsx'
+import { PageHeading } from '../PageHeading.tsx'
 
 // The coordinator's list of volunteers (R3): add one, give a new setup code,
 // or switch an account off when someone leaves.
@@ -82,7 +83,7 @@ export function Volunteers() {
   return (
     <div>
       <CoordinatorNav />
-      <h1>Volunteers</h1>
+      <PageHeading>Volunteers</PageHeading>
       <p className="lead">
         Each volunteer has their own login, so the log can say who did what. They choose their own password
         with a setup code. You never see it.

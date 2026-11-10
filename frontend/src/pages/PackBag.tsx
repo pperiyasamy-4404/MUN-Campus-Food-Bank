@@ -12,6 +12,7 @@ import {
   withNotOnShelf,
   type Findings,
 } from './packingTools.ts'
+import { PageHeading } from '../PageHeading.tsx'
 
 // Packing one bag (U4-U8). The volunteer puts in the booked food and taps
 // "None on the shelf" for anything that isn't there. After each tap the server
@@ -61,9 +62,9 @@ export function PackBag() {
   return (
     <div>
       <BackToQueue />
-      <h1>
+      <PageHeading>
         Bag <span className="bag-code">{bag.code}</span>
-      </h1>
+      </PageHeading>
       <p className="lead">
         Pickup {showDate(bag.pickup_date)} at {showClock(bag.starts_at)} · {STATUS_WORDS[bag.status] ?? bag.status}
       </p>

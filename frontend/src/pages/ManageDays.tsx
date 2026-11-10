@@ -5,6 +5,7 @@ import { useMe } from '../me.ts'
 import { showClock, showDate, showDayAndClock } from '../time.ts'
 import { CoordinatorNav } from './CoordinatorParts.tsx'
 import { count, forTimeBox, sayWeekdays, todayInStJohns, useStaffData } from './coordinatorTools.ts'
+import { PageHeading } from '../PageHeading.tsx'
 
 // The coordinator's pickup days: close a day for a holiday, bad weather or the
 // Christmas break (S7), open it again, or move when booking opens and closes
@@ -36,7 +37,7 @@ export function ManageDays() {
   return (
     <div>
       <CoordinatorNav />
-      <h1>Pickup days</h1>
+      <PageHeading>Pickup days</PageHeading>
       <p className="lead">
         Close a day for a holiday, bad weather or the Christmas break, or move when booking opens and closes for one
         day. Days are made a week ahead. Every change is logged with your name.

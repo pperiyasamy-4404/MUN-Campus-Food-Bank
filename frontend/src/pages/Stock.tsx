@@ -4,6 +4,7 @@ import { useMe } from '../me.ts'
 import { showDate, showDayAndClock } from '../time.ts'
 import { AddFood, AddVariety, CategoriesAndTags, ItemPhotoEditor, Rename, VarietyEditor } from './StockForms.tsx'
 import { change, needsCounting, withVariety, type StockTools } from './stockTools.ts'
+import { PageHeading } from '../PageHeading.tsx'
 
 // The staff stock page (I8, R2): count the shelf before booking opens, and add
 // new food when donations come in. Every staff member can do everything here,
@@ -52,7 +53,7 @@ export function Stock() {
 
   return (
     <div>
-      <h1>Food and stock</h1>
+      <PageHeading>Food and stock</PageHeading>
       <p className="lead">
         Count what's on the shelf and type the number. Food that's booked but not packed yet is taken off for
         you, so a count is right even while booking is open.

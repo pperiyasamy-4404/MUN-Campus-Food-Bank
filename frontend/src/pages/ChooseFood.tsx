@@ -3,6 +3,7 @@ import { send, type BookingDetails, type Food, type HeldTime, type Limits, type 
 import { FoodCard, FoodRow } from '../FoodCards.tsx'
 import { Problem } from '../forms.tsx'
 import { showDayAndClock } from '../time.ts'
+import { PageHeading } from '../PageHeading.tsx'
 
 // Stage 2 of booking: the time is held, a countdown runs, and the student
 // chooses food and substitutes, then presses Book (S8, I3, U2).
@@ -103,8 +104,13 @@ export function ChooseFood({
 
   return (
     <div>
-      <h1>Choose your food</h1>
-      <div className="hold-bar" role="status">
+      <PageHeading>Choose your food</PageHeading>
+      {/* Not a live region: it changes every second, and a screen reader would read
+          every change. The hidden line below speaks only at a few moments. */}
+      <div className="hold-bar">
+        <p className="visually-hidden" role="status">
+          {timeLeftToSay(secondsLeft, limits.hold_minutes)}
+        </p>
         <p>
           <strong>{showDayAndClock(hold.starts_at)}</strong> is kept for you for{' '}
           <strong className={secondsLeft < 60 ? 'time-short' : undefined}>{asMinutes(secondsLeft)}</strong> more.
@@ -299,6 +305,17 @@ function useCountdown(fromServer: number, timeUp: () => void): number {
     return () => clearInterval(timer)
   }, [fromServer, timeUp])
   return left
+}
+
+/**
+ * What a screen reader says about the time left. It changes only a few times
+ * (at the start, then at 5, 2 and 1 minutes left), so it's read only then.
+ */
+function timeLeftToSay(seconds: number, holdMinutes: number): string {
+  if (seconds <= 60) return 'Less than 1 minute left to book.'
+  if (seconds <= 120) return 'Less than 2 minutes left to book.'
+  if (seconds <= 300) return 'Less than 5 minutes left to book.'
+  return `Your time is kept for ${holdMinutes} minutes while you choose.`
 }
 
 /** 125 seconds as "2:05". */

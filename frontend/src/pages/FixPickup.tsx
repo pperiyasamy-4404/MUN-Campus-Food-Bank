@@ -5,6 +5,7 @@ import { useMe } from '../me.ts'
 import { showClock, showDate, showDayAndClock } from '../time.ts'
 import { CounterNav } from './CounterParts.tsx'
 import { useFixPage } from './counterTools.ts'
+import { PageHeading } from '../PageHeading.tsx'
 
 // Fixing a pickup marked wrong, once the day is over (B6). A bag handed over
 // without pressing Hand over is a no-show at 6 pm: mark it picked up. A bag
@@ -31,7 +32,7 @@ export function FixPickup() {
   return (
     <div>
       <CounterNav />
-      <h1>Fix a pickup</h1>
+      <PageHeading>Fix a pickup</PageHeading>
       <p className="lead">
         For a mistake found after the day is over: a bag handed over without pressing Hand over, or one marked picked up
         that the student never took. Every fix is logged with your name.
