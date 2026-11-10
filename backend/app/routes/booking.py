@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from app.deps import DB, CurrentStudent, Now
-from app.models import Booking, BookingItem, BookingSubstitute, Hold, Item, PickupDay, Slot, Variety
+from app.models import Booking, BookingItem, BookingSubstitute, Hold, Item, PickupDay, Slot, Student, Variety
 from app.services import booking as booking_rules
 from app.services.pickup_days import NEWFOUNDLAND
 from app.services.settings import food_bank_settings
@@ -64,12 +64,21 @@ class BookingOut(BaseModel):
     substitutes: list[SubstituteLine]
 
 
+class ClosedDay(BaseModel):
+    """The food bank closed the day the student had booked, so the booking was cancelled (S7)."""
+
+    pickup_date: date
+    reason: str
+
+
 class MyBooking(BaseModel):
     limits: Limits
     booking: BookingOut | None
     hold: HoldOut | None
     # The first date the pickup gap allows, if there's been a pickup (F1).
     next_pickup_allowed_on: date | None
+    # Until that day is over. We have no other way to tell them (CONSTRAINTS.md, known issues).
+    closed_day: ClosedDay | None
 
 
 def hold_out(hold: Hold, db: DB, now: datetime) -> HoldOut:
@@ -131,7 +140,26 @@ def my_booking(student: CurrentStudent, db: DB, now: Now) -> MyBooking:
         booking=booking_out(upcoming, db, now) if upcoming else None,
         hold=hold_out(hold, db, now) if hold is not None and hold.held_until > now else None,
         next_pickup_allowed_on=booking_rules.next_pickup_allowed_on(db, student, settings),
+        closed_day=closed_day(db, student, now),
     )
+
+
+def closed_day(db: DB, student: Student, now: datetime) -> ClosedDay | None:
+    """A booking of theirs the food bank cancelled by closing the day, if that day isn't over yet."""
+    day = db.scalar(
+        select(PickupDay)
+        .join(Booking, Booking.pickup_day_id == PickupDay.id)
+        .where(
+            Booking.student_id == student.id,
+            Booking.cancel_reason == "day_closed",
+            PickupDay.no_show_at > now,
+        )
+        .order_by(PickupDay.pickup_date)
+        .limit(1)
+    )
+    if day is None or day.closed_reason is None:
+        return None
+    return ClosedDay(pickup_date=day.pickup_date, reason=day.closed_reason)
 
 
 # ---------- holding a time ----------

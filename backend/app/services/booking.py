@@ -130,7 +130,7 @@ def hold_slot(db: Session, student: Student, slot_id: int, now: datetime) -> Hol
     slot = db.scalar(select(Slot).where(Slot.id == slot_id).with_for_update())
     if slot is None:
         raise NotFound("There's no pickup time with that number.")
-    day = db.get(PickupDay, slot.pickup_day_id)
+    day = _day_as_it_is_now(db, slot)
     reason = why_not(db, student, day, settings, now)
     if reason is not None:
         raise Problem(reason)
@@ -216,7 +216,7 @@ def book(db: Session, student: Student, items: list[Choice], substitutes: list[i
         raise HoldRanOut(f"Your {settings.hold_minutes} minutes ran out, so the time was let go. Choose a time again.")
 
     # 2. The rules, again: something may have changed while they chose.
-    day = db.get(PickupDay, slot.pickup_day_id)
+    day = _day_as_it_is_now(db, slot)
     reason = why_not(db, student, day, settings, now)
     if reason is not None:
         raise Problem(reason)
@@ -258,6 +258,18 @@ def book(db: Session, student: Student, items: list[Choice], substitutes: list[i
     db.delete(hold)
     db.flush()
     return booking
+
+
+def _day_as_it_is_now(db: Session, slot: Slot) -> PickupDay:
+    """The slot's day, read again after the slot was locked.
+
+    Closing a day locks its slots first (services/day_changes.py). Read after
+    the slot's lock, a day closed a moment ago is seen as closed, even if this
+    request had read it before.
+    """
+    return db.scalar(
+        select(PickupDay).where(PickupDay.id == slot.pickup_day_id).execution_options(populate_existing=True)
+    )
 
 
 def _no_hold(db: Session, student: Student) -> Problem:

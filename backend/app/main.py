@@ -2,7 +2,21 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.routes import accounts, booking, counter, fixes, food, login, packing, photos, pickup_days, stock
+from app.routes import (
+    accounts,
+    booking,
+    counter,
+    days,
+    fixes,
+    food,
+    login,
+    packing,
+    photos,
+    pickup_days,
+    settings,
+    stock,
+    totals,
+)
 from app.problems import Problem
 from app.services.accounts import TooManyTries
 
@@ -20,6 +34,9 @@ app.include_router(packing.router)
 app.include_router(counter.router)
 app.include_router(fixes.router)
 app.include_router(photos.router)
+app.include_router(days.router)
+app.include_router(settings.router)
+app.include_router(totals.router)
 
 
 @app.exception_handler(Problem)

@@ -5,15 +5,15 @@ sample settings. Only totals are kept. A day's totals are worked out from its
 details while they exist, and added to its week just before they're deleted
 (services/retention.py), so each day is counted exactly once.
 
-The coordinator's page (step 9) will show each week as the saved totals plus
-the days still on record, with small numbers hidden (P12).
+The coordinator's page shows each week as the saved totals plus the days
+still on record (weeks() below), with small numbers hidden (P12, routes/totals.py).
 """
 
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
-from sqlalchemy import func, select
+from sqlalchemy import exists, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -102,3 +102,41 @@ def add_to_week(db: Session, week_starts_on: date, totals: Totals) -> None:
                 set_={"given_out": WeeklyItemTotal.given_out + new_item.excluded.given_out},
             )
         )
+
+
+# ---------- what the coordinator sees (P12) ----------
+
+
+def add_up(into: Totals, more: Totals) -> None:
+    into.picked_up += more.picked_up
+    into.walk_ins += more.walk_ins
+    into.no_shows += more.no_shows
+    into.cancelled += more.cancelled
+    into.given_out.update(more.given_out)
+
+
+def weeks(db: Session, now: datetime) -> dict[date, Totals]:
+    """Every week's totals, by the Monday it starts on, newest first.
+
+    A week is its saved totals, from days whose details were deleted, plus the
+    days whose details are still here. Each day is in one or the other, never
+    both, because saving and deleting happen in one transaction. A day counts
+    once it's over, at its no-show time: before that its numbers aren't final.
+    Days still here can change with a fix (B6), and the totals change with them.
+
+    Weeks with no bookings and no walk-ins aren't listed.
+    """
+    found: dict[date, Totals] = {}
+    for row in db.scalars(select(WeeklyTotal)):
+        found[row.week_starts_on] = Totals(
+            picked_up=row.picked_up, walk_ins=row.walk_ins, no_shows=row.no_shows, cancelled=row.cancelled
+        )
+    for row in db.scalars(select(WeeklyItemTotal)):
+        found[row.week_starts_on].given_out[row.item_id] += row.given_out
+
+    has_details = exists().where(Booking.pickup_day_id == PickupDay.id) | exists().where(
+        WalkIn.pickup_day_id == PickupDay.id
+    )
+    for day in db.scalars(select(PickupDay).where(PickupDay.no_show_at <= now, has_details)):
+        add_up(found.setdefault(week_of(day.pickup_date), Totals()), day_totals(db, day))
+    return dict(sorted(found.items(), reverse=True))

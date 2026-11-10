@@ -159,3 +159,7 @@ class AuditLog(Base):
     booking_id: Mapped[int | None] = mapped_column(
         ForeignKey("bookings.id", ondelete="SET NULL")
     )
+    # The pickup day it was done to, like a day the coordinator closed (S7, S9).
+    pickup_day_id: Mapped[int | None] = mapped_column(
+        ForeignKey("pickup_days.id", ondelete="SET NULL")
+    )

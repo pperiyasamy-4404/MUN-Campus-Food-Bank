@@ -103,8 +103,12 @@ def say_day(on: date) -> str:
 
 def say_clock(moment: datetime) -> str:
     """'3:30 p.m.', in Newfoundland time (T1)."""
-    local = moment.astimezone(NEWFOUNDLAND)
-    return f"{local:%I:%M}".lstrip("0") + (" a.m." if local.hour < 12 else " p.m.")
+    return say_time(moment.astimezone(NEWFOUNDLAND).time())
+
+
+def say_time(clock: time) -> str:
+    """'3:30 p.m.', for a time of day like the ones in the settings."""
+    return f"{clock:%I:%M}".lstrip("0") + (" a.m." if clock.hour < 12 else " p.m.")
 
 
 def say_moment(moment: datetime) -> str:
