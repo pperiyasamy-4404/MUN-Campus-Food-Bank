@@ -28,7 +28,7 @@ export function Layout() {
           {account?.kind === 'staff' && <NavLink to="/packing">Packing</NavLink>}
           {account?.kind === 'staff' && <NavLink to="/stock">Stock</NavLink>}
           {account?.kind === 'staff' && account.role === 'coordinator' && (
-            <NavLink to="/volunteers">Volunteers</NavLink>
+            <NavLink to="/coordinator">Coordinator</NavLink>
           )}
           <span className="spacer" />
           {account === null && me.state !== 'loading' && (

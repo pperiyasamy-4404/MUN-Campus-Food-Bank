@@ -4,6 +4,7 @@ import { Field, Problem, SetupCodeBox } from '../forms.tsx'
 import { useValues } from '../useValues.ts'
 import { useMe } from '../me.ts'
 import { showDay, showDayAndClock } from '../time.ts'
+import { CoordinatorNav } from './CoordinatorParts.tsx'
 
 // The coordinator's list of volunteers (R3): add one, give a new setup code,
 // or switch an account off when someone leaves.
@@ -80,6 +81,7 @@ export function Volunteers() {
 
   return (
     <div>
+      <CoordinatorNav />
       <h1>Volunteers</h1>
       <p className="lead">
         Each volunteer has their own login, so the log can say who did what. They choose their own password

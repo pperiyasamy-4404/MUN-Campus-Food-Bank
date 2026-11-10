@@ -233,6 +233,8 @@ export type MyBooking = {
   booking: BookingDetails | null
   hold: HeldTime | null
   next_pickup_allowed_on: string | null
+  // The food bank closed the day they had booked, so the booking was cancelled (S7). Until that day is over.
+  closed_day: { pickup_date: string; reason: string } | null
 }
 
 // ---------- packing, for staff (backend/app/routes/packing.py) ----------
@@ -382,4 +384,85 @@ export type FixPage = {
   day: string | null // the one shown
   fix_before: string | null // when booking opens for the next pickup day, if still to come (B6)
   bags: FixBag[]
+}
+
+// ---------- the coordinator (backend/app/routes/days.py, settings.py, totals.py) ----------
+
+export type CoordinatorDay = {
+  pickup_date: string
+  booking_opens_at: string
+  booking_closes_at: string
+  pickup_starts_at: string
+  pickup_ends_at: string
+  no_show_at: string
+  booking_status: BookingStatus
+  closed_reason: string | null
+  booked: number // bookings still to come
+  packed: number // of those, bags already packed
+  // Why each change can't be made, like "Booking for Monday, November 9 is over, and packing has started."
+  why_not_close: string | null
+  why_not_reopen: string | null
+  why_not_move: string | null
+}
+
+export type DaysPage = {
+  days: CoordinatorDay[] // not over yet, from today
+  pickup_weekdays: number[] // 1 is Monday
+  close_until: string // the furthest date that can be closed
+}
+
+export type ClosedDay = {
+  day: CoordinatorDay
+  cancelled: number
+  were_packed: number
+}
+
+export type PickupHoursRow = {
+  weekday: number // 1 is Monday, 7 is Sunday
+  starts_at: string // "15:30"
+  ends_at: string
+}
+
+export type SettingsValues = {
+  pickup_gap_days: number
+  slot_minutes: number
+  slot_capacity: number
+  hold_minutes: number
+  item_limit: number
+  max_per_item: number
+  substitute_limit: number
+  booking_opens_days_before: number
+  booking_opens_time: string // "17:00"
+  booking_closes_time: string
+  no_show_time: string
+  no_shows_count: boolean
+  retention_days: number
+  setup_code_days: number
+  login_tries: number
+  login_window_minutes: number
+  pickup_hours: PickupHoursRow[]
+}
+
+export type SettingsPage = {
+  settings: SettingsValues
+  days_made: string[] // from tomorrow: they keep their own times
+  days_ahead: number
+  changed_at: string | null
+  changed_by: string | null
+}
+
+/** Any number under 5 comes as "fewer than 5". The real one never leaves the server (P12). */
+export type Shown = number | 'fewer than 5'
+
+export type Week = {
+  week_starts_on: string // the Monday
+  picked_up: Shown
+  walk_ins: Shown
+  no_shows: Shown
+  cancelled: Shown
+  items: { item: string; given_out: Shown }[]
+}
+
+export type TotalsPage = {
+  weeks: Week[]
 }

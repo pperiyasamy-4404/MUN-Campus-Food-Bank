@@ -1,16 +1,19 @@
-import { BrowserRouter, Link, Route, Routes } from 'react-router'
+import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router'
 import { Layout, StaffOnly, StudentOnly } from './Layout.tsx'
 import { MeProvider } from './MeProvider.tsx'
 import { Book } from './pages/Book.tsx'
 import { FixPickup } from './pages/FixPickup.tsx'
 import { HandOver } from './pages/HandOver.tsx'
+import { ManageDays } from './pages/ManageDays.tsx'
 import { Home } from './pages/Home.tsx'
 import { StaffLogIn, StudentLogIn } from './pages/LogIn.tsx'
 import { PackBag } from './pages/PackBag.tsx'
 import { Packing } from './pages/Packing.tsx'
 import { SetupCode } from './pages/SetupCode.tsx'
+import { Settings } from './pages/Settings.tsx'
 import { StaffSetUp, StudentSetUp } from './pages/SetUp.tsx'
 import { Stock } from './pages/Stock.tsx'
+import { Totals } from './pages/Totals.tsx'
 import { Volunteers } from './pages/Volunteers.tsx'
 import { WalkIn } from './pages/WalkIn.tsx'
 
@@ -93,13 +96,38 @@ function App() {
               }
             />
             <Route
-              path="volunteers"
+              path="coordinator"
+              element={
+                <StaffOnly coordinator>
+                  <ManageDays />
+                </StaffOnly>
+              }
+            />
+            <Route
+              path="coordinator/totals"
+              element={
+                <StaffOnly coordinator>
+                  <Totals />
+                </StaffOnly>
+              }
+            />
+            <Route
+              path="coordinator/settings"
+              element={
+                <StaffOnly coordinator>
+                  <Settings />
+                </StaffOnly>
+              }
+            />
+            <Route
+              path="coordinator/volunteers"
               element={
                 <StaffOnly coordinator>
                   <Volunteers />
                 </StaffOnly>
               }
             />
+            <Route path="volunteers" element={<Navigate to="/coordinator/volunteers" replace />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

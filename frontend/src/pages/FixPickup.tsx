@@ -39,7 +39,7 @@ export function FixPickup() {
       {page.fix_before && (
         <p className="notice">
           Fix mistakes before {showDayAndClock(page.fix_before)}, when booking opens for the next pickup day. Then the
-          stock count and the 28 days are right in time.
+          stock count and the pickup gap are right in time.
         </p>
       )}
       {said && (
@@ -134,8 +134,8 @@ function FixRow({
         <div className="card undo-box">
           {toPickedUp ? (
             <p>
-              <strong>Mark bag {bag.code} picked up?</strong> Its food comes off the stock count again, and the 28 days
-              count from this pickup day. This is logged with your name.
+              <strong>Mark bag {bag.code} picked up?</strong> Its food comes off the stock count again, and the pickup
+              gap counts from this pickup day. This is logged with your name.
             </p>
           ) : (
             <p>

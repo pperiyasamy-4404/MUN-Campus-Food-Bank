@@ -63,6 +63,15 @@ export function Book() {
   return (
     <div>
       {notice && <p className="notice">{notice}</p>}
+      {mine.closed_day && !mine.booking && (
+        <div className="problem" role="status">
+          <p>
+            <strong>The food bank closed {showDate(mine.closed_day.pickup_date)},</strong> so your booking for that day
+            was cancelled. You can book another day.
+          </p>
+          <p>Why: {mine.closed_day.reason}</p>
+        </div>
+      )}
       {mine.booking ? (
         <YourBooking
           booking={mine.booking}

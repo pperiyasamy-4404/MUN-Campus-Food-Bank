@@ -1308,3 +1308,117 @@ button.chosen-button {
 .photo-editor .field-error {
   flex-basis: 100%;
 }
+
+/* ---------- the coordinator's pages ---------- */
+
+/* A day's times, as label and value side by side. */
+.day-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.2rem 1rem;
+  margin: 0.4rem 0 0.9rem;
+}
+
+.day-facts dt {
+  color: var(--muted);
+}
+
+.day-facts dd {
+  margin: 0;
+}
+
+.two-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0 1rem;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0 1.2rem;
+}
+
+.hours {
+  border: none;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.hours legend {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.hours-row {
+  display: grid;
+  grid-template-columns: 9rem 9.5rem max-content 9.5rem;
+  justify-content: start;
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 2.9rem;
+}
+
+.hours-row .check {
+  margin: 0;
+}
+
+.hours-row input[type='time'] {
+  margin-top: 0;
+  padding: 0.35rem 0.5rem;
+}
+
+.hours-row .field-error {
+  grid-column: 1 / -1;
+}
+
+@media (width < 40rem) {
+  .hours-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hours-row .check {
+    grid-column: 1 / -1;
+  }
+
+  .hours-row > span {
+    display: none;
+  }
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.totals th[scope='row'] {
+  white-space: nowrap;
+}
+
+.totals td:last-child {
+  width: auto;
+  white-space: normal;
+}
+
+.total {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.item-totals {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  min-width: 12rem;
+}
+
+.item-totals li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.15rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.item-totals li:last-child {
+  border-bottom: none;
+}
