@@ -112,7 +112,7 @@
 <h2 id="script"><span class="num">2</span>The jobs script</h2>
 <p>One small program, <code>backend/app/jobs.py</code>. It runs every 15 minutes, does whatever is due, and stops. On a laptop, Windows Task Scheduler can start it, through <code>backend/run_jobs.cmd</code>. On a real server, the server's own scheduler does.</p>
 <ol class="steps">
-  <li>Make the pickup days for the next two weeks.</li>
+  <li>Make the pickup days for the next week.</li>
   <li>No-shows: bookings not picked up by 6 pm.</li>
   <li>Booking details older than 90 days: save their totals, then delete them.</li>
   <li>The activity log older than 90 days.</li>
@@ -221,10 +221,10 @@ weekly_item_totals  Oats 1   Lentils 1   Bread 1   Rice 2
   <tr><td>Holds</td><td>Once their pickup day is over</td><td>Kept until then, so a student whose 10 minutes ran out is still told "your time ran out".</td></tr>
 </table>
 </div>
-<h3>Pickup days, two weeks ahead</h3>
-<p>Each run makes the pickup days from tomorrow to two weeks from today, on the weekdays with pickup hours (Mondays and Thursdays). A day already made is never touched, even a closed one. Today is never made: its booking would already have opened.</p>
+<h3>Pickup days, a week ahead</h3>
+<p>Each run makes the pickup days from tomorrow to a week from today, on the weekdays with pickup hours (Mondays and Thursdays). A day already made is never touched, even a closed one. Today is never made: its booking would already have opened.</p>
 <div class="why">
-  <p><b>Why two weeks?</b> A made day keeps its own times, so a change to the settings reaches new days within two weeks. And the coordinator can close a day up to two weeks ahead (step 9). <b>Why not further ahead?</b> Settings changes would take longer to reach students.</p>
+  <p><b>Why a week?</b> (Your answer, 10 November. It was two weeks at first.) A made day keeps its own times, so a change to the settings reaches new days within a week. The coordinator can still close a date further ahead: the Pickup days page makes it first (step 9). <b>Why not further ahead?</b> Settings changes would take longer to reach students.</p>
 </div>
 
 <!-- ============================================================ -->
@@ -258,16 +258,17 @@ weekly_item_totals  Oats 1   Lentils 1   Bread 1   Rice 2
 <ul>
   <li><code>tests/test_no_shows.py</code>: what goes back on the shelf for a bag never packed and a packed one; not before 6 pm; picked-up, cancelled and closed-day bookings left alone; once only; both fixes, a fix made twice, a bag never packed, the 28 days after a fix; and the "Hand over at 5:59" race on two connections.</li>
   <li><code>tests/test_retention.py</code>: 90 days to the minute (midnight in St. John's); the totals example above; two days in one week; a day counted once; the log; the year rule, with an account made at 11:30 pm Newfoundland time that's already the next day in UTC; what keeps an account; tidying up.</li>
-  <li><code>tests/test_jobs.py</code>: days made two weeks ahead; a closed day left alone; a whole run, then a second run that finds nothing; one run at a time; a failing job not stopping the others; no settings.</li>
+  <li><code>tests/test_jobs.py</code>: days made a week ahead; a closed day left alone; a whole run, then a second run that finds nothing; one run at a time; a failing job not stopping the others; no settings.</li>
   <li><code>tests/test_fixes_api.py</code> and <code>tests/test_database_rules.py</code>: the page's answers, staff only, nothing about the student; the new tables' rules.</li>
 </ul>
 <p>The fix page was also clicked through in Edge on a phone-sized screen, light and dark, against the test database. That found one bug, now fixed: after a fix, the "Are you sure?" box stayed open and asked the opposite question.</p>
 
 <!-- ============================================================ -->
-<h2 id="ask"><span class="num">11</span>Two questions for you</h2>
+<h2 id="ask"><span class="num">11</span>Two questions for you (answered)</h2>
 <div class="ask">
   <p><b>1. Run the jobs on your laptop every 15 minutes?</b> I can add a Windows Task Scheduler task that runs <code>backend\run_jobs.cmd</code> every 15 minutes, against your working database (fake data only). Or you can run it by hand when you want to see it work.</p>
   <p><b>2. Two weeks ahead for pickup days?</b> As built. Longer lets the coordinator close days further ahead. Shorter makes settings changes reach students sooner.</p>
+  <p><b>Your answers (10 November):</b> 1. No: run it by hand when you want to see it work. 2. One week ahead, now built.</p>
 </div>
 
 <!-- ============================================================ -->

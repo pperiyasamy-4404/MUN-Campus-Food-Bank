@@ -8,7 +8,7 @@ import { useStaffData, WEEKDAYS } from './coordinatorTools.ts'
 
 // The food bank's numbers and weekly pickup hours (R3). Some are used straight
 // away. The ones that make pickup days are copied onto each day when it's
-// made, two weeks ahead, so days already made keep their times.
+// made, a week ahead, so days already made keep their times.
 
 export function Settings() {
   const { forget } = useMe()

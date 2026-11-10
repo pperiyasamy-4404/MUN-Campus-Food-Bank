@@ -153,7 +153,8 @@ def test_the_jobs_never_open_a_day_closed_ahead(db_with_sample_week, alex):
     christmas_monday = date(2026, 12, 21)
     day_changes.close_day(db, christmas_monday, "Christmas break", alex, SUNDAY_4PM)
 
-    make_days_ahead(db, datetime(2026, 12, 10, 12, 0, tzinfo=UTC))
+    # Tuesday 15 December: the next week includes Monday 21.
+    make_days_ahead(db, datetime(2026, 12, 15, 12, 0, tzinfo=UTC))
 
     days = db.scalars(select(PickupDay).where(PickupDay.pickup_date == christmas_monday)).all()
     assert [day.closed_reason for day in days] == ["Christmas break"]

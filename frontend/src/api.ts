@@ -451,7 +451,7 @@ export type SettingsPage = {
   changed_by: string | null
 }
 
-/** Any number under 5 comes as "fewer than 5". The real one never leaves the server (P12). */
+/** Any number from 1 to 4 comes as "fewer than 5". The real one never leaves the server (P12). */
 export type Shown = number | 'fewer than 5'
 
 export type Week = {

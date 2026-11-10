@@ -24,7 +24,7 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 - **P9** Wrong passwords are limited per ID number, so nobody can guess a password by trying many. It slows tries down instead of locking the account, so nobody can lock a student out on purpose.
 - **P10** The ID number never appears in web addresses, logs or error messages. A test checks this.
 - **P11** The secret key is backed up somewhere safe, outside the database. Without it, no card can be matched to an account.
-- **P12** The coordinator sees totals by week, and any number under 5, 0 included, shows as "fewer than 5". The server hides it, so the real number never reaches the browser.
+- **P12** The coordinator sees totals by week, and any number from 1 to 4 shows as "fewer than 5". 0 shows as 0. The server hides the small numbers, so the real number never reaches the browser.
 - **P13** Accounts with no pickup for a year are deleted. An account that never had a pickup counts from when it was made. An account is kept while it has a booking or walk-in on record, or a setup code that hasn't run out.
 
 ### How often

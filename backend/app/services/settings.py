@@ -3,7 +3,7 @@
 The coordinator changes them on the Settings page (R3, step 9). Some are used
 straight away, like the pickup gap and the item limit. The ones that make
 pickup days, like booking times and pickup hours, are copied onto each day
-when it's made, two weeks ahead (services/pickup_days.py). So a day already
+when it's made, a week ahead (services/pickup_days.py). So a day already
 made keeps its times: changing the settings never moves a day students can
 already see.
 """
@@ -41,7 +41,7 @@ SETTING_NAMES = [
 ]
 
 # Booking has to open after the day is made, or the first students would find
-# booking already open. Days are made two weeks ahead, from tomorrow.
+# booking already open. Days are made a week ahead, from tomorrow.
 MOST_DAYS_BEFORE = DAYS_AHEAD.days - 1
 
 
@@ -85,7 +85,7 @@ def why_not_fit(values: dict, hours: list[WeeklyHours]) -> str | None:
     if values["booking_opens_days_before"] == 0 and values["booking_opens_time"] >= values["booking_closes_time"]:
         return "Booking opens and closes on the same day, so it has to open before it closes."
     if values["booking_opens_days_before"] > MOST_DAYS_BEFORE:
-        return f"Booking can open at most {MOST_DAYS_BEFORE} days before, because days are made two weeks ahead."
+        return f"Booking can open at most {MOST_DAYS_BEFORE} days before, because days are made a week ahead."
 
     if not hours:
         return "Choose at least one pickup day of the week. To stop for a while, close the days instead."

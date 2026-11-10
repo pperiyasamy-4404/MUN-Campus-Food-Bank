@@ -39,7 +39,7 @@ export function ManageDays() {
       <h1>Pickup days</h1>
       <p className="lead">
         Close a day for a holiday, bad weather or the Christmas break, or move when booking opens and closes for one
-        day. Days are made two weeks ahead. Every change is logged with your name.
+        day. Days are made a week ahead. Every change is logged with your name.
       </p>
       {said && (
         <div className="done-box" role="status">

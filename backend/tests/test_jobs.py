@@ -35,18 +35,13 @@ MONDAY_MORNING = datetime(2026, 11, 9, 13, 0, tzinfo=UTC)  # Monday 9 November 2
 # ---------- making pickup days ahead of time ----------
 
 
-def test_pickup_days_are_made_two_weeks_ahead(db_with_sample_week):
+def test_pickup_days_are_made_a_week_ahead(db_with_sample_week):
     db = db_with_sample_week
 
     made = make_days_ahead(db, MONDAY_MORNING)
 
-    # From tomorrow to two weeks from today, on Mondays and Thursdays. Not today.
-    assert [day.pickup_date for day in made] == [
-        date(2026, 11, 12),
-        date(2026, 11, 16),
-        date(2026, 11, 19),
-        date(2026, 11, 23),
-    ]
+    # From tomorrow to a week from today, on Mondays and Thursdays. Not today.
+    assert [day.pickup_date for day in made] == [date(2026, 11, 12), date(2026, 11, 16)]
     assert make_days_ahead(db, MONDAY_MORNING) == []
 
 

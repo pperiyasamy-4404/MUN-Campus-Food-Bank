@@ -9,8 +9,8 @@ from app.models import PickupDay, PickupHours, Settings, Slot
 
 NEWFOUNDLAND = ZoneInfo("America/St_Johns")
 
-# How far ahead the jobs script makes pickup days.
-DAYS_AHEAD = timedelta(days=14)
+# How far ahead the jobs script makes pickup days. One week (the user's answer, 10 Nov).
+DAYS_AHEAD = timedelta(days=7)
 
 BookingStatus = Literal["not_open_yet", "open", "booking_over", "day_closed"]
 
@@ -60,12 +60,12 @@ def make_pickup_day(db: Session, pickup_date: date) -> PickupDay:
 
 
 def make_days_ahead(db: Session, now: datetime) -> list[PickupDay]:
-    """Make the pickup days for the next two weeks that aren't made yet (S1).
+    """Make the pickup days for the next week that aren't made yet (S1).
 
     From tomorrow, so a day is never made after its booking has opened. A day
     already made is never touched, even if the coordinator closed it (S7).
-    Two weeks, so the coordinator can close a day ahead of time, and a change to
-    the settings reaches new days within two weeks.
+    A week, so a change to the settings reaches new days within a week. Dates
+    further ahead can still be closed: the coordinator's page makes them first (S7).
     """
     today = now.astimezone(NEWFOUNDLAND).date()
     weekdays = set(db.scalars(select(PickupHours.weekday)))

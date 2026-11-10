@@ -93,8 +93,8 @@ def test_a_day_counts_once_it_is_over(db, weeks):
     assert this_week.given_out == {weeks["oats"]: 6}
 
 
-def test_the_coordinator_sees_fewer_than_5_for_any_small_number(client, db_with_sample_week, weeks):
-    """P12: the real small number never leaves the server."""
+def test_the_coordinator_sees_fewer_than_5_for_1_to_4(client, db_with_sample_week, weeks):
+    """P12: the real small number never leaves the server. 0 shows as 0."""
     log_in(client, db_with_sample_week, coordinator(db_with_sample_week), THURSDAY_7PM)
     stop_the_clock_at(THURSDAY_7PM)
 
@@ -114,7 +114,7 @@ def test_the_coordinator_sees_fewer_than_5_for_any_small_number(client, db_with_
                 "week_starts_on": "2026-11-02",
                 "picked_up": 7,
                 "walk_ins": "fewer than 5",
-                "no_shows": "fewer than 5",
+                "no_shows": 0,
                 "cancelled": 5,
                 "items": [{"item": "Oats", "given_out": 10}, {"item": "Rice", "given_out": "fewer than 5"}],
             },
@@ -126,6 +126,12 @@ def test_no_weeks_yet(client, db_with_sample_week):
     log_in(client, db_with_sample_week, coordinator(db_with_sample_week), THURSDAY_7PM)
 
     assert client.get("/api/totals").json() == {"weeks": []}
+
+
+def test_only_1_to_4_are_hidden():
+    from app.routes.totals import shown
+
+    assert [shown(n) for n in [0, 1, 4, 5, 12]] == [0, "fewer than 5", "fewer than 5", 5, 12]
 
 
 def test_small_numbers_come_last_a_to_z_so_their_order_says_nothing():

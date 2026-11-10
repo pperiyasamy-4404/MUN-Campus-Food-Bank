@@ -163,7 +163,7 @@ back on the stock count. Those students can book another day.</pre>
 
 <!-- ============================================================ -->
 <h2 id="later"><span class="num">5</span>Closing a date further ahead</h2>
-<p>Days are made two weeks ahead, but the Christmas break is known in November. Under the days, <b>Close a later date</b> takes any pickup date up to a year ahead, like Monday 21 December. The day is made now, from today's settings, and closed straight away. The jobs script never touches a day that's made, so when its time comes it's still closed.</p>
+<p>Days are made a week ahead, but the Christmas break is known in November. Under the days, <b>Close a later date</b> takes any pickup date up to a year ahead, like Monday 21 December. The day is made now, from today's settings, and closed straight away. The jobs script never touches a day that's made, so when its time comes it's still closed.</p>
 <p>A Tuesday is refused ("isn't a pickup day"), and so is today or a date in the past.</p>
 
 <!-- ============================================================ -->
@@ -203,13 +203,13 @@ back on the stock count. Those students can book another day.</pre>
   <tr><td>Booking closes by the time pickup starts, every pickup weekday</td><td>Monday: booking closes at 4:00 p.m., after pickup starts at 3:30 p.m. It has to close first, so the bags can be packed.</td></tr>
   <tr><td>No-shows after pickup ends, every pickup weekday</td><td>Thursday: pickup ends at 6:30 p.m., after the no-show time, 6:00 p.m. No-shows have to come after pickup ends.</td></tr>
   <tr><td>Pickup hours hold at least one slot</td><td>Monday: the pickup hours are shorter than one 10-minute slot.</td></tr>
-  <tr><td>Booking opens at most 13 days before</td><td>Booking can open at most 13 days before, because days are made two weeks ahead.</td></tr>
+  <tr><td>Booking opens at most 6 days before</td><td>Booking can open at most 6 days before, because days are made a week ahead.</td></tr>
   <tr><td>At least one pickup weekday</td><td>Choose at least one pickup day of the week. To stop for a while, close the days instead.</td></tr>
 </table>
 </div>
 <div class="why">
   <p><b>Why check these here, when the database has rules too?</b> The database's rules are the safety net, but they only say "refused by ck_settings_…". These say what to change. And some can't be database rules at all: the hours are in one table and the closing time in another.</p>
-  <p><b>Why at most 13 days?</b> A day is made two weeks ahead. If booking opened 20 days before, the day would be made after its booking had already opened.</p>
+  <p><b>Why at most 6 days?</b> A day is made a week ahead. If booking opened 10 days before, the day would be made after its booking had already opened.</p>
   <p><b>Why save everything at once?</b> The rules are between settings. Saving one box at a time, a change of two related boxes would be refused halfway.</p>
 </div>
 
@@ -220,13 +220,13 @@ back on the stock count. Those students can book another day.</pre>
 <table>
   <tr><th>Week of</th><th>Bags picked up</th><th>Walk-ins</th><th>No-shows</th><th>Cancelled</th><th>Food given out</th></tr>
   <tr><td>Monday, November 9</td><td>7</td><td>fewer than 5</td><td>fewer than 5</td><td>fewer than 5</td><td>Oats 7, Rice fewer than 5</td></tr>
-  <tr><td>Monday, October 26</td><td>12</td><td>5</td><td>fewer than 5</td><td>fewer than 5</td><td>Oats 11, Pasta fewer than 5</td></tr>
+  <tr><td>Monday, October 26</td><td>12</td><td>5</td><td>0</td><td>fewer than 5</td><td>Oats 11, Pasta fewer than 5</td></tr>
 </table>
 </div>
 <p><b>Where a week's numbers come from.</b> In step 8, a day's totals are saved into <code>weekly_totals</code> just before its details are deleted, in the same transaction. So every day is in exactly one place: the saved totals, or its details. The page adds the two together. A day counts once it's over, at its no-show time. Until its details are deleted, a fix on the Fix a pickup page changes its week's totals too.</p>
 <div class="why">
   <p><b>Why "fewer than 5"?</b> <span class="rule">P12</span> A small number can point at someone. "2 walk-ins in the week of December 21" might be two people the coordinator knows were on campus.</p>
-  <p><b>Why 0 too?</b> P12 says any number under 5. If 0 showed as 0, then "fewer than 5" would mean "1 to 4", which tells a little more.</p>
+  <p><b>Why is 0 shown as 0?</b> Your answer (10 November). Nobody can be picked out of nobody, and "0 no-shows" is useful to know. So "fewer than 5" means 1 to 4.</p>
   <p><b>Why on the server?</b> The browser never receives the real small number: the answer itself says <code>"fewer than 5"</code>. Hiding it in the page would still send it, and anyone could read it in the browser's developer tools.</p>
   <p><b>The order of the food list</b> is biggest first, and then the small ones A to Z. Sorting the small ones by their real number would give away which was 4 and which was 1.</p>
 </div>
@@ -262,7 +262,7 @@ Why: Snow storm</pre>
 <ul>
   <li><code>test_day_changes.py</code>: what closing puts back, packed bags, bags already handed over, a closed day can't be held or booked, closed days have no no-shows, the reason, closing twice, later dates, opening again, moving times, and the two races in part 3.</li>
   <li><code>test_settings.py</code>: every rule between settings, saving and logging, days already made keep their times, each box's own message, coordinator only.</li>
-  <li><code>test_totals.py</code>: saved weeks plus days on record, a day counts once it's over, "fewer than 5" for every small number, the order of the food list.</li>
+  <li><code>test_totals.py</code>: saved weeks plus days on record, a day counts once it's over, "fewer than 5" for 1 to 4 and 0 shown as 0, the order of the food list.</li>
   <li><code>test_days_api.py</code>: the page's answers, coordinator only, what the student sees, St. John's time in the time boxes.</li>
 </ul>
 <p><b>Writing the tests found a slip:</b> two settings messages ended "3:30 p.m.." with two full stops. Fixed.</p>
@@ -270,8 +270,9 @@ Why: Snow storm</pre>
 
 <!-- ============================================================ -->
 <h2 id="ask"><span class="num">12</span>Questions for you</h2>
+<p><b>Your answers, 10 November:</b> 2. Yes, it stays closed (as built). 3. 0 shows as 0 (now built). 4. Run the jobs by hand, no Task Scheduler; and pickup days are made one week ahead (now built). Question 1 is still open.</p>
 <div class="ask">
-  <p><b>1. "Students per slot" only reaches new days.</b> Like every day-making setting, raising it from 1 to 2 changes days made from now on, so up to two weeks later. Is that fine, or should a change also reach days already made whose booking hasn't opened yet?</p>
+  <p><b>1. "Students per slot" only reaches new days.</b> Like every day-making setting, raising it from 1 to 2 changes days made from now on, so up to a week later. Is that fine, or should a change also reach days already made whose booking hasn't opened yet?</p>
   <p><b>2. A closed day that cancelled bookings stays closed</b> (part 4). Agree?</p>
   <p><b>3. 0 shows as "fewer than 5"</b> (part 8). Agree, or should 0 show as 0?</p>
   <p><b>4. Still open from step 8:</b> run the jobs every 15 minutes with Windows Task Scheduler on your laptop? And two weeks ahead for pickup days? Nothing has been set up without asking.</p>

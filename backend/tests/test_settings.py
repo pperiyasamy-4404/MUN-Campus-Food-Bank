@@ -45,9 +45,10 @@ def test_booking_opens_before_it_closes_and_after_the_day_is_made():
         "Booking opens and closes on the same day, so it has to open before it closes."
     )
     assert why_not(booking_opens_days_before=0, booking_opens_time=time(8, 0)) is None
-    assert why_not(booking_opens_days_before=14) == (
-        "Booking can open at most 13 days before, because days are made two weeks ahead."
+    assert why_not(booking_opens_days_before=7) == (
+        "Booking can open at most 6 days before, because days are made a week ahead."
     )
+    assert why_not(booking_opens_days_before=6) is None
 
 
 def test_every_pickup_day_fits_between_booking_closing_and_no_shows():
@@ -155,7 +156,7 @@ def test_the_page_gets_every_setting_and_the_days_already_made(client, db_with_s
 
     assert page["settings"] == as_sent()
     assert page["days_made"] == ["2026-11-09"]
-    assert page["days_ahead"] == 14
+    assert page["days_ahead"] == 7
     assert (page["changed_at"], page["changed_by"]) == (None, None)
 
 

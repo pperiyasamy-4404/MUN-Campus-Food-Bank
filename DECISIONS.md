@@ -649,3 +649,10 @@ A day counts once it's over, at its no-show time. Each day is in either the save
 - A closed day that cancelled bookings stays closed. Agree?
 - 0 shows as "fewer than 5". Agree?
 - Still open from step 8: Windows Task Scheduler every 15 minutes, and two weeks ahead.
+
+**Later on 10 November, the user's answers to the open questions:**
+- **A closed day that cancelled bookings stays closed** (as built).
+- **0 shows as 0 on Weekly totals; 1 to 4 show as "fewer than 5"** (P12 updated). Nobody can be picked out of nobody, and "0 no-shows" is useful to know. Built: `shown()` in routes/totals.py, with a test for 0, 1, 4, 5 and 12.
+- **The jobs are run by hand.** No Windows Task Scheduler task.
+- **Pickup days are made one week ahead, not two** (`DAYS_AHEAD` is 7). So settings changes reach new days within a week. Booking can open at most 6 days before a pickup day, so a day is always made before its booking opens. Dates further ahead can still be closed from the Pickup days page, which makes them first. Days already made in the working database (up to Monday 23 November) stay as they are.
+- Still open: should "students per slot" also reach days already made whose booking hasn't opened yet?

@@ -11,7 +11,7 @@ Each job looks at what's due now, not at when it last ran. So a missed run is
 caught up by the next one, and a second run straight after does nothing.
 
 In this order:
-1. Make the pickup days for the next two weeks.
+1. Make the pickup days for the next week.
 2. No-shows: bookings not picked up by the no-show time. Their food goes back on the shelf.
 3. Booking details past the retention period: their totals are saved, then they're deleted.
 4. The activity log past the retention period.

@@ -1,8 +1,9 @@
 """Weekly totals, for the coordinator (P12, R3).
 
-Only numbers, and any number under 5 is sent as "fewer than 5". The real
+Only numbers, and any number from 1 to 4 is sent as "fewer than 5". The real
 small number never leaves the server, so it can't be read from the page's code
-either. A small number can point to someone: "2 walk-ins on the week of
+either. 0 is sent as 0 (the user's answer, 10 Nov): nobody can be picked out
+of nobody. A small number can point to someone: "2 walk-ins on the week of
 December 21" might be two people the coordinator knows.
 """
 
@@ -25,8 +26,8 @@ Shown = int | Literal["fewer than 5"]
 
 
 def shown(number: int) -> Shown:
-    """5 or more as it is; anything under 5, 0 included, as "fewer than 5" (P12)."""
-    return number if number >= SMALLEST_SHOWN else "fewer than 5"
+    """0, and 5 or more, as they are; 1 to 4 as "fewer than 5" (P12)."""
+    return number if number == 0 or number >= SMALLEST_SHOWN else "fewer than 5"
 
 
 class ItemTotal(BaseModel):

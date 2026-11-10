@@ -5,7 +5,7 @@ import { CoordinatorNav } from './CoordinatorParts.tsx'
 import { useStaffData } from './coordinatorTools.ts'
 
 // Weekly totals for the coordinator (P12): only numbers, by week. Any number
-// under 5 arrives from the server as "fewer than 5", so the page never has
+// from 1 to 4 arrives from the server as "fewer than 5", so the page never has
 // the real small number to show.
 
 export function Totals() {
@@ -22,7 +22,7 @@ export function Totals() {
       <h1>Weekly totals</h1>
       <p className="lead">
         What each week added up to, Monday to Sunday. A pickup day counts once it's over, at its no-show time. Any number
-        under 5 shows as “fewer than 5”, so nobody can be picked out. Weeks with no bookings and no walk-ins aren't
+        from 1 to 4 shows as “fewer than 5”, so nobody can be picked out. Weeks with no bookings and no walk-ins aren't
         listed.
       </p>
       {weeks.length === 0 ? (
