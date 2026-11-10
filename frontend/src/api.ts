@@ -449,6 +449,8 @@ export type SettingsPage = {
   days_ahead: number
   changed_at: string | null
   changed_by: string | null
+  // After saving: days already made that got the new number of students per slot.
+  capacity_changed_on?: string[]
 }
 
 /** Any number from 1 to 4 comes as "fewer than 5". The real one never leaves the server (P12). */

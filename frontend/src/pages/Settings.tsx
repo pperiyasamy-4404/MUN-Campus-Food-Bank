@@ -125,6 +125,9 @@ function SettingsForm({ page: first, onLoggedOut }: { page: SettingsPage; onLogg
       {saved && (
         <div className="done-box" role="status">
           Saved. New pickup days will use these.
+          {page.capacity_changed_on && page.capacity_changed_on.length > 0 && (
+            <> Students per slot also changed on {page.capacity_changed_on.map(showDate).join('; ')}.</>
+          )}
         </div>
       )}
 
@@ -135,7 +138,8 @@ function SettingsForm({ page: first, onLoggedOut }: { page: SettingsPage; onLogg
             Copied onto each pickup day when it's made, {page.days_ahead} days ahead. Days already made keep their
             times
             {page.days_made.length > 0 && <>: {page.days_made.map(showDate).join('; ')}</>}. To change one of those,
-            move its booking times or close it on the Pickup days page.
+            move its booking times or close it on the Pickup days page. Students per slot is different: it also
+            changes on those days, until their booking opens.
           </>
         }
       >
@@ -184,7 +188,7 @@ function SettingsForm({ page: first, onLoggedOut }: { page: SettingsPage; onLogg
           {clock('booking_closes_time', 'Booking closes at', 'On the pickup day. Packing starts then.')}
           {clock('no_show_time', 'No-shows at', 'After pickup ends. Unpicked bags become no-shows.')}
           {number('slot_minutes', 'Slot length, minutes')}
-          {number('slot_capacity', 'Students per slot')}
+          {number('slot_capacity', 'Students per slot', "Also on days already made, until their booking opens.")}
         </div>
       </Group>
 

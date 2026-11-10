@@ -188,6 +188,7 @@ back on the stock count. Those students can book another day.</pre>
 <p>All of CONSTRAINTS.md's sample values, plus the weekly pickup hours, on one page in three groups:</p>
 <ul>
   <li><b>For new pickup days:</b> pickup days and hours, when booking opens and closes, the no-show time, slot length, students per slot. These are copied onto each day when it's made. <b>Days already made keep their times</b>, and the page lists them. To change one of those, move its booking times or close it.</li>
+  <li><b>Except students per slot</b> (your answer, 10 November): it also changes on days already made, until their booking opens. Example: on Tuesday you raise it from 1 to 2. Next Monday's booking opens on Sunday, so Monday gets 2 places per time straight away. The page says which days changed. A day whose booking is open stays as it is, because students may be booking it right then. And a time never gets fewer places than are already booked in it.</li>
   <li><b>Used straight away:</b> the pickup gap, the time to choose food, the food limits, setup codes, wrong password tries, and whether a no-show counts.</li>
   <li><b>Privacy:</b> how long booking details are kept. A shorter time deletes more at the next jobs run, after saving totals.</li>
 </ul>
@@ -270,7 +271,7 @@ Why: Snow storm</pre>
 
 <!-- ============================================================ -->
 <h2 id="ask"><span class="num">12</span>Questions for you</h2>
-<p><b>Your answers, 10 November:</b> 2. Yes, it stays closed (as built). 3. 0 shows as 0 (now built). 4. Run the jobs by hand, no Task Scheduler; and pickup days are made one week ahead (now built). Question 1 is still open.</p>
+<p><b>Your answers, 10 November:</b> 2. Yes, it stays closed (as built). 3. 0 shows as 0 (now built). 4. Run the jobs by hand, no Task Scheduler; and pickup days are made one week ahead (now built). 1. Students per slot also reaches days already made, until their booking opens (now built, part 7).</p>
 <div class="ask">
   <p><b>1. "Students per slot" only reaches new days.</b> Like every day-making setting, raising it from 1 to 2 changes days made from now on, so up to a week later. Is that fine, or should a change also reach days already made whose booking hasn't opened yet?</p>
   <p><b>2. A closed day that cancelled bookings stays closed</b> (part 4). Agree?</p>

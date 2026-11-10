@@ -113,8 +113,10 @@ class SettingsPage(BaseModel):
     settings: SettingsOut
     # Days already made, from tomorrow. They keep their own times.
     days_made: list[str]
-    # How far ahead days are made: 14.
+    # How far ahead days are made: 7.
     days_ahead: int
+    # After saving: days already made that got the new number of students per slot.
+    capacity_changed_on: list[str] = []
     # When the settings were last changed, and by whom.
     changed_at: datetime | None
     changed_by: str | None
@@ -163,9 +165,12 @@ def get_settings(coordinator: CurrentCoordinator, db: DB, now: Now) -> SettingsP
 
 @router.put("/settings")
 def change_settings(new: SettingsIn, coordinator: CurrentCoordinator, db: DB, now: Now) -> SettingsPage:
-    """Save every setting at once. New pickup days use them; days already made keep their times."""
+    """Save every setting at once. New pickup days use them; days already made keep their times,
+    except students per slot, which also reaches days whose booking hasn't opened."""
     values = new.model_dump(exclude={"pickup_hours"})
     hours = [rules.WeeklyHours(day.weekday, day.starts_at, day.ends_at) for day in new.pickup_hours]
-    rules.change_settings(db, values, hours, coordinator, now)
+    changed_on = rules.change_settings(db, values, hours, coordinator, now)
     db.commit()
-    return settings_page(db, now)
+    page = settings_page(db, now)
+    page.capacity_changed_on = [on.isoformat() for on in changed_on]
+    return page

@@ -6,15 +6,19 @@ pickup days, like booking times and pickup hours, are copied onto each day
 when it's made, a week ahead (services/pickup_days.py). So a day already
 made keeps its times: changing the settings never moves a day students can
 already see.
+
+One exception, the user's answer of 10 November: students per slot also
+changes on days already made whose booking hasn't opened yet. It's raised in
+a rush, when many students need food, and a week is too long to wait.
 """
 
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
 
-from app.models import AuditLog, PickupHours, Settings, Staff
+from app.models import AuditLog, PickupDay, PickupHours, Settings, Slot, Staff
 from app.problems import Problem
 from app.services.pickup_days import DAYS_AHEAD, say_time
 
@@ -114,11 +118,12 @@ def why_not_fit(values: dict, hours: list[WeeklyHours]) -> str | None:
     return None
 
 
-def change_settings(db: Session, values: dict, hours: list[WeeklyHours], staff: Staff, now: datetime) -> Settings:
+def change_settings(db: Session, values: dict, hours: list[WeeklyHours], staff: Staff, now: datetime) -> list[date]:
     """Save new settings and weekly hours, and log who changed them (R3, R4).
 
     Days already made keep their own times. New days, made by the jobs
-    script, use the new ones.
+    script, use the new ones. A new number of students per slot also reaches
+    days already made whose booking hasn't opened. Returns those days.
     """
     if set(values) != set(SETTING_NAMES):
         raise ValueError("Every setting has to be given")
@@ -132,10 +137,30 @@ def change_settings(db: Session, values: dict, hours: list[WeeklyHours], staff: 
     )
     if settings is None:
         raise LookupError("The settings row is missing")
+    capacity_changed = settings.slot_capacity != values["slot_capacity"]
     for name in SETTING_NAMES:
         setattr(settings, name, values[name])
     db.execute(delete(PickupHours))
     db.add_all(PickupHours(weekday=day.weekday, starts_at=day.starts_at, ends_at=day.ends_at) for day in hours)
+    changed_days = new_capacity_on_days_not_open(db, values["slot_capacity"], now) if capacity_changed else []
     db.add(AuditLog(at=now, staff_id=staff.id, action="changed_settings"))
     db.flush()
-    return settings
+    return changed_days
+
+
+def new_capacity_on_days_not_open(db: Session, capacity: int, now: datetime) -> list[date]:
+    """Students per slot, on every day already made whose booking hasn't opened yet.
+
+    Before booking opens, nobody holds or books a slot, so nothing changes
+    under a student's feet. A slot never goes below what's booked in it: the
+    coordinator can move a day's opening later after some students booked (S9),
+    and the database refuses going over capacity (S2).
+    """
+    not_open = select(PickupDay.id).where(PickupDay.booking_opens_at > now)
+    db.execute(
+        update(Slot)
+        .where(Slot.pickup_day_id.in_(not_open))
+        .values(capacity=func.greatest(capacity, Slot.booked_count))
+        .execution_options(synchronize_session=False)
+    )
+    return list(db.scalars(select(PickupDay.pickup_date).where(PickupDay.id.in_(not_open)).order_by(PickupDay.pickup_date)))

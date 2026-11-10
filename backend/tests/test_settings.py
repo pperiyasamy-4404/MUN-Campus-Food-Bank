@@ -9,13 +9,13 @@ from datetime import UTC, date, datetime, time
 import pytest
 from sqlalchemy import select
 
-from app.models import AuditLog, PickupDay, PickupHours
+from app.models import AuditLog, PickupDay, PickupHours, Settings, Slot
 from app.problems import Problem
 from app.sample_data import SAMPLE_SETTINGS
 from app.services import settings as rules
 from app.services.pickup_days import make_pickup_day
 from app.services.settings import WeeklyHours
-from tests.helpers import MONDAY, coordinator, log_in, make_staff, stop_the_clock_at
+from tests.helpers import MONDAY, THURSDAY, coordinator, log_in, make_staff, stop_the_clock_at
 
 NOW = datetime(2026, 11, 8, 19, 30, tzinfo=UTC)  # Sunday 4 pm
 SAMPLE_HOURS = [WeeklyHours(1, time(15, 30), time(17, 30)), WeeklyHours(4, time(15, 30), time(17, 30))]
@@ -114,6 +114,53 @@ def test_days_already_made_keep_their_times_and_new_days_use_the_new_ones(db_wit
     assert next_monday.no_show_at == datetime(2026, 11, 16, 22, 0, tzinfo=UTC)  # 6:30 pm
 
 
+# ---------- students per slot reaches days not open yet (the user's answer, 10 Nov) ----------
+
+
+def capacities(db, day: PickupDay) -> set[int]:
+    return set(db.scalars(select(Slot.capacity).where(Slot.pickup_day_id == day.id).execution_options(populate_existing=True)))
+
+
+def test_students_per_slot_reaches_days_whose_booking_hasnt_opened(db_with_sample_week):
+    db = db_with_sample_week
+    monday, thursday = make_pickup_day(db, MONDAY), make_pickup_day(db, THURSDAY)
+    # Booking for Monday opened at 3 pm on Sunday, an hour before NOW. Thursday's opens on Wednesday.
+    monday.booking_opens_at = datetime(2026, 11, 8, 18, 30, tzinfo=UTC)
+    db.flush()
+
+    changed = rules.change_settings(db, SAMPLE_SETTINGS | {"slot_capacity": 2}, SAMPLE_HOURS, coordinator(db), NOW)
+
+    assert changed == [THURSDAY]
+    assert capacities(db, thursday) == {2}
+    # Students may be booking Monday right now, so it stays as it was.
+    assert capacities(db, monday) == {1}
+
+
+def test_a_slot_never_gets_fewer_places_than_are_booked(db_with_sample_week):
+    """A day whose opening was moved later after students booked it (S9)."""
+    db = db_with_sample_week
+    db.execute(Settings.__table__.update().values(slot_capacity=3))
+    monday = make_pickup_day(db, MONDAY)
+    first = db.scalars(select(Slot).where(Slot.pickup_day_id == monday.id).order_by(Slot.starts_at)).first()
+    first.booked_count = 2
+    db.flush()
+
+    rules.change_settings(db, SAMPLE_SETTINGS | {"slot_capacity": 1}, SAMPLE_HOURS, coordinator(db), NOW)
+
+    assert db.scalar(select(Slot.capacity).where(Slot.id == first.id).execution_options(populate_existing=True)) == 2
+    assert capacities(db, monday) == {1, 2}
+
+
+def test_other_settings_never_change_days_already_made(db_with_sample_week):
+    db = db_with_sample_week
+    monday = make_pickup_day(db, MONDAY)
+
+    changed = rules.change_settings(db, SAMPLE_SETTINGS | {"item_limit": 10}, SAMPLE_HOURS, coordinator(db), NOW)
+
+    assert changed == []
+    assert capacities(db, monday) == {1}
+
+
 # ---------- the page's addresses ----------
 
 
@@ -161,6 +208,8 @@ def test_the_page_gets_every_setting_and_the_days_already_made(client, db_with_s
 
 
 def test_saving_from_the_page(client, db_with_sample_week, alex_logged_in):
+    make_pickup_day(db_with_sample_week, MONDAY)  # booking opens at 5 pm, after NOW
+
     answer = client.put("/api/settings", json=as_sent(slot_capacity="2", booking_closes_time="11:30"))
 
     assert answer.status_code == 200
@@ -168,6 +217,7 @@ def test_saving_from_the_page(client, db_with_sample_week, alex_logged_in):
     assert (page["settings"]["slot_capacity"], page["settings"]["booking_closes_time"]) == (2, "11:30")
     assert page["changed_by"] == "Alex"
     assert page["changed_at"] == "2026-11-08T16:00:00-03:30"
+    assert page["capacity_changed_on"] == ["2026-11-09"]
 
 
 def test_each_box_gets_its_own_message(client, db_with_sample_week, alex_logged_in):

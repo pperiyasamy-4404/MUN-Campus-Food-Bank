@@ -123,6 +123,8 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 | Setup code lifetime | 7 days |
 | Wrong password tries | 5 per 15 minutes per ID number |
 
+Pickup days are made a week ahead, and each keeps the times it was made with. So a change to the booking times, pickup hours, slot length or no-show time reaches days made after it. Students per slot is the exception: it also changes on days already made, until their booking opens.
+
 ## Known issues
 
 Problems we know about and accept for now.
