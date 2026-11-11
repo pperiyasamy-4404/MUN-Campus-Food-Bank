@@ -4,8 +4,9 @@ Plain Python with a database session, like the other services. The routes in
 app/routes/packing.py commit.
 
 How a volunteer packs one bag:
-1. They open it from the queue and put in the booked food.
-2. For food that isn't on the shelf, they tap "None on the shelf". Each tap asks
+1. They open it from the queue and put in the booked food, tapping "Picked" as
+   each thing goes in. Picked is only on the page: the server never sees it.
+2. For food that isn't on the shelf, they tap "Out of stock". Each tap asks
    plan() what goes in instead, and what to write on the sticky note. plan()
    saves nothing, so a wrong tap is simply tapped again.
 3. They put in what it says, write the note, and press Packed. pack() works the
@@ -335,7 +336,7 @@ def _check_findings(
 
     own_substitutes = {line.variety.id for line in substitutes}
     if any(variety_id not in own_substitutes for variety_id in not_on_shelf):
-        raise Problem("Only this bag's substitutes can be marked as none on the shelf.")
+        raise Problem("Only this bag's substitutes can be marked as out of stock.")
     if len(set(not_on_shelf)) != len(not_on_shelf):
         raise Problem("Each substitute can be marked once.")
     return checked
@@ -474,7 +475,7 @@ def unpack(db: Session, booking_id: int, staff: Staff, now: datetime) -> Booking
 
 
 def _ran_out(variety: Variety, now: datetime) -> None:
-    """None on the shelf: nobody else can book it, and every bag still waiting
+    """Out of stock while packing: nobody else can book it, and every bag still waiting
     for it is flagged in the queue, until someone counts the shelf (U7)."""
     variety.stock = 0
     if variety.ran_out_at is None:

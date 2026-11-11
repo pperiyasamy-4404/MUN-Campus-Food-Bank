@@ -243,7 +243,7 @@ function VarietyRow({
         </p>
         {variety.ran_out_at && (
           <p className="stock-age stock-ran-out">
-            None on the shelf while packing, {showDayAndClock(variety.ran_out_at)}. Count it to take the flag off
+            Marked out of stock while packing, {showDayAndClock(variety.ran_out_at)}. Count it to take the flag off
             other bags.
           </p>
         )}

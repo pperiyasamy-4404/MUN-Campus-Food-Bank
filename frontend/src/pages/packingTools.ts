@@ -1,4 +1,4 @@
-import type { Bag, Outcome } from '../api.ts'
+import type { Bag, Outcome, PackingPlan } from '../api.ts'
 
 /** A bag's status, in words. */
 export const STATUS_WORDS: Record<string, string> = {
@@ -43,7 +43,42 @@ export function withMissing(findings: Findings, varietyId: number, howMany: numb
   return { ...findings, missing }
 }
 
-/** The findings with one substitute marked, or unmarked, as none on the shelf. */
+/**
+ * What the volunteer has put in the bag so far, ticked with Picked. Only on the
+ * page, like the findings: it helps them keep track, and the server doesn't need it.
+ * Keys say food or substitute, so the two lists can't mix.
+ */
+export type Picked = ReadonlySet<string>
+
+export const foodKey = (varietyId: number) => `food-${varietyId}`
+export const substituteKey = (varietyId: number) => `substitute-${varietyId}`
+
+/** Picked with one line ticked, or unticked. */
+export function withPicked(picked: Picked, key: string, on: boolean): Picked {
+  const next = new Set(picked)
+  if (on) next.add(key)
+  else next.delete(key)
+  return next
+}
+
+/**
+ * How many lines still need a tap before Packed: booked food that is neither
+ * Picked nor all out of stock, substitutes the plan puts in that aren't Picked,
+ * and substitutes Picked earlier that the plan no longer needs (take them out).
+ */
+export function stillToTick(bag: Bag, findings: Findings, plan: PackingPlan, picked: Picked): number {
+  const food = bag.food.filter((line) => {
+    const missing = findings.missing.find((m) => m.variety_id === line.variety_id)?.how_many ?? 0
+    return missing < line.quantity && !picked.has(foodKey(line.variety_id))
+  }).length
+  const substitutes = plan.substitutes.filter((line) => {
+    const goesIn = line.outcome === 'use'
+    return goesIn !== picked.has(substituteKey(line.variety_id))
+  }).length
+  return food + substitutes
+}
+
+/** The findings with one substitute marked, or unmarked, as out of stock. */
 export function withNotOnShelf(findings: Findings, varietyId: number, none: boolean): Findings {
   const others = findings.not_on_shelf.filter((id) => id !== varietyId)
   return { ...findings, not_on_shelf: none ? [...others, varietyId] : others }
@@ -55,7 +90,7 @@ export function outcomeWords(outcome: Outcome, item: string, replaces: string | 
     case 'use':
       return `Put this in, for ${replaces}`
     case 'not_on_shelf':
-      return 'None on the shelf'
+      return 'Out of stock'
     case 'none_left':
       return 'Skipped: none left that nobody booked'
     case 'already_has_item':

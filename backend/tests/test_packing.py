@@ -339,7 +339,7 @@ def test_example_1_in_the_database(db, monday, food, sam):
     assert rice_line.replaces_variety_id == food["sunflower oil"].id
     # Rice wasn't taken from stock when booking (U3), so it is now.
     assert food["rice"].stock == 4
-    # None on the shelf: nobody else can book it until it's counted (U7).
+    # Out of stock: nobody else can book it until it's counted (U7).
     assert (food["sunflower oil"].stock, food["sunflower oil"].ran_out_at) == (0, PACKING)
     assert packing.saved_note(packing.food_in(db, bag), packing.substitutes_of(db, bag)) == ["Sunflower oil → White rice"]
 
@@ -409,7 +409,7 @@ def test_working_out_the_plan_saves_nothing(db, monday, food, sam):
     [
         (dict(missing=["rice"]), "Only food booked for this bag can be marked as missing."),
         (dict(missing=["sunflower oil", "sunflower oil"]), "Sunflower oil is marked as missing twice."),
-        (dict(not_on_shelf=["steel-cut oats"]), "Only this bag's substitutes can be marked as none on the shelf."),
+        (dict(not_on_shelf=["steel-cut oats"]), "Only this bag's substitutes can be marked as out of stock."),
         (dict(not_on_shelf=["rice", "rice"]), "Each substitute can be marked once."),
     ],
 )

@@ -5,19 +5,25 @@ import { Problem } from '../forms.tsx'
 import { useMe } from '../me.ts'
 import { showClock, showDate } from '../time.ts'
 import {
+  foodKey,
   outcomeWords,
   startingFindings,
   STATUS_WORDS,
+  stillToTick,
+  substituteKey,
   withMissing,
   withNotOnShelf,
+  withPicked,
   type Findings,
+  type Picked,
 } from './packingTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
 
-// Packing one bag (U4-U8). The volunteer puts in the booked food and taps
-// "None on the shelf" for anything that isn't there. After each tap the server
-// works out what goes in instead (the refill rule) and what to write on the
-// sticky note. Nothing is saved until Packed, so a wrong tap is just tapped again.
+// Packing one bag (U4-U8). The volunteer taps "Picked" as each thing goes in the
+// bag, and "Out of stock" for anything that isn't there. After each Out of stock
+// the server works out what goes in instead (the refill rule) and what to write on
+// the sticky note. Nothing is saved until Packed, so a wrong tap is just tapped
+// again. Packed waits until every line is Picked or Out of stock (decided 11 Nov).
 
 type Load = { state: 'loading' } | { state: 'failed'; message: string } | { state: 'ready'; bag: Bag }
 
@@ -121,6 +127,8 @@ function Packer({
   onLoggedOut: () => void
 }) {
   const [findings, setFindings] = useState<Findings>(() => startingFindings(bag))
+  // What's in the bag so far. Not sent to the server, so ticking asks for no new plan.
+  const [picked, setPicked] = useState<Picked>(() => new Set())
   // The server's plan, and which findings it was worked out for.
   const [plan, setPlan] = useState<{ for: Findings; plan: PackingPlan } | null>(null)
   const [planVersion, setPlanVersion] = useState(0)
@@ -147,9 +155,19 @@ function Packer({
   // Packed only goes with a plan worked out for exactly what's on screen.
   const current = plan !== null && plan.for === findings ? plan.plan : null
 
-  function change(next: Findings) {
+  const toTick = current === null ? null : stillToTick(bag, findings, current, picked)
+
+  // A line that changes between Picked and Out of stock is unticked: whatever
+  // the volunteer finds next, they tap again.
+  function change(next: Findings, untick: string) {
     setProblem(null)
     setFindings(next)
+    setPicked((old) => withPicked(old, untick, false))
+  }
+
+  function tick(key: string, on: boolean) {
+    setProblem(null)
+    setPicked((old) => withPicked(old, key, on))
   }
 
   async function packed() {
@@ -175,14 +193,18 @@ function Packer({
     <>
       <section className="card">
         <h2 className="in-card">1. Put in the food</h2>
-        <p className="muted">Tap "None on the shelf" for anything that isn't there.</p>
+        <p className="muted">Tap "Picked" as each thing goes in the bag, or "Out of stock" if it isn't there.</p>
         <ul className="pack-list">
           {bag.food.map((line) => (
             <FoodRow
               key={line.variety_id}
               line={line}
               missing={howManyMissing(line)}
-              onChange={(howMany) => change(withMissing(findings, line.variety_id, howMany))}
+              picked={picked.has(foodKey(line.variety_id))}
+              onPicked={(on) => tick(foodKey(line.variety_id), on)}
+              onChange={(howMany) =>
+                change(withMissing(findings, line.variety_id, howMany), foodKey(line.variety_id))
+              }
             />
           ))}
         </ul>
@@ -199,7 +221,11 @@ function Packer({
                 key={line.variety_id}
                 line={line}
                 plan={current}
-                onNone={(none) => change(withNotOnShelf(findings, line.variety_id, none))}
+                picked={picked.has(substituteKey(line.variety_id))}
+                onPicked={(on) => tick(substituteKey(line.variety_id), on)}
+                onNone={(none) =>
+                  change(withNotOnShelf(findings, line.variety_id, none), substituteKey(line.variety_id))
+                }
               />
             ))}
           </ol>
@@ -216,9 +242,17 @@ function Packer({
         {current && (
           <p className="muted">
             {current.in_bag} of {current.booked} things in the bag.
+            {toTick !== null && toTick > 0 && (
+              <>
+                {' '}
+                <strong>
+                  {toTick === 1 ? '1 line' : `${toTick} lines`} still to tick, then press Packed.
+                </strong>
+              </>
+            )}
           </p>
         )}
-        <button type="button" onClick={packed} disabled={current === null || sending}>
+        <button type="button" onClick={packed} disabled={current === null || toTick !== 0 || sending}>
           {sending ? 'Saving...' : 'Packed'}
         </button>
       </div>
@@ -226,38 +260,90 @@ function Packer({
   )
 }
 
-function FoodRow({ line, missing, onChange }: { line: BagFood; missing: number; onChange: (howMany: number) => void }) {
-  const onShelf = line.quantity - missing
+/**
+ * Ticks a line as in the bag. It's a toggle, so a screen reader says "pressed"
+ * once it's ticked, and tapping again unticks it.
+ */
+function PickedButton({ name, picked, onPicked }: { name: string; picked: boolean; onPicked: (on: boolean) => void }) {
   return (
-    <li className={missing > 0 ? 'pack-row pack-row-missing' : 'pack-row'}>
+    <button
+      type="button"
+      className={picked ? undefined : 'secondary'}
+      aria-pressed={picked}
+      aria-label={`Picked: ${name}`}
+      onClick={() => onPicked(!picked)}
+    >
+      {picked && <span aria-hidden="true">✓ </span>}
+      Picked
+    </button>
+  )
+}
+
+function FoodRow({
+  line,
+  missing,
+  picked,
+  onPicked,
+  onChange,
+}: {
+  line: BagFood
+  missing: number
+  picked: boolean
+  onPicked: (on: boolean) => void
+  onChange: (howMany: number) => void
+}) {
+  const onShelf = line.quantity - missing
+  const allOut = missing === line.quantity
+  const rowClass = allOut || (missing > 0 && !picked) ? 'pack-row pack-row-missing' : picked ? 'pack-row pack-row-use' : 'pack-row'
+  return (
+    <li className={rowClass}>
       <span className="pack-name">
         <strong>{line.variety}</strong>
         <span className="muted">{line.item}</span>
         {line.quantity > 1 && <span>× {line.quantity}</span>}
-        {missing > 0 && (
-          <span className="pack-state">{missing === line.quantity ? 'None on the shelf' : `${missing} missing`}</span>
-        )}
+        {picked && !allOut && <span className="pack-state pack-state-use">In the bag</span>}
+        {missing > 0 && <span className="pack-state">{allOut ? 'Out of stock' : `${missing} out of stock`}</span>}
       </span>
       {line.quantity === 1 ? (
-        <button type="button" className="secondary" onClick={() => onChange(missing > 0 ? 0 : 1)}>
-          {missing > 0 ? 'Found it' : 'None on the shelf'}
-        </button>
+        allOut ? (
+          <button type="button" className="secondary" aria-label={`Found it: ${line.variety}`} onClick={() => onChange(0)}>
+            Found it
+          </button>
+        ) : (
+          <span className="pack-buttons">
+            <PickedButton name={line.variety} picked={picked} onPicked={onPicked} />
+            {!picked && (
+              <button
+                type="button"
+                className="secondary"
+                aria-label={`Out of stock: ${line.variety}`}
+                onClick={() => onChange(1)}
+              >
+                Out of stock
+              </button>
+            )}
+          </span>
+        )
       ) : (
-        <label className="on-shelf">
-          On the shelf{' '}
-          <select value={onShelf} onChange={(event) => onChange(line.quantity - Number(event.target.value))}>
-            {Array.from({ length: line.quantity + 1 }, (_, n) => line.quantity - n).map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
+        <span className="pack-buttons">
+          <label className="on-shelf">
+            On the shelf{' '}
+            <select value={onShelf} onChange={(event) => onChange(line.quantity - Number(event.target.value))}>
+              {Array.from({ length: line.quantity + 1 }, (_, n) => line.quantity - n).map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+          {onShelf > 0 && <PickedButton name={line.variety} picked={picked} onPicked={onPicked} />}
+        </span>
       )}
       {line.ran_out_at && (
         <span className="hint pack-hint">
           {/* No full stop after the time: it ends in "a.m." or "p.m." already. */}
-          A volunteer found none on the shelf at {showClock(line.ran_out_at)} If there is some, tap Found it.
+          A volunteer marked this out of stock at {showClock(line.ran_out_at)}{' '}
+          {line.quantity === 1 ? 'If there is some, tap Found it.' : 'If there is some, choose how many are on the shelf.'}
         </span>
       )}
     </li>
@@ -267,32 +353,59 @@ function FoodRow({ line, missing, onChange }: { line: BagFood; missing: number; 
 function SubstituteRow({
   line,
   plan,
+  picked,
+  onPicked,
   onNone,
 }: {
   line: BagSubstitute
   plan: PackingPlan | null
+  picked: boolean
+  onPicked: (on: boolean) => void
   onNone: (none: boolean) => void
 }) {
   const planned = plan?.substitutes.find((substitute) => substitute.variety_id === line.variety_id)
   const outcome = planned?.outcome
+  const goesIn = outcome === 'use'
+  // Picked earlier, but the plan changed (say the booked food was found after all).
+  const takeOut = picked && planned !== undefined && !goesIn
+  const rowClass = takeOut || outcome === 'not_on_shelf' ? 'pack-row-missing' : goesIn ? 'pack-row-use' : undefined
   return (
-    <li className={outcome === 'use' ? 'pack-row-use' : outcome === 'not_on_shelf' ? 'pack-row-missing' : undefined}>
+    <li className={rowClass}>
       <span className="pack-name">
         <strong>{line.variety}</strong>
         <span className="muted">{line.item}</span>
-        {planned && (
-          <span className={outcome === 'use' ? 'pack-state pack-state-use' : 'pack-state pack-state-skip'}>
-            {outcomeWords(planned.outcome, line.item, planned.replaces)}
-          </span>
+        {takeOut ? (
+          <span className="pack-state">Not needed now: take it out of the bag</span>
+        ) : (
+          planned && (
+            <span className={goesIn ? 'pack-state pack-state-use' : 'pack-state pack-state-skip'}>
+              {goesIn && picked ? `In the bag, for ${planned.replaces}` : outcomeWords(planned.outcome, line.item, planned.replaces)}
+            </span>
+          )
         )}
       </span>
-      {outcome === 'use' && (
-        <button type="button" className="secondary" onClick={() => onNone(true)}>
-          None on the shelf
+      {goesIn && (
+        <span className="pack-buttons">
+          <PickedButton name={line.variety} picked={picked} onPicked={onPicked} />
+          {!picked && (
+            <button
+              type="button"
+              className="secondary"
+              aria-label={`Out of stock: ${line.variety}`}
+              onClick={() => onNone(true)}
+            >
+              Out of stock
+            </button>
+          )}
+        </span>
+      )}
+      {takeOut && (
+        <button type="button" className="secondary" onClick={() => onPicked(false)}>
+          Taken out
         </button>
       )}
       {outcome === 'not_on_shelf' && (
-        <button type="button" className="secondary" onClick={() => onNone(false)}>
+        <button type="button" className="secondary" aria-label={`Found it: ${line.variety}`} onClick={() => onNone(false)}>
           Found it
         </button>
       )}
@@ -361,7 +474,7 @@ function BagAsItIs({
                 {line.quantity > 1 && <span>× {line.quantity}</span>}
                 {line.missing > 0 && (
                   <span className="pack-state">
-                    {line.missing === line.quantity ? "Wasn't on the shelf" : `${line.missing} weren't on the shelf`}
+                    {line.missing === line.quantity ? 'Out of stock' : `${line.missing} out of stock`}
                   </span>
                 )}
               </span>

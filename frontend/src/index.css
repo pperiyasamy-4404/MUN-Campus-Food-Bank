@@ -948,6 +948,14 @@ h2.in-card {
   font-weight: 400;
 }
 
+/* Picked and Out of stock side by side. */
+.pack-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
 .pack-hint {
   flex-basis: 100%;
   margin: 0;
