@@ -102,7 +102,7 @@
 <div class="table-wrap">
 <table>
   <tr><th>#</th><th>What could go wrong</th><th>How much it matters</th><th>What I'd pick</th></tr>
-  <tr><td>1</td><td><a href="#q1">Nobody runs the 6 pm jobs</a></td><td><span class="tag big">Before real use</span></td><td>A now, B when it goes live</td></tr>
+  <tr><td>1</td><td><a href="#q1">Nobody runs the 6 pm jobs</a></td><td><span class="tag big">Before real use</span></td><td><b>Decided 11 Nov:</b> the hosting team schedules it</td></tr>
   <tr><td>2</td><td><a href="#q2">No backup of the data or the secret key</a></td><td><span class="tag big">Before real use</span></td><td>A</td></tr>
   <tr><td>3</td><td><a href="#q3">Only one coordinator</a></td><td><span class="tag big">Before real use</span></td><td>A</td></tr>
   <tr><td>4</td><td><a href="#q4">Who looks after it when you leave MUN</a></td><td><span class="tag big">Before real use</span></td><td>README + ask the food bank</td></tr>
@@ -123,7 +123,8 @@
 <h2>Before real students use it</h2>
 
 <div class="card" id="q1">
-  <h3><span class="num">1</span>Nobody runs the 6 pm jobs <span class="tag big">Before real use</span> <span class="tag you">Your choice</span></h3>
+  <h3><span class="num">1</span>Nobody runs the 6 pm jobs <span class="tag big">Before real use</span></h3>
+  <div class="note"><p><b>Decided on 11 November:</b> whoever hosts the system runs the jobs every 15 minutes with the server's own scheduler. That's the hosting team's job, not the coordinator's, so no warning is built. The README will say how. The demo keeps running them by hand.</p></div>
   <p>The <b>jobs</b> are the small script (<code>python -m app.jobs</code>) that does the work nobody clicks for. It makes next week's pickup days, marks bags nobody collected as no-shows, and deletes old data. On 10 November you chose to run it by hand, not on a timer. That's fine for a demo. My worry is real use.</p>
   <span class="label">A small story</span>
   <div class="example">
