@@ -73,7 +73,7 @@
   <li><a href="#refill">The refill rule</a></li>
   <li><a href="#tap">Nothing is saved until Packed</a></li>
   <li><a href="#packed">Pressing Packed: one transaction</a></li>
-  <li><a href="#ranout">"None on the shelf", and the flags</a></li>
+  <li><a href="#ranout">"Out of stock", and the flags</a></li>
   <li><a href="#note">The sticky note, and bags that go out short</a></li>
   <li><a href="#tables">What the database remembers</a></li>
   <li><a href="#addresses">The addresses</a></li>
@@ -99,8 +99,8 @@
 
     <rect x="345" y="30" width="250" height="130" rx="12" fill="#d1fae5" stroke="#059669"/>
     <text x="470" y="60" font-weight="700">2. One bag</text>
-    <text x="470" y="86" font-size="13">Put the food in. Tap</text>
-    <text x="470" y="105" font-size="13">"None on the shelf" if it's not there.</text>
+    <text x="470" y="86" font-size="13">Tap "Picked" as food goes in,</text>
+    <text x="470" y="105" font-size="13">"Out of stock" if it's not there.</text>
     <text x="470" y="124" font-size="13">The page says what goes in instead.</text>
     <text x="470" y="148" font-size="13" fill="#475569">/packing/12</text>
 
@@ -212,7 +212,7 @@ for substitute in substitutes, best first:
 
 <!-- ============================================================ -->
 <h2 id="tap"><span class="num">4</span>Nothing is saved until Packed</h2>
-<p>Tapping "None on the shelf" or "Found it" only changes the page. After each tap, the page sends the server what the volunteer has found so far, and the server answers with the plan:</p>
+<p>Tapping "Out of stock" or "Found it" only changes the page. After each tap, the page sends the server what the volunteer has found so far, and the server answers with the plan:</p>
 <pre class="code">POST /api/packing/bags/12/plan
 {"missing": [{"variety_id": 31}], "not_on_shelf": []}
 
@@ -223,7 +223,15 @@ for substitute in substitutes, best first:
  "uses": [61]}</pre>
 <p><code>/plan</code> saves nothing. So if a volunteer taps the wrong line, they tap Found it and the plan goes back. If they tap quickly, the page keeps only the answer for the latest taps.</p>
 <div class="why">
-  <p><b>Why not save each tap?</b> "None on the shelf" sets the food's stock to 0 (part 6). If that were saved at once, undoing it would need the stock number from before, and nobody knows it any more. Saving everything once, at Packed, means there's nothing to undo.</p>
+  <p><b>Why not save each tap?</b> "Out of stock" sets the food's stock to 0 (part 6). If that were saved at once, undoing it would need the stock number from before, and nobody knows it any more. Saving everything once, at Packed, means there's nothing to undo.</p>
+</div>
+<h3>Picked: ticking off what's in the bag <span class="muted">(added 11 Nov)</span></h3>
+<p>Each line also has a <b>Picked</b> button. The volunteer taps it as that food goes in the bag, and the line turns green: "In the bag". A substitute the plan puts in gets one too. Tapping it again unticks it.</p>
+<p><b>Packed waits until every line is ticked</b>: Picked, or Out of stock. Until then the bottom of the page says, for example, "2 lines still to tick, then press Packed." So a bag can't be marked Packed with something forgotten.</p>
+<p>If the plan changes after a substitute was Picked (say the oil turned up after all, so the rice isn't needed), the rice line turns red: "Not needed now: take it out of the bag", with a <b>Taken out</b> button. Packed waits for that too.</p>
+<div class="why">
+  <p><b>Why only on the page?</b> Picked helps the volunteer keep track while packing one bag. It changes nothing in the stock, so the server doesn't need it, and there's nothing to save or undo. Like Out of stock, it's gone if the page is reloaded, and the volunteer ticks again.</p>
+  <p><b>Why "Out of stock" and not "None on the shelf"?</b> It's the shorter, everyday words volunteers already use. (The database still calls it <code>not_on_shelf</code> and <code>ran_out_at</code>: only the words on the page changed.)</p>
 </div>
 
 <!-- ============================================================ -->
@@ -250,7 +258,7 @@ for substitute in substitutes, best first:
 <p>The lock order is the same as booking and cancelling: the booking, then the food from the lowest id up. Packing never needs the slot. So packing can't deadlock with them.</p>
 
 <!-- ============================================================ -->
-<h2 id="ranout"><span class="num">6</span>"None on the shelf", and the flags</h2>
+<h2 id="ranout"><span class="num">6</span>"Out of stock", and the flags</h2>
 <p>When Packed saves food that nobody found, it does two things to that food:</p>
 <ul>
   <li><b>Its stock becomes 0.</b> The shelf has none, so nobody else can book it until someone counts it.</li>
@@ -265,7 +273,7 @@ for substitute in substitutes, best first:
     <rect x="20" y="40" width="240" height="100" rx="12" fill="#fee2e2" stroke="#b91c1c"/>
     <text x="140" y="70" font-weight="700">Bag E5M: Packed</text>
     <text x="140" y="94" font-size="13">Sunflower oil:</text>
-    <text x="140" y="113" font-size="13">none on the shelf</text>
+    <text x="140" y="113" font-size="13">out of stock</text>
 
     <rect x="350" y="20" width="240" height="60" rx="10" fill="#fff" stroke="#b91c1c" stroke-width="2"/>
     <text x="470" y="45" font-weight="700">M9G</text>
@@ -286,8 +294,8 @@ for substitute in substitutes, best first:
   </g>
 </svg>
 </div>
-<p>When a volunteer opens a flagged bag, that food is already marked "None on the shelf", with "A volunteer found none on the shelf at 12:26 p.m. If there is some, tap Found it." So nobody searches the shelf for it again.</p>
-<p><b>Counting the shelf clears the mark</b>, because a count is what's really there. The stock page lists food that ran out as needing a count, in red: "None on the shelf while packing, Monday, November 9 at 12:26 p.m. Count it to take the flag off other bags."</p>
+<p>When a volunteer opens a flagged bag, that food is already marked "Out of stock", with "A volunteer marked this out of stock at 12:26 p.m. If there is some, tap Found it." So nobody searches the shelf for it again.</p>
+<p><b>Counting the shelf clears the mark</b>, because a count is what's really there. The stock page lists food that ran out as needing a count, in red: "Marked out of stock while packing, Monday, November 9 at 12:26 p.m. Count it to take the flag off other bags."</p>
 
 <!-- ============================================================ -->
 <h2 id="note"><span class="num">7</span>The sticky note, and bags that go out short</h2>

@@ -674,3 +674,14 @@ Not done: a real screen reader (NVDA) and real users. Automatic checks find only
 - **It serves the built website itself** (`frontend/dist`, made by `npm run build`), so one command is enough. Only the demo does this: where the real site is hosted isn't decided yet.
 - Nothing runs the jobs script in the demo, so the 6 pm no-shows aren't marked unless it's run by hand.
 Also: `app.sample_data` now makes the same week of pickup days the jobs script makes (it made 4 days, from before the "one week ahead" answer), and its filling part is shared with the demo.
+
+## 2026-11-11
+
+Found while walking through the system from an empty start (Alex, Sam and one student, Wednesday 4 pm to Thursday 6 pm). The two ideas below are Prakash's, from packing bag G6M.
+
+**Each line on the packing page has a "Picked" button, and Packed waits until every line is Picked or Out of stock.**
+The volunteer taps Picked as each thing goes in the bag, and the line turns green ("In the bag"). A substitute the plan puts in gets one too. Until every line is ticked, the bottom of the page says "2 lines still to tick, then press Packed" and Packed can't be pressed. If a substitute was Picked and the plan then stops needing it (the booked food turned up after all), its line says "Not needed now: take it out of the bag" with a Taken out button, and Packed waits for that too. Picked is only on the page and is never sent to the server, like the Out of stock taps before Packed.
+Why: with only an Out of stock button, the page showed what was missing but not what was already in, so a volunteer packing several bags had to remember. Why Packed waits: the point is that nothing gets forgotten, and one tap per line is cheap next to a student going home without their rice. Why not saved on the server: it changes no stock and no record, so there is nothing to save or undo. (Claude chose "Packed waits"; Prakash can change it to just a reminder.)
+
+**"None on the shelf" is now "Out of stock" on every page volunteers see.**
+Also "Wasn't on the shelf" on a packed bag, the hint on a flagged bag ("A volunteer marked this out of stock at 12:26 p.m.") and the Stock page's ran-out line. Why: the shorter, everyday words. Only the words changed: the database and the addresses still say `not_on_shelf`, `missing` and `ran_out_at`, and the server's one message about it now says "out of stock". Older sections of this file keep the old words.
