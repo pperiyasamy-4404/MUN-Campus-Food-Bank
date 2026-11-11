@@ -217,6 +217,8 @@ def test_only_staff_can_give_a_student_a_setup_code(client, db):
         ("POST", "/api/volunteers/1/setup-code"),
         ("POST", "/api/volunteers/1/switch-off"),
         ("POST", "/api/volunteers/1/switch-on"),
+        ("POST", "/api/volunteers/1/make-coordinator"),
+        ("POST", "/api/volunteers/1/make-volunteer"),
     ],
 )
 def test_only_the_coordinator_manages_volunteers(client, db, method, address):
@@ -227,7 +229,7 @@ def test_only_the_coordinator_manages_volunteers(client, db, method, address):
     response = client.request(method, address, json={"username": "Pat"})
 
     assert response.status_code == 403
-    assert response.json() == {"detail": "Only the coordinator can do this."}
+    assert response.json() == {"detail": "Only a coordinator can do this."}
 
 
 def log_in_coordinator(client, db):
@@ -255,7 +257,9 @@ def test_the_coordinator_adds_lists_and_switches_off_volunteers(client, db):
     )
     assert setup.json() == {"kind": "staff", "username": "Pat O'Brien", "role": "volunteer"}
 
-    [listed] = client.get("/api/volunteers").json()
+    alex, listed = client.get("/api/volunteers").json()
+    assert (alex["username"], alex["role"], alex["you"]) == ("Alex", "coordinator", True)
+    assert (listed["role"], listed["you"]) == ("volunteer", False)
     assert (listed["password_set"], listed["setup_code_expires_at"], listed["switched_off_at"]) == (True, None, None)
 
     switched_off = client.post(f"/api/volunteers/{pat['id']}/switch-off")
@@ -302,6 +306,54 @@ def test_the_coordinator_gives_a_volunteer_a_new_setup_code(client, db):
     assert response.json()["new_account"] is False
     # Sam's old password still works until the new code is used.
     assert log_in_staff(another_browser(), "Sam").status_code == 200
+
+
+# ---------- several coordinators (decided 11 November) ----------
+
+
+def test_a_coordinator_makes_a_volunteer_a_coordinator_too(client, db):
+    """Jordan can use the coordinator pages at once, with the same password."""
+    log_in_coordinator(client, db)
+    jordan = volunteer_with_password(db, NOW, "Jordan")
+    jordans_phone = another_browser()
+    log_in_staff(jordans_phone, "Jordan")
+    assert jordans_phone.get("/api/settings").status_code == 403
+
+    response = client.post(f"/api/volunteers/{jordan.id}/make-coordinator")
+
+    assert response.status_code == 200
+    assert (response.json()["role"], response.json()["you"]) == ("coordinator", False)
+    assert jordans_phone.get("/api/settings").status_code == 200
+    assert me(jordans_phone)["role"] == "coordinator"
+
+
+def test_a_coordinator_made_a_volunteer_loses_the_coordinator_pages_at_once(client, db):
+    """Alex hands over to Jordan, then Jordan makes Alex a volunteer."""
+    log_in_coordinator(client, db)
+    jordan = volunteer_with_password(db, NOW, "Jordan")
+    client.post(f"/api/volunteers/{jordan.id}/make-coordinator")
+    jordans_phone = another_browser()
+    log_in_staff(jordans_phone, "Jordan")
+    alex_id = next(row["id"] for row in jordans_phone.get("/api/volunteers").json() if row["username"] == "Alex")
+
+    response = jordans_phone.post(f"/api/volunteers/{alex_id}/make-volunteer")
+
+    assert response.json()["role"] == "volunteer"
+    # Alex is still logged in, as a volunteer: the packing pages work, the coordinator ones don't.
+    assert client.get("/api/settings").status_code == 403
+    assert client.get("/api/packing").status_code == 200
+
+
+def test_nobody_changes_their_own_account_on_the_staff_page(client, db):
+    """So a coordinator can't switch themselves off, or leave the food bank with no coordinator."""
+    log_in_coordinator(client, db)
+    alex_id = client.get("/api/volunteers").json()[0]["id"]
+
+    for action in ["make-volunteer", "switch-off", "setup-code", "switch-on"]:
+        response = client.post(f"/api/volunteers/{alex_id}/{action}")
+        assert response.status_code == 400
+        assert response.json() == {"detail": "That's your own account. Another coordinator can change it."}
+    assert client.get("/api/settings").status_code == 200
 
 
 # ---------- the answers the page gets back ----------

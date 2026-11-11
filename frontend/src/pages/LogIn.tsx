@@ -100,9 +100,9 @@ function LogIn({ who }: { who: 'student' | 'staff' }) {
       ) : (
         <div className="after-form">
           <p>
-            Got a setup code from the coordinator? <Link to="/staff/setup">Choose your password</Link>.
+            Got a setup code from a coordinator? <Link to="/staff/setup">Choose your password</Link>.
           </p>
-          <p>Forgot your password? Ask the coordinator for a new setup code.</p>
+          <p>Forgot your password? Ask a coordinator for a new setup code.</p>
         </div>
       )}
     </div>

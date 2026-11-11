@@ -7,7 +7,7 @@ import { useMe } from '../me.ts'
 import { AlreadyLoggedIn } from './AlreadyLoggedIn.tsx'
 import { PageHeading } from '../PageHeading.tsx'
 
-// Choosing a password with a setup code from the counter (R1) or the coordinator (R3).
+// Choosing a password with a setup code from the counter (R1) or a coordinator (R3).
 // The same page resets a forgotten password: it's just a new code.
 
 export function StudentSetUp() {
@@ -61,7 +61,7 @@ function SetUp({ who }: { who: 'student' | 'staff' }) {
       <p className="lead">
         {student
           ? 'Use the setup code you got at the food bank counter. You can do this right there, or later at home.'
-          : 'Use the setup code the coordinator gave you.'}
+          : 'Use the setup code a coordinator gave you.'}
       </p>
       <form onSubmit={setUp} noValidate>
         <Problem message={problem} />
@@ -79,7 +79,7 @@ function SetUp({ who }: { who: 'student' | 'staff' }) {
         ) : (
           <Field
             label="Username"
-            hint="The one the coordinator gave you."
+            hint="The one a coordinator gave you."
             autoComplete="username"
             autoCapitalize="none"
             value={values.name}
@@ -119,7 +119,7 @@ function SetUp({ who }: { who: 'student' | 'staff' }) {
         <p>
           {student
             ? 'Code not working, or run out? Ask at the counter for a new one.'
-            : 'Code not working, or run out? Ask the coordinator for a new one.'}
+            : 'Code not working, or run out? Ask a coordinator for a new one.'}
         </p>
       </div>
     </div>

@@ -40,6 +40,12 @@ class AccountProblem(Problem):
     """Something about an account the person can fix, like a password that's their ID number."""
 
 
+class NotACoordinatorAnyMore(Problem):
+    """Another coordinator made this one a volunteer, or switched them off, a moment ago."""
+
+    status_code = 403
+
+
 class WrongDetails(AccountProblem):
     """The same words whatever was wrong: no account, no password set yet, the
     wrong password, a wrong or expired code. So the answer never tells anyone
@@ -148,7 +154,12 @@ def log_in_staff(db: Session, username: str, password: str, device_cookie: str |
     return staff
 
 
-# ---------- the coordinator (R3) ----------
+# ---------- coordinators (R3) ----------
+#
+# There can be several coordinators (decided 11 November). Any coordinator looks
+# after every other staff account: setup codes, switching off and on, and making
+# someone a coordinator or a volunteer. Nobody can change their own account
+# here, so the coordinator doing it is always left, and there is never none.
 
 
 def add_volunteer(db: Session, username: str, coordinator: Staff, now: datetime) -> tuple[Staff, IssuedCode]:
@@ -165,7 +176,8 @@ def add_volunteer(db: Session, username: str, coordinator: Staff, now: datetime)
 
 
 def give_volunteer_setup_code(db: Session, volunteer: Staff, coordinator: Staff, now: datetime) -> IssuedCode:
-    """For a volunteer who hasn't set a password yet, lost their code, or forgot their password."""
+    """For a volunteer or another coordinator who hasn't set a password yet, lost
+    their code, or forgot their password."""
     if volunteer.disabled_at is not None:
         raise AccountProblem(f"{volunteer.username}'s account is switched off.")
     return _give_setup_code(db, volunteer, coordinator, now)
@@ -175,7 +187,9 @@ def switch_off_volunteer(db: Session, volunteer: Staff, coordinator: Staff, now:
     """A volunteer who leaves can't log in again, starting now, until they're switched back on.
 
     The account itself is kept, so the log can still say who did what (R4).
+    Another coordinator can be switched off too, like one who has left.
     """
+    _lock_both(db, coordinator, volunteer)
     if volunteer.disabled_at is not None:
         return
     volunteer.disabled_at = now
@@ -201,31 +215,84 @@ def switch_on_volunteer(db: Session, volunteer: Staff, coordinator: Staff, now: 
     return _give_setup_code(db, volunteer, coordinator, now)
 
 
-def volunteer_with_id(db: Session, staff_id: int) -> Staff:
-    """Only volunteers: the coordinator's own account is looked after by the setup script."""
-    volunteer = db.get(Staff, staff_id)
-    if volunteer is None or volunteer.role != "volunteer":
-        raise NotFound("There's no volunteer with that number.")
-    return volunteer
+def make_coordinator(db: Session, volunteer: Staff, coordinator: Staff, now: datetime) -> None:
+    """A volunteer becomes a coordinator, with the same account and password.
+
+    For a second person in charge, or a new coordinator taking over: the one
+    leaving is then made a volunteer or switched off by the new one.
+    """
+    _lock_both(db, coordinator, volunteer)
+    if volunteer.role == "coordinator":
+        raise AccountProblem(f"{volunteer.username} is a coordinator already.")
+    if volunteer.disabled_at is not None:
+        raise AccountProblem(f"{volunteer.username}'s account is switched off. Switch it on first.")
+    volunteer.role = "coordinator"
+    log(db, coordinator, "made_coordinator", now, staff=volunteer)
+
+
+def make_volunteer(db: Session, other: Staff, coordinator: Staff, now: datetime) -> None:
+    """Another coordinator goes back to being a volunteer. Their next click on a
+    coordinator page is refused, because every request reads the role again."""
+    _lock_both(db, coordinator, other)
+    if other.role == "volunteer":
+        raise AccountProblem(f"{other.username} is a volunteer already.")
+    other.role = "volunteer"
+    log(db, coordinator, "made_volunteer", now, staff=other)
+
+
+def staff_with_id(db: Session, staff_id: int, coordinator: Staff) -> Staff:
+    """Any staff account but the coordinator's own.
+
+    Nobody changes their own account here: it stops a coordinator switching
+    themselves off by mistake, and it means the one doing it always stays a
+    coordinator, so there is never none. Their own password is reset by another
+    coordinator, or by the setup script on the server.
+    """
+    staff = db.get(Staff, staff_id)
+    if staff is None:
+        raise NotFound("There's no staff account with that number.")
+    if staff.id == coordinator.id:
+        raise AccountProblem("That's your own account. Another coordinator can change it.")
+    return staff
+
+
+def _lock_both(db: Session, coordinator: Staff, other: Staff) -> None:
+    """Lock both accounts, lowest id first, then check the coordinator still is one.
+
+    Without this, Alex makes Jordan a volunteer while Jordan makes Alex a
+    volunteer, at the same moment: both checks pass and nobody is coordinator.
+    With it, the second waits, sees it was made a volunteer, and is refused.
+    """
+    db.scalars(
+        select(Staff)
+        .where(Staff.id.in_([coordinator.id, other.id]))
+        .order_by(Staff.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).all()
+    if coordinator.role != "coordinator" or coordinator.disabled_at is not None:
+        raise NotACoordinatorAnyMore("You're not a coordinator any more, so this wasn't done.")
 
 
 def set_up_first_coordinator(db: Session, username: str, now: datetime) -> IssuedCode:
     """Run once on the server when the system is installed (R3). There is no web page for it.
 
-    Run again with the same username, it gives that coordinator a new code,
-    for a forgotten password. It never makes a second coordinator.
+    Run again with a coordinator's username, it gives them a new code, for a
+    forgotten password. It never makes another coordinator: after the first,
+    a coordinator makes a volunteer a coordinator on the Staff page.
     """
     named = _staff_named(db, username)
     if named is not None:
         if named.role != "coordinator":
-            raise AccountProblem(f"{named.username} is a volunteer, not the coordinator.")
+            raise AccountProblem(f"{named.username} is a volunteer, not a coordinator.")
         return _give_setup_code(db, named, None, now)
 
     coordinators = db.scalars(select(Staff.username).where(Staff.role == "coordinator")).all()
     if coordinators:
         raise AccountProblem(
-            f"The coordinator is already set up: {', '.join(coordinators)}. "
-            "To give them a new setup code, run this again with that username."
+            f"A coordinator is already set up: {', '.join(coordinators)}. "
+            "To give one a new setup code, run this again with that username. "
+            "To add a coordinator, a coordinator makes a volunteer one on the Staff page."
         )
     coordinator = Staff(username=username, role="coordinator", created_at=now, created_by_staff_id=None)
     db.add(coordinator)

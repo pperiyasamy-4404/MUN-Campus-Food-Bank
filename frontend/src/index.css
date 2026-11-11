@@ -492,11 +492,21 @@ button.link-button {
   gap: 0.4rem;
 }
 
-/* On a phone, the buttons go under each other. */
+/* On a phone, the buttons go under each other, and the cells are a little
+   tighter, so the Staff table fits 320 pixels with the role under each name. */
 @media (width < 40rem) {
   .row-actions {
     flex-direction: column;
     align-items: flex-end;
+  }
+
+  .people th,
+  .people td {
+    padding: 0.5rem 0.3rem;
+  }
+
+  .people .row-actions button {
+    padding: 0.3rem 0.55rem;
   }
 }
 
@@ -508,6 +518,14 @@ button.link-button {
 .row-actions button {
   padding: 0.3rem 0.7rem;
   font-size: 0.9rem;
+}
+
+/* "Coordinator" or "Volunteer", under the username on the Staff page. */
+.role-line {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 400;
 }
 
 .switched-off th,

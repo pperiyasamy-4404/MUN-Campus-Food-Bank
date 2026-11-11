@@ -81,7 +81,7 @@ export function StaffOnly({ coordinator = false, children }: { coordinator?: boo
   if (me.state === 'failed') return null
   if (me.me?.kind !== 'staff') return <Navigate to="/staff/login" replace />
   if (coordinator && me.me.role !== 'coordinator') {
-    return <p className="problem">Only the coordinator can see this page.</p>
+    return <p className="problem">Only a coordinator can see this page.</p>
   }
   return children
 }

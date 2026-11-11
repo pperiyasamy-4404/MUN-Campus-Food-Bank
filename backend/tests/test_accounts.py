@@ -37,6 +37,7 @@ from tests.helpers import (
     make_staff,
     student_with_password,
     volunteer_with_password,
+    wait_until_someone_is_waiting_for_a_lock,
 )
 
 NOW = datetime(2026, 11, 8, 21, 0, tzinfo=UTC)
@@ -448,14 +449,131 @@ def test_switching_on_an_account_that_is_on_is_refused(db_with_settings):
     assert accounts.log_in_staff(db, "Sam", PASSWORD, None, NOW) is sam
 
 
-def test_the_coordinator_account_is_not_in_the_volunteer_list(db_with_settings):
-    """The coordinator can't switch off their own account by mistake."""
+def test_a_coordinator_can_not_pick_their_own_account(db_with_settings):
+    """So they can't switch themselves off by mistake, and there's always a coordinator left."""
     db = db_with_settings
     alex = coordinator(db)
 
-    for staff_id in [alex.id, 999_999]:
-        with pytest.raises(NotFound):
-            accounts.volunteer_with_id(db, staff_id)
+    with pytest.raises(AccountProblem, match="That's your own account"):
+        accounts.staff_with_id(db, alex.id, alex)
+    with pytest.raises(NotFound):
+        accounts.staff_with_id(db, 999_999, alex)
+
+
+# ---------- several coordinators (decided 11 November) ----------
+
+
+def test_a_volunteer_is_made_a_coordinator_and_back(db_with_settings):
+    db = db_with_settings
+    alex = coordinator(db)
+    jordan = volunteer_with_password(db, NOW, "Jordan")
+
+    accounts.make_coordinator(db, jordan, alex, NOW)
+    assert jordan.role == "coordinator"
+    # Same account, same password.
+    assert accounts.log_in_staff(db, "Jordan", PASSWORD, None, NOW) is jordan
+
+    accounts.make_volunteer(db, jordan, alex, NOW)
+    assert jordan.role == "volunteer"
+    assert log_actions(db)[-2:] == [("made_coordinator", alex.id, None, jordan.id), ("made_volunteer", alex.id, None, jordan.id)]
+
+
+def test_a_new_coordinator_takes_over_from_the_old_one(db_with_settings):
+    """Alex is leaving: Alex makes Jordan a coordinator, then Jordan switches Alex off."""
+    db = db_with_settings
+    alex = coordinator(db)
+    jordan = volunteer_with_password(db, NOW, "Jordan")
+
+    accounts.make_coordinator(db, jordan, alex, NOW)
+    accounts.switch_off_volunteer(db, alex, jordan, NOW)
+
+    assert alex.disabled_at == NOW
+    assert log_actions(db)[-1] == ("switched_off_volunteer", jordan.id, None, alex.id)
+
+
+@pytest.mark.parametrize(
+    "change, before, refusal",
+    [
+        (accounts.make_coordinator, "coordinator", "Jordan is a coordinator already."),
+        (accounts.make_volunteer, "volunteer", "Jordan is a volunteer already."),
+    ],
+)
+def test_changing_to_the_role_they_have_is_refused(db_with_settings, change, before, refusal):
+    db = db_with_settings
+    jordan = make_staff(db, "Jordan", role=before)
+
+    with pytest.raises(AccountProblem, match=refusal):
+        change(db, jordan, coordinator(db), NOW)
+
+
+def test_a_switched_off_volunteer_is_not_made_a_coordinator(db_with_settings):
+    """Switch them on first: that gives them a new setup code, so it really is them."""
+    db = db_with_settings
+    alex = coordinator(db)
+    jordan = volunteer_with_password(db, NOW, "Jordan")
+    accounts.switch_off_volunteer(db, jordan, alex, NOW)
+
+    with pytest.raises(AccountProblem, match="switched off. Switch it on first."):
+        accounts.make_coordinator(db, jordan, alex, NOW)
+    assert jordan.role == "volunteer"
+
+
+def test_someone_made_a_volunteer_a_moment_ago_can_not_change_accounts(db_with_settings):
+    """Their page still shows the buttons, but the server reads their role again."""
+    db = db_with_settings
+    alex = coordinator(db)
+    jordan = make_staff(db, "Jordan", role="coordinator")
+    sam = make_staff(db, "Sam")
+    accounts.make_volunteer(db, jordan, alex, NOW)
+
+    with pytest.raises(accounts.NotACoordinatorAnyMore):
+        accounts.make_coordinator(db, sam, jordan, NOW)
+    assert sam.role == "volunteer"
+
+
+@pytest.fixture
+def two_coordinators(engine):
+    """Alex and Jordan, saved for real, because two connections need to see them."""
+    with Session(engine) as db:
+        alex = Staff(username="Race Alex", role="coordinator")
+        jordan = Staff(username="Race Jordan", role="coordinator")
+        db.add_all([alex, jordan])
+        db.commit()
+        ids = {"alex": alex.id, "jordan": jordan.id}
+    yield ids
+    with Session(engine) as tidy:
+        tidy.execute(delete(AuditLog).where(AuditLog.staff_id.in_(ids.values())))
+        tidy.execute(delete(Staff).where(Staff.id.in_(ids.values())))
+        tidy.commit()
+
+
+def test_two_coordinators_make_each_other_volunteers_at_the_same_moment(engine, two_coordinators):
+    """Without the lock both would pass the check, and the food bank would have no coordinator."""
+    results = {}
+
+    def jordan_demotes_alex():
+        with Session(engine) as db:
+            jordan, alex = db.get(Staff, two_coordinators["jordan"]), db.get(Staff, two_coordinators["alex"])
+            try:
+                accounts.make_volunteer(db, alex, jordan, NOW)
+                db.commit()
+                results["jordan"] = "done"
+            except accounts.NotACoordinatorAnyMore as refusal:
+                results["jordan"] = refusal
+
+    with Session(engine) as db:
+        alex, jordan = db.get(Staff, two_coordinators["alex"]), db.get(Staff, two_coordinators["jordan"])
+        accounts.make_volunteer(db, jordan, alex, NOW)
+        racer = threading.Thread(target=jordan_demotes_alex)
+        racer.start()
+        wait_until_someone_is_waiting_for_a_lock(engine)
+        db.commit()
+    racer.join(timeout=10)
+
+    assert isinstance(results["jordan"], accounts.NotACoordinatorAnyMore)
+    with Session(engine) as db:
+        roles = dict(db.execute(select(Staff.username, Staff.role).where(Staff.id.in_(two_coordinators.values()))).all())
+    assert roles == {"Race Alex": "coordinator", "Race Jordan": "volunteer"}
 
 
 # ---------- the setup script (R3) ----------

@@ -7,8 +7,10 @@ import { showDay, showDayAndClock } from '../time.ts'
 import { CoordinatorNav } from './CoordinatorParts.tsx'
 import { PageHeading } from '../PageHeading.tsx'
 
-// The coordinator's list of volunteers (R3): add one, give a new setup code,
-// or switch an account off when someone leaves.
+// The Staff page (R3): every volunteer and coordinator. A coordinator adds a
+// volunteer, gives a new setup code, makes someone a coordinator or a volunteer
+// (several coordinators since 11 Nov), or switches an account off when someone
+// leaves. Their own row has no buttons: another coordinator changes it.
 
 // Why a setup code was given: the words around it change.
 type Why = 'added' | 'new code' | 'switched back on'
@@ -69,6 +71,23 @@ export function Volunteers() {
     refresh()
   }
 
+  async function changeRole(volunteer: Volunteer, to: 'coordinator' | 'volunteer') {
+    const sure = window.confirm(
+      to === 'coordinator'
+        ? `Make ${volunteer.username} a coordinator? They'll be able to close days, change settings and manage staff, ` +
+            'with the password they have now.'
+        : `Make ${volunteer.username} a volunteer? They'll lose the coordinator pages straight away.`,
+    )
+    if (!sure) return
+    const answer = await send<Volunteer>(`/api/volunteers/${volunteer.id}/make-${to}`)
+    if (!answer.ok) {
+      if (answer.status === 401) forget()
+      return setProblem(answer.message)
+    }
+    setProblem(null)
+    refresh()
+  }
+
   async function switchOn(volunteer: Volunteer) {
     const answer = await send<{ volunteer: Volunteer; code: IssuedCode }>(`/api/volunteers/${volunteer.id}/switch-on`)
     if (!answer.ok) {
@@ -83,10 +102,11 @@ export function Volunteers() {
   return (
     <div>
       <CoordinatorNav />
-      <PageHeading>Volunteers</PageHeading>
+      <PageHeading>Staff</PageHeading>
       <p className="lead">
-        Each volunteer has their own login, so the log can say who did what. They choose their own password
-        with a setup code. You never see it.
+        Each volunteer and coordinator has their own login, so the log can say who did what. They choose their own
+        password with a setup code. You never see it. To add a coordinator, add them as a volunteer, then make them a
+        coordinator.
       </p>
 
       {issued && (
@@ -119,13 +139,12 @@ export function Volunteers() {
       <h2>Everyone</h2>
       <Problem message={problem} />
       {list.state === 'loading' && <p className="muted">Asking the server...</p>}
-      {list.state === 'failed' && <p className="problem">Could not get the volunteers. Is the server running?</p>}
-      {list.state === 'ready' && list.volunteers.length === 0 && <p className="muted">No volunteers yet.</p>}
-      {list.state === 'ready' && list.volunteers.length > 0 && (
+      {list.state === 'failed' && <p className="problem">Could not get the staff list. Is the server running?</p>}
+      {list.state === 'ready' && (
         <table className="people">
           <thead>
             <tr>
-              <th scope="col">Username</th>
+              <th scope="col">Username and role</th>
               <th scope="col">Account</th>
               <th scope="col">
                 <span className="visually-hidden">Changes</span>
@@ -135,10 +154,19 @@ export function Volunteers() {
           <tbody>
             {list.volunteers.map((volunteer) => (
               <tr key={volunteer.id} className={volunteer.switched_off_at ? 'switched-off' : undefined}>
-                <th scope="row">{volunteer.username}</th>
+                <th scope="row">
+                  {volunteer.username}
+                  {/* Under the name, not in its own column, so the table still fits a phone. */}
+                  <span className="role-line">
+                    {volunteer.role === 'coordinator' ? 'Coordinator' : 'Volunteer'}
+                    {volunteer.you && ' (you)'}
+                  </span>
+                </th>
                 <td>{accountState(volunteer)}</td>
                 <td>
-                  {volunteer.switched_off_at ? (
+                  {volunteer.you ? (
+                    <span className="muted">That's you</span>
+                  ) : volunteer.switched_off_at ? (
                     <div className="row-actions">
                       <button type="button" className="secondary" onClick={() => switchOn(volunteer)}>
                         Switch back on
@@ -148,6 +176,13 @@ export function Volunteers() {
                     <div className="row-actions">
                       <button type="button" className="secondary" onClick={() => newCode(volunteer)}>
                         New setup code
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => changeRole(volunteer, volunteer.role === 'coordinator' ? 'volunteer' : 'coordinator')}
+                      >
+                        {volunteer.role === 'coordinator' ? 'Make volunteer' : 'Make coordinator'}
                       </button>
                       <button type="button" className="danger" onClick={() => switchOff(volunteer)}>
                         Switch off

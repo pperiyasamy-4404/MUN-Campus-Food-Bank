@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router'
 
-/** The coordinator's pages (R3). */
+/** The coordinators' pages (R3). */
 export function CoordinatorNav() {
   return (
     <nav className="sub-nav" aria-label="Coordinator">
@@ -9,7 +9,7 @@ export function CoordinatorNav() {
       </NavLink>
       <NavLink to="/coordinator/totals">Weekly totals</NavLink>
       <NavLink to="/coordinator/settings">Settings</NavLink>
-      <NavLink to="/coordinator/volunteers">Volunteers</NavLink>
+      <NavLink to="/coordinator/volunteers">Staff</NavLink>
     </nav>
   )
 }

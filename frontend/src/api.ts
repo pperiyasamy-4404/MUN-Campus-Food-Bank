@@ -90,9 +90,12 @@ export type IssuedCode = {
   new_account: boolean
 }
 
+/** One staff account on the Staff page: a volunteer or a coordinator (several since 11 Nov). */
 export type Volunteer = {
   id: number
   username: string
+  role: 'volunteer' | 'coordinator'
+  you: boolean // the coordinator looking at the page: their own account can't be changed there
   password_set: boolean
   setup_code_expires_at: string | null
   switched_off_at: string | null

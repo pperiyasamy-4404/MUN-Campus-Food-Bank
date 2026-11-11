@@ -193,7 +193,7 @@ def test_only_the_coordinator_sees_and_changes_settings(client, db_with_sample_w
     answer = client.request(method, "/api/settings", json=as_sent())
 
     assert answer.status_code == 403
-    assert answer.json() == {"detail": "Only the coordinator can do this."}
+    assert answer.json() == {"detail": "Only a coordinator can do this."}
 
 
 def test_the_page_gets_every_setting_and_the_days_already_made(client, db_with_sample_week, alex_logged_in):

@@ -67,7 +67,7 @@ def get_student(login: Login, db: DB) -> Student:
 
 
 def get_staff(login: Login, db: DB) -> Staff:
-    """A volunteer or the coordinator."""
+    """A volunteer or a coordinator."""
     staff = None if login is None or login.staff_id is None else db.get(Staff, login.staff_id)
     # Switching an account off deletes its sessions. This is a second check.
     if staff is None or staff.disabled_at is not None:
@@ -81,7 +81,7 @@ CurrentStaff = Annotated[Staff, Depends(get_staff)]
 
 def get_coordinator(staff: CurrentStaff) -> Staff:
     if staff.role != "coordinator":
-        raise HTTPException(403, "Only the coordinator can do this.")
+        raise HTTPException(403, "Only a coordinator can do this.")
     return staff
 
 
