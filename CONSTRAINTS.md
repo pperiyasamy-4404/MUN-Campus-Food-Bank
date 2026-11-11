@@ -142,6 +142,7 @@ Problems we know about and accept for now.
 
 - A privacy review, and deciding where the system is hosted (where the data actually lives).
 - Whoever hosts it runs `python -m app.jobs` every 15 minutes with the server's own scheduler (like cron). It's safe to run twice at once, catches up after a missed run, and ends with error code 1 when a job fails, so their monitoring can alert them. This is the hosting team's job, not the coordinator's (decided 11 November).
+- It will run on a cloud. The cloud's database backups are used, not our own backup script. The secret key (`SECRET_KEY`, now in `backend/.env`) isn't in the database, so it goes in the cloud's secrets setting, kept apart from the database and its backups. Losing it means no card matches any account; stealing it with the database means ID numbers can be worked out (decided 11 November).
 - Accessibility (screen readers, large text), and students without smartphones. Automatic checks (axe, WCAG 2.1 AA) pass on every page in light and dark, booking works with the keyboard only, and every page fits a 320-pixel screen (10 November). Still to do: try it with a real screen reader (NVDA), and with students who use one.
 
 ## Not in the prototype

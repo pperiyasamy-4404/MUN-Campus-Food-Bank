@@ -103,7 +103,7 @@
 <table>
   <tr><th>#</th><th>What could go wrong</th><th>How much it matters</th><th>What I'd pick</th></tr>
   <tr><td>1</td><td><a href="#q1">Nobody runs the 6 pm jobs</a></td><td><span class="tag big">Before real use</span></td><td><b>Decided 11 Nov:</b> the hosting team schedules it</td></tr>
-  <tr><td>2</td><td><a href="#q2">No backup of the data or the secret key</a></td><td><span class="tag big">Before real use</span></td><td>A</td></tr>
+  <tr><td>2</td><td><a href="#q2">No backup of the data or the secret key</a></td><td><span class="tag big">Before real use</span></td><td><b>Decided 11 Nov:</b> the cloud's backups; the key in its secrets setting</td></tr>
   <tr><td>3</td><td><a href="#q3">Only one coordinator</a></td><td><span class="tag big">Before real use</span></td><td>A</td></tr>
   <tr><td>4</td><td><a href="#q4">Who looks after it when you leave MUN</a></td><td><span class="tag big">Before real use</span></td><td>README + ask the food bank</td></tr>
   <tr><td>5</td><td><a href="#q5">Food counted twice after a no-show</a></td><td><span class="tag mid">Worth fixing</span></td><td>Wait for question 13</td></tr>
@@ -144,7 +144,8 @@
 </div>
 
 <div class="card" id="q2">
-  <h3><span class="num">2</span>No backup of the data or the secret key <span class="tag big">Before real use</span> <span class="tag you">Your choice</span></h3>
+  <h3><span class="num">2</span>No backup of the data or the secret key <span class="tag big">Before real use</span></h3>
+  <div class="note"><p><b>Decided on 11 November:</b> it will run on a cloud, and the cloud's database backups are used. No backup script of our own. The secret key isn't in the database, so it goes in the cloud's secrets setting, kept apart from the database. The demo has only made-up data, so it needs no backup.</p></div>
   <p>Nothing copies the database anywhere. There's also a <b>secret key</b> in <code>backend/.env</code>. The database never stores a student's ID number, only a scrambled version made with that key (a "hash"). When a volunteer types a card number, the system scrambles it the same way and looks for a match.</p>
   <span class="label">Three small stories</span>
   <div class="example">
