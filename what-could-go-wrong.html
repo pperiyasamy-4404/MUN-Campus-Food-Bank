@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What could still go wrong</title>
+<style>
+  :root {
+    color-scheme: light;
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc; --card: #ffffff;
+    --blue: #1d4ed8; --blue-bg: #dbeafe;
+    --green: #065f46; --green-bg: #d1fae5;
+    --amber: #92400e; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9; --suggest-bg: #eff6ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --ink: #e2e8f0; --muted: #a7b3c4; --line: #334155; --bg: #0f172a; --card: #1e293b;
+      --blue: #93c5fd; --blue-bg: #1e3a5f;
+      --green: #6ee7b7; --green-bg: #064e3b;
+      --amber: #fcd34d; --amber-bg: #451a03;
+      --red: #fca5a5; --red-bg: #450a0a;
+      --slate-bg: #273449; --suggest-bg: #172a46;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 960px; margin: 0 auto; padding: 36px 16px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.15rem; line-height: 1.35; margin: 0 0 6px; }
+  h3 .num { color: var(--blue); margin-right: 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  a { color: var(--blue); }
+  code { font: .92em ui-monospace, Consolas, monospace; background: var(--slate-bg); padding: 1px 5px; border-radius: 5px; }
+
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; background: var(--card); font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--red); border-radius: 14px; padding: 18px 20px; margin: 20px 0; }
+  .card.ask { border-left-color: var(--blue); }
+  .card.small { border-left-color: var(--amber); }
+  .label { display: block; font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 14px 0 2px; }
+  .example { background: var(--slate-bg); border-radius: 10px; padding: 10px 14px; margin: 6px 0; }
+  .example p { margin: 4px 0; }
+  .options { margin: 6px 0; padding-left: 0; list-style: none; }
+  .options li { background: var(--slate-bg); border-radius: 10px; padding: 8px 14px; margin: 6px 0; }
+  .options b.opt { color: var(--blue); }
+  .suggest { background: var(--suggest-bg); border-radius: 10px; padding: 10px 14px; margin: 8px 0; }
+  .suggest p { margin: 4px 0; }
+  .note { border-left: 4px solid var(--amber); background: var(--amber-bg); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .note p { margin: 4px 0; }
+
+  .tag { display: inline-block; font-size: .75rem; font-weight: 700; padding: 1px 9px; border-radius: 999px; vertical-align: 3px; margin-left: 4px; white-space: nowrap; }
+  .tag.big { background: var(--red-bg); color: var(--red); }
+  .tag.mid { background: var(--amber-bg); color: var(--amber); }
+  .tag.you { background: var(--blue-bg); color: var(--blue); }
+  .tag.fb { background: var(--green-bg); color: var(--green); }
+
+  /* A picture of a screen: the same colours in light and dark mode. */
+  .screen { max-width: 540px; margin: 12px 0; border: 2px solid #334155; border-radius: 12px; overflow: hidden; background: #fff; color: #0f172a; font-size: .95rem; }
+  .screen .bar { background: #334155; color: #fff; padding: 6px 12px; font-weight: 600; font-size: .9rem; }
+  .screen .body { padding: 12px 16px; }
+  .screen .row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 8px; }
+  .screen .row.red { background: #fee2e2; }
+  .screen .btn { display: inline-block; border: 1.5px solid #1d4ed8; color: #1d4ed8; border-radius: 6px; padding: 2px 10px; font-weight: 600; font-size: .88rem; margin-left: 4px; }
+  .screen .small { color: #475569; font-size: .85rem; }
+  .screen .box { display: inline-block; width: 14px; height: 14px; border: 1.5px solid #475569; border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; margin: 14px 0; overflow-x: auto; }
+  .diagram svg { display: block; width: 100%; min-width: 640px; height: auto; }
+  .toc { columns: 2 280px; }
+</style>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Campus Food Bank · 11 November 2026</p>
+<h1>What could still go wrong</h1>
+<p class="lead">All 9 steps are built and the walkthrough works from an empty start. This page lists what could still go wrong once real students and volunteers use it. I found these by walking through the system with you today and reading the code again. Each one has a small story, why it matters, the choices, and what I'd pick.</p>
+
+<div class="note">
+  <p><b>How to answer:</b> reply with numbers and letters, like <b>"1B, 3A, 5 wait, 8A"</b>. Say "explain 5 again" if a story isn't clear. Nothing on this page has been changed in the code yet.</p>
+</div>
+
+<p>The tags say how much each one matters:</p>
+<ul>
+  <li><span class="tag big">Before real use</span> must be sorted before real students use it.</li>
+  <li><span class="tag mid">Worth fixing</span> won't stop anything, but people will run into it.</li>
+  <li><span class="tag you">Your choice</span> needs your answer. <span class="tag fb">Ask the food bank</span> only the food bank knows.</li>
+</ul>
+
+<h2>All of them on one screen</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>#</th><th>What could go wrong</th><th>How much it matters</th><th>What I'd pick</th></tr>
+  <tr><td>1</td><td><a href="#q1">Nobody runs the 6 pm jobs</a></td><td><span class="tag big">Before real use</span></td><td>A now, B when it goes live</td></tr>
+  <tr><td>2</td><td><a href="#q2">No backup of the data or the secret key</a></td><td><span class="tag big">Before real use</span></td><td>A</td></tr>
+  <tr><td>3</td><td><a href="#q3">Only one coordinator</a></td><td><span class="tag big">Before real use</span></td><td>A</td></tr>
+  <tr><td>4</td><td><a href="#q4">Who looks after it when you leave MUN</a></td><td><span class="tag big">Before real use</span></td><td>README + ask the food bank</td></tr>
+  <tr><td>5</td><td><a href="#q5">Food counted twice after a no-show</a></td><td><span class="tag mid">Worth fixing</span></td><td>Wait for question 13</td></tr>
+  <tr><td>6</td><td><a href="#q6">One wrong "Out of stock" tap spreads to every bag</a></td><td><span class="tag mid">Worth fixing</span></td><td>A</td></tr>
+  <tr><td>7</td><td><a href="#q7">Two volunteers pack the same bag</a></td><td><span class="tag mid">Worth fixing</span></td><td>Wait for question 14</td></tr>
+  <tr><td>8</td><td><a href="#q8">Still logged in on a shared computer</a></td><td><span class="tag big">Before real use</span></td><td>A</td></tr>
+  <tr><td>9</td><td><a href="#q9">Forgot the code, and the phone is dead</a></td><td><span class="tag mid">Worth fixing</span></td><td>A</td></tr>
+  <tr><td>10</td><td><a href="#q10">Older phones may show broken colours</a></td><td><span class="tag mid">Worth fixing</span></td><td>A</td></tr>
+  <tr><td>11</td><td><a href="#q11">Holidays and term breaks</a></td><td><span class="tag mid">Worth fixing</span></td><td>A</td></tr>
+  <tr><td>12</td><td><a href="#q12">No "Delete my account" button</a></td><td><span class="tag mid">Worth fixing</span></td><td>A</td></tr>
+  <tr><td>13–16</td><td><a href="#foodbank">Four questions for the food bank</a></td><td><span class="tag fb">Ask the food bank</span></td><td>—</td></tr>
+  <tr><td>—</td><td><a href="#small">Small things</a> and <a href="#known">problems we already knew about</a></td><td>—</td><td>—</td></tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<h2>Before real students use it</h2>
+
+<div class="card" id="q1">
+  <h3><span class="num">1</span>Nobody runs the 6 pm jobs <span class="tag big">Before real use</span> <span class="tag you">Your choice</span></h3>
+  <p>The <b>jobs</b> are the small script (<code>python -m app.jobs</code>) that does the work nobody clicks for. It makes next week's pickup days, marks bags nobody collected as no-shows, and deletes old data. On 10 November you chose to run it by hand, not on a timer. That's fine for a demo. My worry is real use.</p>
+  <span class="label">A small story</span>
+  <div class="example">
+    <p>You have exams and don't run the jobs from Thursday 12 to Thursday 26 November.</p>
+    <p>The jobs make pickup days only one week ahead. On Thursday 12 they made Thursday 19, but nobody makes <b>Monday 23</b>. On Sunday 22 at 5 pm, students open the app to book Monday and see <b>no pickup days at all</b>.</p>
+    <p>Also, Thursday 12's uncollected bag stays "packed" for two weeks. Its food is never offered to anyone else. And booking details older than 90 days aren't deleted, even though we promise students they will be.</p>
+  </div>
+  <span class="label">Why it matters</span>
+  <p>Booking stops, food goes missing from the stock, and a privacy promise gets broken. All of it happens quietly, with no error anywhere.</p>
+  <span class="label">Choices</span>
+  <ul class="options">
+    <li><b class="opt">A.</b> Keep running it by hand, but show a <b>red warning</b> on the coordinator's page, like "The jobs last ran 3 days ago. Run them today." Small to build.</li>
+    <li><b class="opt">B.</b> The computer runs it every 15 minutes by itself (Windows Task Scheduler, or the same thing on wherever it's hosted). Nobody has to remember.</li>
+    <li><b class="opt">C.</b> Leave it as it is.</li>
+  </ul>
+  <div class="suggest"><p><b>What I'd pick:</b> <b>A now</b>, because it costs little and catches the problem. Then <b>B</b> once it runs somewhere real. B also makes question 5 almost go away.</p></div>
+</div>
+
+<div class="card" id="q2">
+  <h3><span class="num">2</span>No backup of the data or the secret key <span class="tag big">Before real use</span> <span class="tag you">Your choice</span></h3>
+  <p>Nothing copies the database anywhere. There's also a <b>secret key</b> in <code>backend/.env</code>. The database never stores a student's ID number, only a scrambled version made with that key (a "hash"). When a volunteer types a card number, the system scrambles it the same way and looks for a match.</p>
+  <span class="label">Three small stories</span>
+  <div class="example">
+    <p><b>The disk breaks.</b> In March the computer's disk dies. Every account, booking and weekly total is gone. 300 students have to queue at the counter again for new setup codes.</p>
+    <p><b>Only the key is lost.</b> The database is fine, but <code>.env</code> was deleted. The system can't scramble "202312345" the same way any more, so no card matches any account. That's as bad as losing everything.</p>
+    <p><b>Both are stolen together.</b> A thief has the database <i>and</i> the key. MUN numbers look like 2023xxxxx, so a computer can try every possible number quickly and find which scrambled code belongs to which number. Now the thief knows who uses the food bank.</p>
+  </div>
+  <span class="label">Why it matters</span>
+  <p>We need <b>both</b> things backed up, but <b>never in the same place</b>. Then a single lost or stolen copy can't do the damage above.</p>
+  <span class="label">Choices</span>
+  <ul class="options">
+    <li><b class="opt">A.</b> I write a small backup script now. It copies the database every night into a folder you choose (later, somewhere off the computer). The key is kept separately, for example in the coordinator's password manager. We also try a <b>restore</b> once, because an untested backup often doesn't work.</li>
+    <li><b class="opt">B.</b> Wait until we know where it will be hosted, because many hosts make backups for you.</li>
+  </ul>
+  <div class="suggest"><p><b>What I'd pick:</b> <b>A</b>. Even for the demo it teaches the restore steps, and a "how backups work" section looks good in the README.</p></div>
+</div>
+
+<div class="card" id="q3">
+  <h3><span class="num">3</span>Only one coordinator <span class="tag big">Before real use</span> <span class="tag you">Your choice</span></h3>
+  <p>The system allows exactly <b>one</b> coordinator account (rule R3). Only the coordinator can close a day, change settings or add volunteers. Volunteers can't do any of these.</p>
+  <span class="label">A small story</span>
+  <div class="example">
+    <p>Thursday, 10 am. A snowstorm is coming and MUN closes at noon. The food bank should close today's pickup day so students don't walk through the storm. But Alex is sick in bed with their phone off. Sam and Jo are volunteers, so the Close button isn't on their pages. 12 students come in the storm, or don't come and become no-shows.</p>
+    <p><b>Later:</b> Alex graduates and Jordan takes over. Jordan can't get a new account. They have to log in as "Alex", so every log line says "Alex" did it.</p>
+  </div>
+  <span class="label">Choices</span>
+  <ul class="options">
+    <li><b class="opt">A.</b> Allow <b>several coordinators</b>. A coordinator can make a volunteer a coordinator (and back again). Jordan gets their own account, and Alex's is switched off.</li>
+    <li><b class="opt">B.</b> Keep one coordinator, but let volunteers <b>close today's day</b> too (only today, with a reason).</li>
+    <li><b class="opt">C.</b> Leave it. In an emergency, someone with access to the server computer runs <code>python -m app.first_coordinator Alex</code> to get a new setup code for Alex's account.</li>
+  </ul>
+  <div class="suggest"><p><b>What I'd pick:</b> <b>A</b>. Real food banks usually have two or three people in charge, and handing over to a new coordinator becomes normal instead of a workaround.</p></div>
+</div>
+
+<div class="card" id="q4">
+  <h3><span class="num">4</span>Who looks after it when you leave MUN <span class="tag big">Before real use</span> <span class="tag fb">Ask the food bank</span></h3>
+  <p>Any system that's really used needs someone to look after it: update it, fix it when something breaks, renew where it's hosted.</p>
+  <span class="label">A small story</span>
+  <div class="example">
+    <p>You graduate. Next September a volunteer says "the Hand over button gives an error". Nobody at the food bank knows Python or where the server is. The food bank goes back to paper, and students' accounts are lost.</p>
+  </div>
+  <span class="label">Why it matters</span>
+  <p>A food bank is right to worry about this before they agree to use it. Having an answer ready also makes the project look more serious in an interview.</p>
+  <span class="label">What I'd do</span>
+  <ul>
+    <li>Write the <b>README</b> (already on your list), plus a one-page "If something breaks" guide: how to restart it, run the jobs, restore a backup, and give the coordinator a new code.</li>
+    <li>Ask the food bank or MUNSU (the students' union) who could own it later, for example a computer science student volunteer each year.</li>
+    <li>Where it's hosted is already on the "Before going live" list in CONSTRAINTS.md.</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>Problems in how the pieces fit together</h2>
+<p>These come from two parts of the system that each work correctly on their own, but can step on each other.</p>
+
+<div class="card" id="q5">
+  <h3><span class="num">5</span>Food counted twice after a no-show <span class="tag mid">Worth fixing</span> <span class="tag you">Your choice</span></h3>
+  <p>Two things change the stock number in different ways:</p>
+  <ul>
+    <li>A <b>count</b> on the Stock page <i>sets</i> the number: "there are 5 rice".</li>
+    <li>A <b>no-show</b> <i>adds</i> the bag's food back: "+1 rice".</li>
+  </ul>
+  <p>If the count happens first and the no-show is marked afterwards, the same rice is counted twice.</p>
+  <span class="label">A small story, with numbers</span>
+  <div class="diagram" tabindex="0" role="region" aria-label="Timeline of the rice being counted twice (scrolls sideways on a phone)">
+  <svg viewBox="0 0 940 230" role="img" aria-label="Timeline: a bag is not collected, its rice goes back on the shelf, a volunteer counts 5, then the jobs add 1 more, so the system says 6 but the shelf has 5">
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker></defs>
+    <g font-family="system-ui, Segoe UI, sans-serif" text-anchor="middle" fill="#0f172a">
+      <rect x="10" y="20" width="210" height="150" rx="12" fill="#f1f5f9" stroke="#94a3b8"/>
+      <text x="115" y="48" font-weight="700" font-size="15">Thu 6:00 pm</text>
+      <text x="115" y="74" font-size="13">Bag K3P wasn't collected.</text>
+      <text x="115" y="93" font-size="13">It has 1 rice.</text>
+      <text x="115" y="128" font-size="13">Shelf: 4 · System: 4</text>
+
+      <rect x="245" y="20" width="210" height="150" rx="12" fill="#f1f5f9" stroke="#94a3b8"/>
+      <text x="350" y="48" font-weight="700" font-size="15">Thu 6:10 pm</text>
+      <text x="350" y="74" font-size="13">A volunteer puts the</text>
+      <text x="350" y="93" font-size="13">rice back on the shelf.</text>
+      <text x="350" y="128" font-size="13">Shelf: 5 · System: 4</text>
+
+      <rect x="480" y="20" width="210" height="150" rx="12" fill="#d1fae5" stroke="#059669"/>
+      <text x="585" y="48" font-weight="700" font-size="15">Fri 10 am</text>
+      <text x="585" y="74" font-size="13">Sam counts the shelf</text>
+      <text x="585" y="93" font-size="13">and types 5.</text>
+      <text x="585" y="128" font-size="13" font-weight="700" fill="#065f46">Shelf: 5 · System: 5 ✓</text>
+
+      <rect x="715" y="20" width="215" height="150" rx="12" fill="#fee2e2" stroke="#b91c1c"/>
+      <text x="822" y="48" font-weight="700" font-size="15">Sat: jobs run</text>
+      <text x="822" y="74" font-size="13">K3P becomes a no-show.</text>
+      <text x="822" y="93" font-size="13">Its rice is added back: +1</text>
+      <text x="822" y="128" font-size="13" font-weight="700" fill="#b91c1c">Shelf: 5 · System: 6 ✗</text>
+
+      <line x1="220" y1="95" x2="241" y2="95" stroke="#64748b" stroke-width="2" marker-end="url(#ar)"/>
+      <line x1="455" y1="95" x2="476" y2="95" stroke="#64748b" stroke-width="2" marker-end="url(#ar)"/>
+      <line x1="690" y1="95" x2="711" y2="95" stroke="#64748b" stroke-width="2" marker-end="url(#ar)"/>
+      <text x="470" y="210" font-size="14" fill="#475569">On Monday, 6 students book rice. The 6th bag has no rice, and the volunteer finds out only while packing.</text>
+    </g>
+  </svg>
+  </div>
+  <p>The same thing happens when a volunteer fixes a bag to "no-show" on the Fix page after the shelf was counted.</p>
+  <span class="label">Choices</span>
+  <ul class="options">
+    <li><b class="opt">A.</b> A rule for volunteers: "run the jobs before you count". Easy to forget.</li>
+    <li><b class="opt">B.</b> A code fix: when a no-show puts food back, it <b>skips food that was counted after that day's 6 pm</b>, because the count already included it.</li>
+    <li><b class="opt">C.</b> Run the jobs every 15 minutes (question 1, choice B). The gap shrinks from days to minutes, so it almost never happens.</li>
+  </ul>
+  <div class="suggest">
+    <p><b>What I'd pick:</b> wait for the food bank's answer to <a href="#q13">question 13</a>. Choice B is right only if uncollected bags are <b>unpacked onto the shelf</b> before anyone counts. If the bags sit in a back room for a few days, the count wouldn't include their food, and B would undercount instead. C helps either way.</p>
+  </div>
+</div>
+
+<div class="card" id="q6">
+  <h3><span class="num">6</span>One wrong "Out of stock" tap spreads to every bag <span class="tag mid">Worth fixing</span> <span class="tag you">Your choice</span></h3>
+  <p>When a volunteer marks something Out of stock and presses Packed, two things happen. Nobody can book it until someone counts it. And every other bag still to pack opens with that food <b>already marked Out of stock</b>, so nobody searches the shelf again (rule U7).</p>
+  <span class="label">A small story</span>
+  <div class="example">
+    <p>12:20 pm. Sam can't see the peanut butter, because it's behind the rice. Sam taps Out of stock and presses Packed. There are actually 10 jars.</p>
+    <p>12:30 pm. Jo packs the next 6 bags. In each one, peanut butter is already marked Out of stock, and since today's change those lines count as done. So Packed doesn't ask Jo to check. 6 students get a substitute (or nothing) instead of peanut butter, while 10 jars sit on the shelf.</p>
+  </div>
+  <span class="label">Choices</span>
+  <ul class="options">
+    <li><b class="opt">A.</b> A line that someone else marked Out of stock <b>still needs one tap</b>: "Still out of stock" or "Found it". The volunteer glances at the shelf once, so a wrong tap gets caught by the next bag.
+      <div class="screen" aria-hidden="true">
+        <div class="bar">Bag M9G · 1. Put in the food</div>
+        <div class="body">
+          <div class="row red"><span><b>Smooth peanut butter</b> <span class="small">Sam marked this out of stock at 12:20 p.m. Have a quick look.</span></span><span><span class="btn">Still out of stock</span><span class="btn">Found it</span></span></div>
+        </div>
+      </div>
+    </li>
+    <li><b class="opt">B.</b> Leave it. The Stock page already lists the food in red as "needs a count", and a count clears it.</li>
+  </ul>
+  <div class="suggest"><p><b>What I'd pick:</b> <b>A</b>. It costs one tap per bag, only for the food that ran out, and it fits the Picked idea: every line gets looked at.</p></div>
+</div>
+
+<div class="card" id="q7">
+  <h3><span class="num">7</span>Two volunteers pack the same bag <span class="tag mid">Worth fixing</span> <span class="tag you">Your choice</span></h3>
+  <p>The packing queue shows "To pack" or "Packed", but not "someone is packing this right now".</p>
+  <span class="label">A small story</span>
+  <div class="example">
+    <p>Sam and Jo both open bag G6M on their phones at the same moment, and both start filling a bag. Jo presses Packed first. Sam presses Packed and the page says "already packed" (the database stops a double save). But there are now <b>two full bags of food</b> for G6M, and Sam has to put everything back.</p>
+  </div>
+  <span class="label">Choices</span>
+  <ul class="options">
+    <li><b class="opt">A.</b> When a volunteer opens a bag, the queue shows "<b>Sam is packing</b>". Anyone else who opens it sees a warning first.
+      <div class="screen" aria-hidden="true">
+        <div class="bar">Packing queue · Thursday</div>
+        <div class="body">
+          <div class="row"><span><b>G6M</b> 3:30 p.m. · <span class="small">Sam is packing (since 12:31)</span></span><span class="btn">Open</span></div>
+          <div class="row"><span><b>K3P</b> 3:40 p.m. · To pack</span><span class="btn">Open</span></div>
+        </div>
+      </div>
+    </li>
+    <li><b class="opt">B.</b> Leave it. Volunteers split the bags among themselves, for example Sam takes 3:30–4:30 and Jo takes 4:30–5:30.</li>
+  </ul>
+  <div class="suggest"><p><b>What I'd pick:</b> wait for <a href="#q14">question 14</a>. If only one person packs at a time, B is enough. If several pack together, A.</p></div>
+</div>
+
+<!-- ============================================================ -->
+<h2>Students</h2>
+
+<div class="card" id="q8">
+  <h3><span class="num">8</span>Still logged in on a shared computer <span class="tag big">Before real use</span> <span class="tag you">Your choice</span></h3>
+  <p>A student stays logged in for <b>30 days</b> (you chose this on 5 November). That's handy on their own phone, but not on a computer other people use.</p>
+  <span class="label">A small story</span>
+  <div class="example">
+    <p>Maya's phone is broken, so she books on a library computer. She closes the browser without pressing Log out. An hour later, another student opens the food bank site on the same computer and sees <b>Maya's booking</b>: her code, her food and her pickup time.</p>
+    <p>They can't take her bag, because the counter checks her MUN card. But they now know Maya uses the food bank, and they could press <b>Cancel this booking</b>.</p>
+  </div>
+  <span class="label">Choices</span>
+  <ul class="options">
+    <li><b class="opt">A.</b> A box on the log-in page: "<b>This is a shared computer</b>". If it's ticked, the login ends after 30 minutes without use, not 30 days.
+      <div class="screen" aria-hidden="true">
+        <div class="bar">Student log in</div>
+        <div class="body"><p>ID number · Password</p><p><span class="box"></span>This is a shared computer (log me out after 30 minutes)</p></div>
+      </div>
+    </li>
+    <li><b class="opt">B.</b> Everyone gets short logins. Safer, but students have to log in every time.</li>
+    <li><b class="opt">C.</b> Leave it, and put a sentence on the page: "On a shared computer, always press Log out."</li>
+  </ul>
+  <div class="suggest"><p><b>What I'd pick:</b> <b>A</b>. Your own phone stays easy, and a shared computer stays safe. Banks and email sites work the same way. It also helps students without smartphones (already on the "Before going live" list), who will use shared computers more.</p></div>
+</div>
+
+<div class="card" id="q9">
+  <h3><span class="num">9</span>Forgot the code, and the phone is dead <span class="tag mid">Worth fixing</span> <span class="tag you">Your choice</span></h3>
+  <p>At the counter, a volunteer can find a bag <b>only by its code</b> (like G6M). The code is shown on the student's phone.</p>
+  <span class="label">A small story</span>
+  <div class="example">
+    <p>Ali comes at 3:30 with his MUN card, but his phone battery is dead and he doesn't remember the code. The volunteer has no way to find his bag, even though his card is right there. Ali goes home without food, or the volunteer guesses by looking at sticky notes.</p>
+  </div>
+  <span class="label">Choices</span>
+  <ul class="options">
+    <li><b class="opt">A.</b> The counter page gets a second way in: "<b>No code? Type the MUN card number</b>". It finds that student's bag for today. The card is checked anyway, so the volunteer learns nothing new.</li>
+    <li><b class="opt">B.</b> Leave it. Tell students to write the code down.</li>
+  </ul>
+  <div class="suggest"><p><b>What I'd pick:</b> <b>A</b>. It's a small change, and a dead phone is common.</p></div>
+</div>
+
+<div class="card" id="q10">
+  <h3><span class="num">10</span>Older phones may show broken colours <span class="tag mid">Worth fixing</span> <span class="tag you">Your choice</span></h3>
+  <p>The pages pick light or dark colours with a CSS feature called <code>light-dark()</code>. Only phone software from 2024 or later understands it: iPhones need iOS 17.5 or newer. An iPhone 8 or X can't update that far.</p>
+  <span class="label">A small story</span>
+  <div class="example">
+    <p>Sara uses an old iPhone 8. She opens the booking page. The colours don't load: buttons may look like plain text, and the green "booked" box may have no background. She isn't sure whether she pressed Book.</p>
+  </div>
+  <p><b>Honest note:</b> I haven't tested this on an old phone, but I'm fairly sure about the cause. Students who need a food bank are more likely than most to have older phones.</p>
+  <span class="label">Choices</span>
+  <ul class="options">
+    <li><b class="opt">A.</b> Give each colour a plain light value first, then the <code>light-dark()</code> one. Old phones get light mode, which works. New phones are unchanged. It's a small change in one CSS file.</li>
+    <li><b class="opt">B.</b> Leave it.</li>
+  </ul>
+  <div class="suggest"><p><b>What I'd pick:</b> <b>A</b>.</p></div>
+</div>
+
+<div class="card" id="q11">
+  <h3><span class="num">11</span>Holidays and term breaks <span class="tag mid">Worth fixing</span> <span class="tag you">Your choice</span></h3>
+  <p>The system makes a pickup day for every Monday and Thursday. It doesn't know about holidays. The coordinator <b>can</b> close dates up to a year ahead (built in step 9), but only <b>one date at a time</b>, and only if they remember.</p>
+  <span class="label">A small story</span>
+  <div class="example">
+    <p>Say the food bank closes from 19 December to 5 January. Nobody closes those dates. On Sunday 20 December at 5 pm, students book Monday 21. On Monday they find the door locked. They were counting on that food over the break.</p>
+  </div>
+  <span class="label">Choices</span>
+  <ul class="options">
+    <li><b class="opt">A.</b> "<b>Close several days</b>": pick a first and a last date, and give one reason, like "Christmas break, back on 7 January".</li>
+    <li><b class="opt">B.</b> Leave it. The coordinator closes each date, at the start of each term.</li>
+  </ul>
+  <div class="suggest"><p><b>What I'd pick:</b> <b>A</b>, and ask the food bank for their closure dates (they may already have a list).</p></div>
+</div>
+
+<div class="card" id="q12">
+  <h3><span class="num">12</span>No "Delete my account" button <span class="tag mid">Worth fixing</span> <span class="tag you">Your choice</span></h3>
+  <p>A student account is deleted only after <b>a year with no pickup</b> (rule P13), and only when the jobs run. A student can't delete it themselves.</p>
+  <span class="label">A small story</span>
+  <div class="example">
+    <p>Maya graduates in April and doesn't want any record left. Right now she has to wait a year, and there's no button or form to ask for it.</p>
+  </div>
+  <span class="label">Choices</span>
+  <ul class="options">
+    <li><b class="opt">A.</b> A "<b>Delete my account</b>" button on the student's page. It asks first, and isn't allowed while they have a booking. The weekly totals stay, because they're only numbers, with no person in them.</li>
+    <li><b class="opt">B.</b> A volunteer deletes it at the counter when asked.</li>
+    <li><b class="opt">C.</b> Leave it: deleted automatically after a year.</li>
+  </ul>
+  <div class="suggest"><p><b>What I'd pick:</b> <b>A</b>. It's a strong privacy point, and a privacy review is likely to ask for it.</p></div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="foodbank">Questions only the food bank can answer</h2>
+<p>For the list in CONSTRAINTS.md under "To ask the Campus Food Bank".</p>
+
+<div class="card ask" id="q13">
+  <h3><span class="num">13</span>What happens to uncollected bags at 6 pm? <span class="tag fb">Ask the food bank</span></h3>
+  <p>Are they unpacked onto the shelf that evening, or kept bagged for a while in case the student comes back?</p>
+  <p class="label">Why we ask</p>
+  <p>It decides how to fix <a href="#q5">question 5</a> (food counted twice).</p>
+</div>
+
+<div class="card ask" id="q14">
+  <h3><span class="num">14</span>How do volunteers share out the packing? <span class="tag fb">Ask the food bank</span></h3>
+  <p>Does one person pack all the bags, or do several people pack at the same time? If several, how do they split the bags today: by time, by table, or by a paper list?</p>
+  <p class="label">Why we ask</p>
+  <p>It decides whether we need "Sam is packing" in the queue (<a href="#q7">question 7</a>).</p>
+</div>
+
+<div class="card ask" id="q15">
+  <h3><span class="num">15</span>What numbers do you report, and to whom? <span class="tag fb">Ask the food bank</span></h3>
+  <p>After 90 days, booking details are deleted and only the <b>weekly totals</b> are kept. Weekly totals count <b>pickups, not people</b>.</p>
+  <div class="example">
+    <p>A funder asks: "How many <b>different</b> students did you help from September to December?" The totals say 40 pickups each week, but that could be 40 students, or 10 students coming 4 times. Once the details are deleted, nobody can tell.</p>
+  </div>
+  <p class="label">Why we ask</p>
+  <p>If they need it, we can keep a count of "different students this term" as a plain number, with no names or ID numbers. It's much easier to add now than to rebuild later.</p>
+</div>
+
+<div class="card ask" id="q16">
+  <h3><span class="num">16</span>What if a student lost their MUN card? <span class="tag fb">Ask the food bank</span></h3>
+  <p>At the counter, the volunteer types the number from the card. The system can't tell whether the volunteer actually looked at a card, or just typed a number the student said.</p>
+  <div class="example">
+    <p>Ali lost his card last week. He has a driver's licence and knows his student number. Should he get his bag? If "yes, any photo ID", someone who knows Ali's number and code, and looks a bit like him, could take his bag.</p>
+  </div>
+  <p class="label">Why we ask</p>
+  <p>This is the food bank's rule to make. The system follows whatever they say, but volunteers need to know it.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="small">Small things</h2>
+<div class="card small">
+  <ul>
+    <li><b>"Staff log in" shows when staff are already logged in.</b> The link at the bottom of every page is always there. It should hide when Sam is logged in.</li>
+    <li><b>Picked ticks are lost if the page reloads.</b> Example: Jo's phone browser reloads the page after a call, and the ticks are gone. The Out of stock taps were already lost the same way before today. The fix: remember the ticks in the phone's browser until Packed.</li>
+    <li><b>Counting a food while a bag is half packed makes the number a little low.</b> Example: Jo has put 1 rice in a bag but hasn't pressed Packed. Sam counts the shelf: that rice isn't on the shelf <i>and</i> it's still "booked, not packed", so it's taken off twice. Stock is 1 lower than it should be. It's on the safe side (it never offers food that isn't there), so a note for volunteers is enough: count before 12 pm or after packing.</li>
+    <li><b>No real screen reader test yet</b> (already on the "Before going live" list).</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="known">Problems we already knew about</h2>
+<p>These are already in CONSTRAINTS.md under "Known issues" and "Before going live". They're listed here so this page has everything in one place.</p>
+<ul>
+  <li><b>The 5 pm rush:</b> slots go to whoever is free when booking opens.</li>
+  <li><b>Password resets only at the counter.</b></li>
+  <li><b>Closures can't reach students:</b> we have no email or phone number. This goes with the snowstorm story in <a href="#q3">question 3</a>.</li>
+  <li><b>A volunteer could use a setup code first</b>, since they see both the number and the code.</li>
+  <li><b>Internet down at the counter:</b> no card or 28-day checks. A paper backup plan is still needed.</li>
+  <li><b>First visit in person:</b> a new student can't book online until they've been to the counter.</li>
+  <li><b>A stranger guessing can delay a reset on a new phone</b> by up to 15 minutes.</li>
+  <li><b>A fix to no-show can shorten the year rule</b> (rare).</li>
+  <li><b>Students without smartphones</b>, a <b>privacy review</b>, and <b>where it's hosted</b>.</li>
+</ul>
+
+<div class="note">
+  <p><b>Next:</b> answer what you can (like "1A, 2A, 3A, 8A"). The food bank questions can wait until you talk to them. I'll write your answers into DECISIONS.md and CONSTRAINTS.md, then build the ones you choose, one at a time.</p>
+</div>
+
+</main>
+</body>
+</html>
