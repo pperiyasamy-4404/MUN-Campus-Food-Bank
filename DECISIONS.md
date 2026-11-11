@@ -691,3 +691,14 @@ From what-could-go-wrong.html, problem 1: if nobody runs `python -m app.jobs`, n
 
 **Backups come from the cloud it will run on. No backup script of our own.**
 From what-could-go-wrong.html, problem 2: nothing copies the database today. Prakash plans to run the system on a cloud, not on a laptop, and cloud databases make backups themselves, so a script of our own would be thrown away. The one thing their database backups don't cover is the secret key (`SECRET_KEY`): it isn't in the database. On the cloud it goes in the provider's secrets setting, kept apart from the database and its backups, because the key and the database together let someone work out the ID numbers. The demo has made-up data only, so it needs no backup.
+
+**There can be several coordinators. A coordinator makes a volunteer a coordinator on the Staff page (R3 updated).**
+From what-could-go-wrong.html, problem 3: with one coordinator, nobody could close a day in a snowstorm if Alex was ill, and a new coordinator had to log in as "Alex". Prakash chose A: several coordinators. How it works:
+- To add a coordinator, add them as a volunteer, then press **Make coordinator**. Same account, same password. **Make volunteer** goes back. Both ask first, and both are logged (`made_coordinator`, `made_volunteer`).
+- A coordinator can give any **other** staff account a new setup code, switch it off or switch it on, coordinators included. So a new coordinator can switch off the one who left.
+- **Nobody can change their own account on the Staff page.** Their row says "That's you" and has no buttons; the server refuses too. Why: a coordinator can't switch themselves off by mistake, and the one doing the change always stays a coordinator, so there is never none. Their own forgotten password is reset by another coordinator, or by the setup script on the server.
+- **A switched-off volunteer can't be made a coordinator.** Switch them on first: that gives a new setup code, handed over in person, so it really is them.
+- **Two coordinators changing each other at the same moment take turns.** Without a lock, Alex makes Jordan a volunteer while Jordan makes Alex one, both checks pass, and nobody is coordinator. Both accounts are locked, lowest id first, and the one acting is checked again after the lock: the second is refused with "You're not a coordinator any more" (403). A test runs this on two connections; with the lock taken out, it fails.
+- Someone made a volunteer loses the coordinator pages on their next click, because every request reads the role from the database. They stay logged in, as a volunteer.
+- The setup script still only makes the **first** coordinator, or gives an existing coordinator a new code.
+- The page is now called **Staff** (it was Volunteers) and lists coordinators first. The role is under each name rather than in its own column, so the table fits a 320-pixel phone. The web addresses still say `/api/volunteers`, to keep them stable.

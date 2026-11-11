@@ -268,7 +268,7 @@
 <p>The check is a dependency, like <code>db</code> and <code>now</code> on the database page. A route just says who it needs:</p>
 <pre class="code">@router.get("/volunteers")
 def list_volunteers(coordinator: CurrentCoordinator, db: DB) -> list[VolunteerOut]:</pre>
-<p><code>CurrentCoordinator</code> reads the cookie, finds the login, and checks the role, all before the route's own code starts. Nobody logged in gets <code>401 "Please log in."</code>. A volunteer gets <code>403 "Only the coordinator can do this."</code>.</p>
+<p><code>CurrentCoordinator</code> reads the cookie, finds the login, and checks the role, all before the route's own code starts. Nobody logged in gets <code>401 "Please log in."</code>. A volunteer gets <code>403 "Only a coordinator can do this."</code>.</p>
 <div class="why">
 <p><b>Why a dependency and not an "if" inside each route?</b> A route can't forget it. If the type says <code>CurrentCoordinator</code>, the check runs. The pages also hide what you can't use, but that's only for looks: the server checks every request on its own.</p>
 </div>
