@@ -136,7 +136,7 @@ def test_cancelling(client, db, setup):
 def test_the_gap_shows_on_the_booking_page(client, db, setup):
     setup["student"].last_pickup_on = MONDAY - timedelta(days=10)
 
-    assert mine(client)["next_pickup_allowed_on"] == "2026-11-27"
+    assert mine(client)["next_pickup_allowed_on"] == "2026-11-29"
 
 
 def test_a_hold_that_ran_out_is_gone(client, db, setup):

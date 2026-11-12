@@ -158,12 +158,12 @@
   <tr>
     <td>Sam handed over bag K3P at 5:50 but forgot to press Hand over. At 6 pm it became a no-show.</td>
     <td><b>They did take it</b> → picked up</td>
-    <td>The bag's food comes off the stock count again. The 28 days count from that pickup day. Recorded as picked up by whoever fixed it, at the time of the fix.</td>
+    <td>The bag's food comes off the stock count again. The 30 days count from that pickup day. Recorded as picked up by whoever fixed it, at the time of the fix.</td>
   </tr>
   <tr>
     <td>Bag M3T was marked picked up, but the student never took it.</td>
     <td><b>They didn't take it</b> → no-show</td>
-    <td>The bag's food goes back on the stock count, and so does anything given with it at the counter (the bread). The 28 days count from their last real pickup still on record, if any.</td>
+    <td>The bag's food goes back on the stock count, and so does anything given with it at the counter (the bread). The 30 days count from their last real pickup still on record, if any.</td>
   </tr>
 </table>
 </div>
@@ -175,7 +175,7 @@
   <li>If the shelf count is already lower than what's in the bag, it stops at 0. The shelf can't have less than none.</li>
 </ul>
 <div class="limit">
-  <p><b>A small known limit.</b> Fixing a bag to "no-show" sets the 28 days from the student's last pickup still on record. If their only earlier pickup was more than 90 days ago, its record is already deleted. Then the year rule counts from when their account was made, which can be earlier. Example: account made 14 months ago, last pickup 5 months ago, today's pickup fixed to no-show. The no-show keeps the account for its 90 days, then it's deleted: 3 months after the fix, instead of 7. It needs that exact mix, so it should be very rare. The student would just get a new account at the counter next time.</p>
+  <p><b>A small known limit.</b> Fixing a bag to "no-show" sets the 30 days from the student's last pickup still on record. If their only earlier pickup was more than 90 days ago, its record is already deleted. Then the year rule counts from when their account was made, which can be earlier. Example: account made 14 months ago, last pickup 5 months ago, today's pickup fixed to no-show. The no-show keeps the account for its 90 days, then it's deleted: 3 months after the fix, instead of 7. It needs that exact mix, so it should be very rare. The student would just get a new account at the counter next time.</p>
 </div>
 
 <!-- ============================================================ -->
@@ -256,7 +256,7 @@ weekly_item_totals  Oats 1   Lentils 1   Bread 1   Rice 2
 <h2 id="tests"><span class="num">10</span>The tests</h2>
 <p>56 new tests, 439 in all, every one passing.</p>
 <ul>
-  <li><code>tests/test_no_shows.py</code>: what goes back on the shelf for a bag never packed and a packed one; not before 6 pm; picked-up, cancelled and closed-day bookings left alone; once only; both fixes, a fix made twice, a bag never packed, the 28 days after a fix; and the "Hand over at 5:59" race on two connections.</li>
+  <li><code>tests/test_no_shows.py</code>: what goes back on the shelf for a bag never packed and a packed one; not before 6 pm; picked-up, cancelled and closed-day bookings left alone; once only; both fixes, a fix made twice, a bag never packed, the 30 days after a fix; and the "Hand over at 5:59" race on two connections.</li>
   <li><code>tests/test_retention.py</code>: 90 days to the minute (midnight in St. John's); the totals example above; two days in one week; a day counted once; the log; the year rule, with an account made at 11:30 pm Newfoundland time that's already the next day in UTC; what keeps an account; tidying up.</li>
   <li><code>tests/test_jobs.py</code>: days made a week ahead; a closed day left alone; a whole run, then a second run that finds nothing; one run at a time; a failing job not stopping the others; no settings.</li>
   <li><code>tests/test_fixes_api.py</code> and <code>tests/test_database_rules.py</code>: the page's answers, staff only, nothing about the student; the new tables' rules.</li>

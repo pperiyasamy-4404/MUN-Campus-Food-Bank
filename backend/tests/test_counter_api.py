@@ -108,7 +108,7 @@ def test_handing_over_a_bag_from_start_to_end(client, setup):
         json={"code": code, "id_number": ID_NUMBER, "extras": [setup["food"]["white bread"].id]},
     )
     assert response.status_code == 201
-    assert response.json() == {"code": code, "picked_up_at": "2026-11-09T15:40:00-03:30", "next_pickup_on": "2026-12-07"}
+    assert response.json() == {"code": code, "picked_up_at": "2026-11-09T15:40:00-03:30", "next_pickup_on": "2026-12-09"}
 
     again = client.post("/api/counter/find", json={"code": code}).json()
     assert (again["status"], again["picked_up_by"]) == ("picked_up", "Sam")
@@ -149,9 +149,9 @@ def test_a_walk_in_from_start_to_end(client, setup):
     assert response.status_code == 201
     done = response.json()
     assert (done["things"], done["extras"], done["new_account"], done["cancelled"]) == (1, 1, True, None)
-    assert done["next_pickup_on"] == "2026-12-07"
+    assert done["next_pickup_on"] == "2026-12-09"
     again = client.post("/api/walk-ins/check", json={"id_number": OTHER_ID_NUMBER}).json()
-    assert (again["can_serve"], again["why_not"]) == (False, "Not yet. Their next pickup can be on Monday, December 7 or later.")
+    assert (again["can_serve"], again["why_not"]) == (False, "Not yet. Their next pickup can be on Wednesday, December 9 or later.")
 
 
 def test_a_student_with_a_bag_today_is_sent_to_their_bag(client, setup):

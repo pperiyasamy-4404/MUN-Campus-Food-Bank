@@ -32,7 +32,7 @@ class WalkIn(Base):
     served_by_staff_id: Mapped[int] = mapped_column(ForeignKey("staff.id"))
 
     __table_args__ = (
-        # The pickup gap allows one pickup in 28 days, so one walk-in a day is the
+        # The pickup gap allows one pickup in 30 days, so one walk-in a day is the
         # least it can mean. The code checks the gap. This is the safety net.
         UniqueConstraint("student_id", "pickup_day_id"),
     )

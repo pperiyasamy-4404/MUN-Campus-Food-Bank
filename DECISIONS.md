@@ -756,3 +756,16 @@ Why the stock stays at 0 rather than going back to "In stock": the food ran out 
 Checked: 549 tests (6 new); in a browser on the demo, a Picked tick survives a reload, the count warning shows while Sam has a bag open, and axe finds nothing on the packing and Stock pages, at full width and 320 px.
 
 **Accounts for trying the app that stay put.** `python -m app.dev_accounts` makes Admin (coordinator), Staff (volunteer) and student 202681309, all with the password "Password", in the working database. The demo and the tests only ever empty the test database, so these stay. Safe to run again (it sets the passwords back), and it refuses any database not on this computer, so the easy passwords can never reach a real server.
+
+**The pickup gap is 30 days, not 28 (F1).** Prakash: a student can pick up again only 30 days after their last pickup. The sample setting, the working database, CONSTRAINTS.md and the explainer pages now say 30. The coordinator can still change it on the Settings page. Because pickups are on Mondays and Thursdays, day 30 is never a pickup day: after a Thursday the first slot is the Monday 32 days later, after a Monday the Thursday 31 days later. 11 tests changed their dates; 549 pass.
+
+**Answers to the rest of the open list.**
+- Students without smartphones: not built. They book on any computer, or come as a walk-in.
+- Privacy: only the coordinator sees sensitive data. Checked every page a volunteer can open: they see bag codes, times and food, never an ID number, a name, or a list of students (P2, P3, P4 already made this so). The Fixes page shows past days' bags by code only, for fixing a wrong pickup or no-show.
+- Real screen reader test: dropped. The automatic checks stay.
+- The second ID box on the setup-code and walk-in pages says "Re-enter ID number".
+- Food bank question 13: uncollected bags are unpacked that evening, since the slot is over. That's what the 6 pm no-show already does.
+- Question 14: several people may pack, and "Sam is packing" in the queue is enough to stop two bags for one booking.
+- Question 15: left for now.
+- Question 16: no card, no food. A student who lost their MUN card gets a new one first. The card boxes at the counter say "Type it from the card itself. No card, no food".
+- Hosting and the jobs script: later, before going live.

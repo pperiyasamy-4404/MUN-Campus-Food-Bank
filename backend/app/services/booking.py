@@ -62,7 +62,7 @@ def next_pickup_allowed_on(db: Session, student: Student, settings: Settings) ->
     """The first date the pickup gap allows, or None if there's been no pickup (F1).
 
     Counted in Newfoundland calendar days: a pickup on Thursday 1 October allows
-    Thursday 29 October with a 28-day gap. Cancellations never count (F3), and
+    Saturday 31 October with a 30-day gap, so the first pickup day is Monday 2 November. Cancellations never count (F3), and
     no-shows count only if the setting says so.
     """
     counted = ["picked_up", "no_show"] if settings.no_shows_count else ["picked_up"]

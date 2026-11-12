@@ -220,9 +220,9 @@ def test_handing_over_a_packed_bag(db, monday, food, sam):
     counter.hand_over(db, bag.code.lower(), ID_NUMBER, [], [], sam, COUNTER)
 
     assert (bag.status, bag.picked_up_at, bag.picked_up_by_staff_id) == ("picked_up", COUNTER, sam.id)
-    # F1: the next pickup is 28 calendar days after today.
+    # F1: the next pickup is 30 calendar days after today.
     assert student.last_pickup_on == MONDAY
-    assert booking_rules.next_pickup_allowed_on(db, student, db.get(Settings, 1)) == MONDAY + timedelta(days=28)
+    assert booking_rules.next_pickup_allowed_on(db, student, db.get(Settings, 1)) == MONDAY + timedelta(days=30)
     logged = db.scalar(select(AuditLog).where(AuditLog.booking_id == bag.id))
     assert (logged.action, logged.staff_id, logged.student_id) == ("marked_picked_up", sam.id, student.id)
 
@@ -354,15 +354,15 @@ def test_a_first_visit_walk_in_gets_an_account(db, monday, food, sam):
     assert recorded.new_account is True
     student = db.scalar(select(Student).where(Student.id_hash == id_hash(ID_NUMBER)))
     assert student.last_pickup_on == MONDAY
-    assert recorded.next_pickup_on == date(2026, 12, 7)
+    assert recorded.next_pickup_on == date(2026, 12, 9)
     assert (food["rice"].stock, food["lentils"].stock, food["eggs"].stock) == (4, 4, 4)
     assert db.scalar(select(func.count()).select_from(CounterItem).where(CounterItem.walk_in_id == recorded.walk_in.id)) == 3
     actions = db.scalars(select(AuditLog.action).where(AuditLog.student_id == student.id).order_by(AuditLog.id)).all()
     assert actions == ["created_student", "recorded_walk_in"]
 
 
-def test_a_walk_in_within_28_days_is_refused(db, monday, food, sam):
-    """No exception (decided 7 Nov): one pickup every 28 days, however they come."""
+def test_a_walk_in_within_30_days_is_refused(db, monday, food, sam):
+    """No exception (decided 7 Nov): one pickup every 30 days, however they come."""
     student = card_holder(db)
     student.last_pickup_on = MONDAY - timedelta(days=10)
 
@@ -371,7 +371,7 @@ def test_a_walk_in_within_28_days_is_refused(db, monday, food, sam):
         db, Problem, lambda: counter.record_walk_in(db, ID_NUMBER, [Choice(food["rice"].id)], [], False, sam, COUNTER)
     )
 
-    assert (checked.can_serve, checked.why_not) == (False, "Not yet. Their next pickup can be on Friday, November 27 or later.")
+    assert (checked.can_serve, checked.why_not) == (False, "Not yet. Their next pickup can be on Sunday, November 29 or later.")
     assert problem.message == checked.why_not
 
 
@@ -380,7 +380,7 @@ def test_a_second_walk_in_the_same_day_is_refused(db, monday, food, sam):
 
     checked = counter.check_walk_in(db, ID_NUMBER, COUNTER)
 
-    assert checked.why_not == "Not yet. Their next pickup can be on Monday, December 7 or later."
+    assert checked.why_not == "Not yet. Their next pickup can be on Wednesday, December 9 or later."
 
 
 def test_a_walk_in_who_booked_today_gets_their_bag_instead(db, monday, food, sam):
@@ -446,7 +446,7 @@ def test_a_walk_in_only_takes_what_nobody_booked(db, monday, food, sam):
     assert db.scalar(select(func.count()).select_from(WalkIn)) == 0
 
 
-def test_after_a_walk_in_booking_online_waits_28_days(db, monday, food, sam):
+def test_after_a_walk_in_booking_online_waits_30_days(db, monday, food, sam):
     """W1: nobody can walk in one week and book online the next."""
     thursday = make_pickup_day(db, THURSDAY)
     thursday.booking_opens_at = OPEN
@@ -456,7 +456,7 @@ def test_after_a_walk_in_booking_online_waits_28_days(db, monday, food, sam):
 
     problem = refused(db, Problem, lambda: booking_rules.hold_slot(db, student, first_slot.id, COUNTER))
 
-    assert problem.message == "Your next pickup can be on Monday, December 7 or later."
+    assert problem.message == "Your next pickup can be on Wednesday, December 9 or later."
 
 
 # ---------- at the same moment ----------

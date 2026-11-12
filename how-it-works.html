@@ -136,7 +136,7 @@
     <li><a href="#s7">When booking is open</a></li>
     <li><a href="#s8">How many students per slot</a></li>
     <li><a href="#s9">Step 2: Making a booking</a></li>
-    <li><a href="#s10">The 28-day rule</a></li>
+    <li><a href="#s10">The 30-day rule</a></li>
     <li><a href="#s11">Step 3: Cancelling</a></li>
     <li><a href="#s12">Step 4: Packing and substitutes</a></li>
     <li><a href="#s13">Step 5: Pickup at the counter</a></li>
@@ -161,13 +161,13 @@
 </ul>
 <p>At the same time, the system has to keep some promises:</p>
 <ul>
-  <li><b>Fair:</b> one pickup every 28 days per person. <span class="rule">F1</span></li>
+  <li><b>Fair:</b> one pickup every 30 days per person. <span class="rule">F1</span></li>
   <li><b>Private:</b> no names, emails, phone numbers or MCP numbers, anywhere. <span class="rule">P3</span></li>
   <li><b>Honest about stock:</b> never promise food that isn't there. <span class="rule">I4</span></li>
   <li><b>Within limits:</b> no slot ever gets more students than it can take. <span class="rule">S2</span></li>
 </ul>
 <div class="note">
-  <p><b>This is a prototype with sample data.</b> The real rules will be agreed with the Campus Food Bank later. Every number that might change (28 days, 13 items, 5 pm…) is a <b>setting</b> the coordinator can change without touching the code. So switching to the real rules means changing settings and the item list, not rewriting the code.</p>
+  <p><b>This is a prototype with sample data.</b> The real rules will be agreed with the Campus Food Bank later. Every number that might change (30 days, 13 items, 5 pm…) is a <b>setting</b> the coordinator can change without touching the code. So switching to the real rules means changing settings and the item list, not rewriting the code.</p>
   <p><b>Each booking is for one person.</b> Families aren't in the prototype.</p>
 </div>
 
@@ -255,7 +255,7 @@
 </div>
 <ul>
   <li><b>Website (React):</b> the screens. It shows things and sends what the person clicked to the server. It doesn't decide anything, because anyone can change what runs in their own browser.</li>
-  <li><b>Server (FastAPI):</b> every request goes here. It checks the rules (is booking open? has it been 28 days?) and only then changes the database.</li>
+  <li><b>Server (FastAPI):</b> every request goes here. It checks the rules (is booking open? has it been 30 days?) and only then changes the database.</li>
   <li><b>Database (PostgreSQL):</b> keeps all the data. The most important rules are also built into the database itself: slot capacity, stock never below zero, and one upcoming booking per person. These hold even if the server code has a bug.</li>
   <li><b>Secret key:</b> used to scramble ID numbers (next section). It's kept outside the database, so a stolen copy of the database is useless without it.</li>
 </ul>
@@ -497,7 +497,7 @@
     <div class="down">↓</div>
     <div class="step s"><b class="n">2</b>Picks a pickup day that's open for booking.</div>
     <div class="down">↓</div>
-    <div class="step s"><b class="n">3</b>Picks a free 10-minute slot. The system first checks they're allowed to book (28 days, no other booking, didn't cancel for this day), then <b>holds</b> the slot while they choose. One held slot at a time. <span class="rule">S8</span></div>
+    <div class="step s"><b class="n">3</b>Picks a free 10-minute slot. The system first checks they're allowed to book (30 days, no other booking, didn't cancel for this day), then <b>holds</b> the slot while they choose. One held slot at a time. <span class="rule">S8</span></div>
     <div class="down">↓</div>
     <div class="step s"><b class="n">4</b>Chooses items: up to 13, one of each item.</div>
     <div class="down">↓</div>
@@ -511,7 +511,7 @@
       <div class="title">ONE TRANSACTION: ALL OF THIS HAPPENS, OR NONE OF IT</div>
       <div class="step sys">Is booking open for this day right now (5 pm the day before until 12 pm)? <span class="rule">S5</span></div>
       <div class="down">↓</div>
-      <div class="step sys">Has it been 28 days since their last pickup? <span class="rule">F1</span></div>
+      <div class="step sys">Has it been 30 days since their last pickup? <span class="rule">F1</span></div>
       <div class="down">↓</div>
       <div class="step sys">Do they have no other upcoming booking? <span class="rule">F2</span></div>
       <div class="down">↓</div>
@@ -541,9 +541,9 @@
 <p><b>The hold lasts 10 minutes</b>, with a countdown on screen: "3:40 is held for you: 7 minutes left". If time runs out, the slot is free again straight away, and Ana starts over like everyone else. <span class="rule">S8</span></p>
 
 <!-- 10 -->
-<h2 id="s10"><span class="num">10</span>The 28-day rule</h2>
+<h2 id="s10"><span class="num">10</span>The 30-day rule</h2>
 <ul>
-  <li>A pickup must be at least 28 days after the person's last pickup. <span class="rule">F1</span></li>
+  <li>A pickup must be at least 30 days after the person's last pickup. <span class="rule">F1</span></li>
   <li>A person can have only one upcoming booking at a time. <span class="rule">F2</span></li>
   <li>Cancellations, whether by the student or the food bank, don't count. <span class="rule">F3</span></li>
   <li>No-shows don't count either. This is a setting the food bank can change.</li>
@@ -559,8 +559,8 @@
     <circle cx="860" cy="80" r="8" fill="#475569"/>
     <text x="30" y="38" class="t-b">Thu 1 Oct</text>
     <text x="30" y="58" class="t-s">picks up food</text>
-    <text x="295" y="38" class="t-b mid">Thu 29 Oct</text>
-    <text x="295" y="58" class="t-s mid">28 days later: can pick up again</text>
+    <text x="295" y="38" class="t-b mid">Mon 2 Nov</text>
+    <text x="295" y="58" class="t-s mid">32 days later: the first pickup day after 30 days</text>
     <text x="870" y="38" class="t-b end">Wed 30 Dec</text>
     <text x="870" y="58" class="t-s end">90 days: booking details deleted</text>
     <text x="167" y="114" class="t-s mid" style="fill:#991b1b">can't pick up again yet</text>
@@ -568,7 +568,7 @@
     <text x="870" y="150" class="t-s end">After that, only totals stay, like "38 pickups that week". <tspan font-weight="600">P7</tspan></text>
   </svg>
 </div>
-<p><b>How the days are counted:</b> calendar days in Newfoundland time, from the date of the last pickup to the date of the new slot. The time of day doesn't matter. So after a pickup on Thursday 1 October at 5 pm, a slot on Thursday 29 October at 3:30 pm is allowed, even though it's a little short of 28 × 24 hours. <span class="done">Decided</span></p>
+<p><b>How the days are counted:</b> calendar days in Newfoundland time, from the date of the last pickup to the date of the new slot. The time of day doesn't matter. So after a pickup on Thursday 1 October at 5 pm, the 30 days end on Saturday 31 October, and the first slot they can book is Monday 2 November at 3:30 pm. With pickups on Mondays and Thursdays, the wait is 31 or 32 days in practice. <span class="done">Decided</span></p>
 <div class="why"><p><b>Why don't no-shows count?</b> People miss pickups for many reasons, and a penalty hurts the people who need food most.</p></div>
 
 <!-- 11 -->
@@ -576,7 +576,7 @@
 <ul>
   <li><b>No changes:</b> once a booking is made, its items and substitutes can't be changed. <span class="rule">I7</span></li>
   <li><b>Cancel:</b> the student can cancel until 12 pm on the pickup day. <span class="rule">S6</span> Booking is still open until then, so the slot and the items go straight back for someone else to book. <span class="rule">I6</span></li>
-  <li>A cancelled booking doesn't count toward the 28 days. <span class="rule">F3</span></li>
+  <li>A cancelled booking doesn't count toward the 30 days. <span class="rule">F3</span></li>
   <li><b>No booking again that day:</b> a student who cancels can't book again for that same pickup day. Otherwise cancelling and booking again would be a way to change items. They can book a later pickup day. <span class="rule">S6</span></li>
   <li>After 12 pm there's no cancel button, because the bags are being packed. If the student doesn't come, it becomes a no-show at 6 pm (<a href="#s14">section 14</a>).</li>
 </ul>
@@ -670,7 +670,7 @@
     <div class="down">↓</div>
     <div class="step v"><b class="n">2</b>Volunteer types the number from the student's MUN card. <span class="rule">W1</span></div>
     <div class="down">↓</div>
-    <div class="step sys"><b class="n">3</b>System checks the 28-day rule. <span class="rule">F1</span></div>
+    <div class="step sys"><b class="n">3</b>System checks the 30-day rule. <span class="rule">F1</span></div>
     <div class="down">↓</div>
     <div class="step v"><b class="n">4</b>Volunteer picks the food from the shelf with the student, then selects the items and extras on the <b>Walk-in</b> screen, so the stock count stays right.</div>
     <div class="down">↓</div>
@@ -698,7 +698,7 @@
     <text x="445" y="87" class="t-s mid">bag is ready</text>
     <rect x="690" y="40" width="170" height="60" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="3"/>
     <text x="775" y="66" class="t-b mid">Picked up</text>
-    <text x="775" y="87" class="t-s mid">counts for 28 days</text>
+    <text x="775" y="87" class="t-s mid">counts for 30 days</text>
     <rect x="195" y="238" width="170" height="78" rx="12" fill="#f1f5f9" stroke="#64748b" stroke-width="3"/>
     <text x="280" y="263" class="t-b mid">Cancelled</text>
     <text x="280" y="284" class="t-s mid">items back to stock</text>
@@ -741,7 +741,7 @@
 <h2 id="s15"><span class="num">15</span>What the coordinator does</h2>
 <ul>
   <li><b>Items and stock:</b> updates the item list each week. Bookings already made keep their items. <span class="rule">I8</span></li>
-  <li><b>Settings:</b> changes the numbers (28 days, slot capacity, booking times…) without touching the code.</li>
+  <li><b>Settings:</b> changes the numbers (30 days, slot capacity, booking times…) without touching the code.</li>
   <li><b>Closing a day:</b> for a holiday, bad weather or the Christmas break. Every booking that day is cancelled, even packed ones, and the items go back to stock. Those students can book again, because cancellations don't count. <span class="rule">S7</span> <span class="rule">F3</span>
     <br><span class="known">Known issue</span> We have no contact details, so we can't tell students their day was closed. MUN email might fix this if MUN approves the project.</li>
   <li><b>Volunteer accounts:</b> creates them with a username (a first name or nickname) and gives each volunteer a one-time setup code. The volunteer sets their own password with it, the same way students do, so the coordinator never sees it. A volunteer who also uses the food bank has a separate student account. The first coordinator account is made by a setup script when the system is installed. <span class="rule">R3</span> <span class="rule">R4</span></li>
@@ -777,7 +777,7 @@
 <p>These are sample values. The coordinator can change them without changing the code.</p>
 <table>
   <tr><th>Setting</th><th>Sample value</th></tr>
-  <tr><td>Pickup gap</td><td>28 days</td></tr>
+  <tr><td>Pickup gap</td><td>30 days</td></tr>
   <tr><td>Pickup days and hours</td><td>Monday and Thursday, 3:30–5:30 pm</td></tr>
   <tr><td>Booking opens</td><td>5 pm the day before the pickup day</td></tr>
   <tr><td>Booking closes (and cancelling)</td><td>12 pm on the pickup day</td></tr>
@@ -848,7 +848,7 @@
   <tr><td>2</td><td>A walk-in who already has an upcoming booking: the volunteer cancels the booking and serves them now. Otherwise they could get food twice.</td><td><span class="done">Decided</span> <span class="rule">W4</span></td></tr>
   <tr><td>3</td><td>Pack only after the list is final.</td><td><span class="done">Decided</span> Pack 12–3 pm, after booking closes</td></tr>
   <tr><td>4</td><td>Delete accounts with no pickup for a year, so we don't keep ID hashes of people who have left.</td><td><span class="done">Decided</span> <span class="rule">P13</span></td></tr>
-  <tr><td>5</td><td>Count the 28 days as calendar days in Newfoundland time.</td><td><span class="done">Decided</span></td></tr>
+  <tr><td>5</td><td>Count the 30 days as calendar days in Newfoundland time.</td><td><span class="done">Decided</span></td></tr>
   <tr><td colspan="3" class="group">Privacy</td></tr>
   <tr><td>6</td><td>Show totals by week, and any number under 5 as "fewer than 5". With small numbers, someone who knows who came in on Monday could work out who uses the food bank.</td><td><span class="done">Decided</span> <span class="rule">P12</span></td></tr>
   <tr><td>7</td><td>The ID number never appears in web addresses, logs or error messages. FastAPI's 422 errors repeat back what was typed, so we have to stop that. Add a test that checks it.</td><td><span class="done">Decided</span> <span class="rule">P10</span></td></tr>

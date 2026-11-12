@@ -11,7 +11,7 @@ import { PageHeading } from '../PageHeading.tsx'
 // A walk-in (W1, W3, W4): a student served without a booking, in their own line.
 // 1. Check their MUN card: the pickup gap, with no exception.
 // 2. Choose what they take from the shelf, and any extras.
-// 3. Record it. Their next pickup is 28 days from today, online or in person.
+// 3. Record it. Their next pickup is 30 days from today, online or in person.
 
 export function WalkIn() {
   const { forget } = useMe()
@@ -29,7 +29,7 @@ export function WalkIn() {
     setProblem(null)
     setFields({})
     // Typed twice: a typo would record the walk-in under someone else's number,
-    // and block them for 28 days instead of this student.
+    // and block them for 30 days instead of this student.
     if (values.id_number.replace(/[\s-]/g, '') !== values.again.replace(/[\s-]/g, '')) {
       setProblem('Please fix the boxes marked in red.')
       setFields({ again: "The two numbers aren't the same. Check the card again." })
@@ -88,12 +88,13 @@ export function WalkIn() {
           <Problem message={problem} />
           <Field
             label="ID number on their MUN card"
+            hint="Type it from the card itself. No card, no food: a student who lost it gets a new MUN card first."
             inputMode="numeric"
             value={values.id_number}
             onChange={set('id_number')}
             error={fields.id_number}
           />
-          <Field label="Type it again" inputMode="numeric" value={values.again} onChange={set('again')} error={fields.again} />
+          <Field label="Re-enter ID number" inputMode="numeric" value={values.again} onChange={set('again')} error={fields.again} />
           <button type="submit" disabled={sending || !page.walk_ins_open}>
             {sending ? 'Checking...' : 'Check the card'}
           </button>

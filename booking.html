@@ -110,13 +110,13 @@
   <tr><td>Is booking open for that day?</td><td><span class="rule">S5</span> <span class="rule">S7</span></td><td>"Booking for Monday, November 9 opens Sunday, November 8 at 5:00 p.m."</td></tr>
   <tr><td>Did they cancel this day already?</td><td><span class="rule">S6</span></td><td>"You cancelled your booking for Monday, November 9, so it can't be booked again. You can book a later day."</td></tr>
   <tr><td>Do they have another upcoming booking?</td><td><span class="rule">F2</span></td><td>"You already have a booking, for Thursday, November 12. You can book again after it."</td></tr>
-  <tr><td>Is it at least 28 days since their last pickup?</td><td><span class="rule">F1</span></td><td>"Your next pickup can be on Tuesday, November 10 or later."</td></tr>
+  <tr><td>Is it at least 30 days since their last pickup?</td><td><span class="rule">F1</span></td><td>"Your next pickup can be on Tuesday, November 10 or later."</td></tr>
 </table>
 <h3>The pickup gap, in calendar days</h3>
-<p>The last pickup is the latest of: the date on the student's account (which will also cover walk-ins, in step 7), a picked-up booking, and a no-show if the setting says no-shows count. Cancellations never count <span class="rule">F3</span>. Then it adds 28 days:</p>
-<pre class="code">last pickup  Monday 12 October  + 28 days  =  Monday 9 November   <span class="good">← allowed</span>
-last pickup  Tuesday 13 October + 28 days  =  Tuesday 10 November  <span class="bad">← Monday 9 is one day early</span></pre>
-<p>Calendar days, not hours: a pickup at 5 pm and one at 3:30 pm four weeks later are 28 days apart, as rule F1's own example says.</p>
+<p>The last pickup is the latest of: the date on the student's account (which will also cover walk-ins, in step 7), a picked-up booking, and a no-show if the setting says no-shows count. Cancellations never count <span class="rule">F3</span>. Then it adds 30 days:</p>
+<pre class="code">last pickup  Monday 12 October  + 30 days  =  Monday 9 November   <span class="good">← allowed</span>
+last pickup  Tuesday 13 October + 30 days  =  Tuesday 10 November  <span class="bad">← Monday 9 is one day early</span></pre>
+<p>Calendar days, not hours: a pickup at 5 pm and one at 3:30 pm four weeks later are 30 days apart, as rule F1's own example says.</p>
 
 <h2 id="hold"><span class="num">3</span>Holding a time</h2>
 <p>A <b>hold</b> keeps a time for one student for 10 minutes while they choose food <span class="rule">S8</span>. It's a row in the <code>holds</code> table: the student, the slot, and <code>held_until</code>.</p>

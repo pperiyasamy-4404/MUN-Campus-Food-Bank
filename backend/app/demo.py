@@ -183,7 +183,7 @@ def main() -> None:
     print(f"  202300002   student, bag packed one item short (code {codes['202300002']})")
     print(f"  202300003   student, bag still to pack (code {codes['202300003']})")
     print("  202300005   student, can book next Monday")
-    print("  202300004   student, picked up last Monday (so can't book for 4 weeks)")
+    print("  202300004   student, picked up last Monday (so can't book for 30 days)")
     print()
     print("Open http://localhost:8000   (Ctrl+C stops it)")
 

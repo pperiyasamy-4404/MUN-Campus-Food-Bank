@@ -180,12 +180,12 @@ def test_after_cancelling_a_day_it_cannot_be_booked_again(db, monday, food):
 @pytest.mark.parametrize(
     "last_pickup, allowed",
     [
-        (date(2026, 10, 12), True),  # 28 days before Monday 9 November
-        (date(2026, 10, 13), False),  # 27 days
+        (date(2026, 10, 10), True),  # 30 days before Monday 9 November
+        (date(2026, 10, 11), False),  # 29 days
     ],
 )
 def test_the_pickup_gap_counts_calendar_days(db, monday, last_pickup, allowed):
-    """F1: 28 days, from the date of the last pickup to the date of the new one."""
+    """F1: 30 days, from the date of the last pickup to the date of the new one."""
     student = make_student(db)
     student.last_pickup_on = last_pickup
 
@@ -216,7 +216,7 @@ def test_no_shows_count_toward_the_gap_only_if_the_setting_says_so(db, monday, n
 
     allowed_on = rules.next_pickup_allowed_on(db, student, settings)
 
-    assert allowed_on == (MONDAY + timedelta(days=21) if no_shows_count else None)
+    assert allowed_on == (MONDAY + timedelta(days=23) if no_shows_count else None)
 
 
 # ---------- pressing Book ----------

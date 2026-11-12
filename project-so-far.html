@@ -115,7 +115,7 @@
 <div class="cards">
   <div class="card">
     <h3>Fair</h3>
-    <p>Each student can pick up once every 28 days. The system checks this, so nobody has to remember faces or keep a paper list <span class="rule">F1</span>.</p>
+    <p>Each student can pick up once every 30 days. The system checks this, so nobody has to remember faces or keep a paper list <span class="rule">F1</span>.</p>
   </div>
   <div class="card">
     <h3>Private</h3>
@@ -226,7 +226,7 @@
   </g>
 </svg>
 </div>
-<p>A student who comes without a booking is a <b>walk-in</b>. They're served in their own line, only during pickup hours <span class="rule">W3</span>, and the system still checks the 28 days <span class="rule">W1</span>, with no exception. Built in step 7 too.</p>
+<p>A student who comes without a booking is a <b>walk-in</b>. They're served in their own line, only during pickup hours <span class="rule">W3</span>, and the system still checks the 30 days <span class="rule">W1</span>, with no exception. Built in step 7 too.</p>
 
 <!-- ================================================================ -->
 <h2 id="pieces"><span class="num">4</span>The four pieces, and how they talk</h2>
@@ -306,7 +306,7 @@
   <li><b>The page</b> (<code>ChooseFood.tsx</code>) sends <code>POST /api/bookings</code> with <code>{"items": [{"variety_id": 4}, {"variety_id": 7}], "substitutes": [9]}</code>. The browser adds the login cookie by itself.</li>
   <li><b>FastAPI</b> checks the request has the right shape. A list of numbers? Good. Then it finds who's logged in from the cookie. Not a student? "Please log in." The route's own code never runs.</li>
   <li><b>The route</b> (<code>routes/booking.py</code>) calls <code>book()</code> in <code>services/booking.py</code>.</li>
-  <li><b>The rules</b>: lock the time, check the 10 minutes haven't run out, check the 28 days and the other rules again, check the food limits, take a place, take the food off stock.</li>
+  <li><b>The rules</b>: lock the time, check the 10 minutes haven't run out, check the 30 days and the other rules again, check the food limits, take a place, take the food off stock.</li>
   <li><b>The database</b> saves the booking, its food and its substitutes, all together or not at all.</li>
   <li><b>The answer</b> goes back: <code>{"code": "K3P", "status": "booked", ...}</code>.</li>
   <li><b>The page</b> shows "Your code is K3P", with the food and a Cancel button.</li>
@@ -346,18 +346,18 @@
 
 <!-- ================================================================ -->
 <h2 id="rules"><span class="num">7</span>The rules, and their letters</h2>
-<p>All the rules are in <code>CONSTRAINTS.md</code>. Each has a letter and a number, like <span class="rule">F1</span>. The same label appears in the code, the tests and these pages. So when you see <code># F1</code> in the code, that line is the 28-day rule.</p>
+<p>All the rules are in <code>CONSTRAINTS.md</code>. Each has a letter and a number, like <span class="rule">F1</span>. The same label appears in the code, the tests and these pages. So when you see <code># F1</code> in the code, that line is the 30-day rule.</p>
 <div class="table-wrap">
 <table>
   <tr><th>Letter</th><th>About</th><th>One example</th></tr>
   <tr><td><span class="rule">P</span></td><td>Privacy and identity</td><td><b>P2</b> The ID number is never stored, only a keyed hash of it.</td></tr>
-  <tr><td><span class="rule">F</span></td><td>How often</td><td><b>F1</b> At least 28 days between pickups.</td></tr>
+  <tr><td><span class="rule">F</span></td><td>How often</td><td><b>F1</b> At least 30 days between pickups.</td></tr>
   <tr><td><span class="rule">S</span></td><td>Days and slots</td><td><b>S2</b> A slot never has more students than its capacity, even when many book at once.</td></tr>
   <tr><td><span class="rule">I</span></td><td>Items and stock</td><td><b>I4</b> Stock never goes below zero, even when two students take the last one together.</td></tr>
   <tr><td><span class="rule">E</span></td><td>Extras</td><td><b>E1</b> Eggs, bread and chips aren't booked online. Students ask at pickup.</td></tr>
   <tr><td><span class="rule">U</span></td><td>Substitutes</td><td><b>U4</b> When packing, missing food is replaced from the substitute list, in order.</td></tr>
   <tr><td><span class="rule">K</span></td><td>Packing</td><td><b>K1</b> Volunteers pack between 12 pm and 3 pm.</td></tr>
-  <tr><td><span class="rule">W</span></td><td>Walk-ins</td><td><b>W1</b> Walk-ins are recorded too, so the 28 days stay fair.</td></tr>
+  <tr><td><span class="rule">W</span></td><td>Walk-ins</td><td><b>W1</b> Walk-ins are recorded too, so the 30 days stay fair.</td></tr>
   <tr><td><span class="rule">B</span></td><td>A booking's life</td><td><b>B4</b> Clicking Book twice makes only one booking.</td></tr>
   <tr><td><span class="rule">R</span></td><td>Roles</td><td><b>R1</b> Student accounts are made at the counter, with a one-time setup code.</td></tr>
   <tr><td><span class="rule">T</span></td><td>Time</td><td><b>T1</b> Times are saved in UTC and shown in Newfoundland time.</td></tr>
@@ -370,7 +370,7 @@
 <div class="table-wrap">
 <table>
   <tr><th>Setting</th><th>Sample</th><th>Setting</th><th>Sample</th></tr>
-  <tr><td>Pickup gap</td><td>28 days</td><td>Item limit</td><td>13 per booking</td></tr>
+  <tr><td>Pickup gap</td><td>30 days</td><td>Item limit</td><td>13 per booking</td></tr>
   <tr><td>Pickup days</td><td>Mon and Thu, 3:30–5:30 pm</td><td>Max of each item</td><td>1</td></tr>
   <tr><td>Booking opens</td><td>5 pm the day before</td><td>Substitutes</td><td>up to 5</td></tr>
   <tr><td>Booking and cancelling close</td><td>12 pm on pickup day</td><td>No-show time</td><td>6 pm</td></tr>
@@ -437,7 +437,7 @@
   </tr>
   <tr>
     <td>7 Nov</td><td><b>Step 7, the counter</b> <span class="tag done">done</span></td>
-    <td>Handing over a bag with the card check, filling a short bag from the shelf, extras one of each, walk-ins (refused inside 28 days, W4). The Counter pages. 358 tests.</td>
+    <td>Handing over a bag with the card check, filling a short bag from the shelf, extras one of each, walk-ins (refused inside 30 days, W4). The Counter pages. 358 tests.</td>
     <td><a href="counter.html">counter</a></td>
   </tr>
   <tr>
@@ -637,7 +637,7 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
 
 <h3>Questions still open</h3>
 <p><b>Answered 7 Nov</b>, from step 4: volunteers can add categories and tags and fix names too (now built), and an extra with none left isn't shown to students (as built).</p>
-<p><b>Answered 7 Nov</b>, from step 6: volunteers can pack until 6 pm (as built), and a volunteer can undo Packed on the wrong bag until it's handed over (now built). For step 7: a walk-in who hasn't reached 28 days is refused, with no override. Students keep seeing exact counts like "6 left".</p>
+<p><b>Answered 7 Nov</b>, from step 6: volunteers can pack until 6 pm (as built), and a volunteer can undo Packed on the wrong bag until it's handed over (now built). For step 7: a walk-in who hasn't reached 30 days is refused, with no override. Students keep seeing exact counts like "6 left".</p>
 <p><b>Answered 9 Nov</b>, from step 7: walk-ins are served only during pickup hours, 3:30 to 5:30 (now built, see <a href="counter.html#when">counter.html</a>). Booked bags can still be handed over until 6 pm.</p>
 <p><b>Answered 10 Nov</b>, from steps 8 and 9: the jobs are run by hand, with no Task Scheduler. Pickup days are made one week ahead (now built). A closed day that cancelled bookings stays closed (as built). 0 shows as 0 on Weekly totals, and 1 to 4 as "fewer than 5" (now built).</p>
 <p>And a change to "students per slot" also reaches days already made, until their booking opens (now built). No questions are open for you right now.</p>

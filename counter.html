@@ -56,7 +56,7 @@
 
 <p class="eyebrow">Campus Food Bank · Step 7, the counter · 7 November 2026</p>
 <h1>The counter</h1>
-<p class="lead">This is where students actually get their food. Booked students say their code, a volunteer checks their MUN card, and hands over the packed bag. Students without a booking are served as walk-ins, from what's left on the shelf. Both count toward the 28 days, so nobody can walk in one week and book online the next.</p>
+<p class="lead">This is where students actually get their food. Booked students say their code, a volunteer checks their MUN card, and hands over the packed bag. Students without a booking are served as walk-ins, from what's left on the shelf. Both count toward the 30 days, so nobody can walk in one week and book online the next.</p>
 
 <ol class="toc">
   <li><a href="#lines">Two lines, one counter</a></li>
@@ -99,7 +99,7 @@
     <text x="185" y="220" font-size="12">no booking to compare with</text>
     <rect x="300" y="172" width="170" height="64" rx="10" fill="#d1fae5" stroke="#059669"/>
     <text x="385" y="200" font-weight="700">The check</text>
-    <text x="385" y="220" font-size="12">28 days, no exception</text>
+    <text x="385" y="220" font-size="12">30 days, no exception</text>
     <rect x="500" y="172" width="170" height="64" rx="10" fill="#d1fae5" stroke="#059669"/>
     <text x="585" y="200" font-weight="700">From the shelf</text>
     <text x="585" y="220" font-size="12">up to 13, extras one each</text>
@@ -113,7 +113,7 @@
     <path d="M670,44 C710,44 710,110 726,120" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#b2)"/>
     <path d="M670,204 C710,204 710,150 726,145" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#b2)"/>
     <defs><marker id="b2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker></defs>
-    <text x="470" y="285" font-size="13" fill="#475569">Two lines side by side, with their own volunteers (W3). Both count toward the 28 days.</text>
+    <text x="470" y="285" font-size="13" fill="#475569">Two lines side by side, with their own volunteers (W3). Both count toward the 30 days.</text>
   </g>
 </svg>
 </div>
@@ -139,7 +139,7 @@ Walk-ins are over for today. They're served from 3:30 p.m. to 5:30 p.m., during 
   <li>If the bag is short, the student chooses from the shelf <span class="rule">U6</span>. They also say which extras they'd like <span class="rule">E3</span>.</li>
   <li>The volunteer types the number on the student's MUN card, and presses <b>Hand over</b>.</li>
 </ol>
-<p>The server then does it all in one transaction: lock the student and the booking, check it's packed, check the card, take the chosen food and extras off stock, and mark it picked up, by this volunteer <span class="rule">B3</span>. The student's last pickup date becomes today, so their next pickup is 28 days later <span class="rule">F1</span>.</p>
+<p>The server then does it all in one transaction: lock the student and the booking, check it's packed, check the card, take the chosen food and extras off stock, and mark it picked up, by this volunteer <span class="rule">B3</span>. The student's last pickup date becomes today, so their next pickup is 30 days later <span class="rule">F1</span>.</p>
 
 <h3>The card check</h3>
 <p>Booking online proves nothing. The card at the counter does <span class="rule">P5</span>. The server makes the keyed hash of the typed number and compares it with the one saved on the account:</p>
@@ -160,12 +160,12 @@ typed 202300009 → keyed hash 71c2…  !=  3f9a…                         <spa
 
 <!-- ============================================================ -->
 <h2 id="walkin"><span class="num">4</span>Walk-ins</h2>
-<p>The volunteer types the card number twice and presses <b>Check the card</b>. Twice, because there's no booking to compare with: a typo would record the walk-in under someone else's number and block them for 28 days. The check saves nothing, and has four possible answers:</p>
+<p>The volunteer types the card number twice and presses <b>Check the card</b>. Twice, because there's no booking to compare with: a typo would record the walk-in under someone else's number and block them for 30 days. The check saves nothing, and has four possible answers:</p>
 <div class="table-wrap">
 <table>
   <tr><th>Who</th><th>What the page says</th><th>Rule</th></tr>
   <tr><td>A card with no account yet</td><td class="yes">"They can be served. This is their first visit: recording it makes an account for their card."</td><td><span class="rule">W1</span></td></tr>
-  <tr><td>Picked up within 28 days, online or walk-in</td><td class="no">"Not yet. Their next pickup can be on Wednesday, November 25 or later." No override, as you decided.</td><td><span class="rule">F1</span> <span class="rule">W1</span></td></tr>
+  <tr><td>Picked up within 30 days, online or walk-in</td><td class="no">"Not yet. Their next pickup can be on Wednesday, November 25 or later." No override, as you decided.</td><td><span class="rule">F1</span> <span class="rule">W1</span></td></tr>
   <tr><td>Booked for today</td><td class="no">"They booked for today: bag U3P, at 3:10 p.m. Hand over that bag instead."</td><td>—</td></tr>
   <tr><td>Booked for a later day</td><td class="yes">Can be served, but serving them cancels that booking. A checkbox must be ticked first.</td><td><span class="rule">W4</span></td></tr>
 </table>
@@ -231,7 +231,7 @@ UNIQUE (booking_id, item_id) WHERE is_extra             <span class="c">-- one B
 <h2 id="tests"><span class="num">9</span>The tests</h2>
 <p>49 new tests, 358 in all, every one passing.</p>
 <ul>
-  <li><code>tests/test_counter.py</code>: when the counter is open; handing over (right card, wrong card, not packed, twice, another day's code); a short bag and its limits; extras one of each, and only real extras; walk-ins (first visit, inside 28 days, twice in a day, booked today, W4 with and without confirming, limits, nothing left); booking online after a walk-in; and the two "same moment" tests.</li>
+  <li><code>tests/test_counter.py</code>: when the counter is open; handing over (right card, wrong card, not packed, twice, another day's code); a short bag and its limits; extras one of each, and only real extras; walk-ins (first visit, inside 30 days, twice in a day, booked today, W4 with and without confirming, limits, nothing left); booking online after a walk-in; and the two "same moment" tests.</li>
   <li><code>tests/test_counter_api.py</code>: the addresses the way the pages use them. Staff only, and no student hash in any answer <span class="rule">P4</span>.</li>
   <li><code>tests/test_database_rules.py</code>: the new rules, including trying to dodge "one bread" with a wrong copy.</li>
   <li><code>tests/test_privacy.py</code>: a second search for the card number <span class="rule">P10</span>. It goes through walk-ins, a typo and the wrong card at handover, and is then searched for in every answer, every log line (SQL included) and every database row.</li>

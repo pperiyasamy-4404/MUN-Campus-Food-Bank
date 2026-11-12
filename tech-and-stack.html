@@ -177,11 +177,11 @@
   </div>
 </div>
 
-<p><b>Example.</b> Ana taps "Monday 3:40 pm". React sends a request: "hold this slot for me". FastAPI checks the rules: is booking open, and has it been 28 days? PostgreSQL saves the hold. The answer goes back, and Ana sees a 10-minute countdown.</p>
+<p><b>Example.</b> Ana taps "Monday 3:40 pm". React sends a request: "hold this slot for me". FastAPI checks the rules: is booking open, and has it been 30 days? PostgreSQL saves the hold. The answer goes back, and Ana sees a 10-minute countdown.</p>
 
 <div class="why">
   <p><b>Why not put everything on the phone?</b></p>
-  <p>Anything that runs on the student's phone can be changed by the student. Every browser has developer tools, and with them a curious student can switch off a check. If the 28-day check lived only in React, someone could remove it and book every week.</p>
+  <p>Anything that runs on the student's phone can be changed by the student. Every browser has developer tools, and with them a curious student can switch off a check. If the 30-day check lived only in React, someone could remove it and book every week.</p>
   <p>So the screens only show things and send requests. The server checks every rule again, and students can't touch the server.</p>
 </div>
 
@@ -322,7 +322,7 @@ def list_slots(day: date):
 <p>If the phone sends <code>"hold_id": "abc"</code>, or leaves out <code>items</code>, FastAPI answers with an error (code 422) and our booking code never runs.</p>
 
 <span class="label">Shape versus rules</span>
-<p>Pydantic checks the <b>shape</b>: "items is a list of numbers". Our own code checks the <b>rules</b>: "at most 13 items", "one of each item", "28 days have passed".</p>
+<p>Pydantic checks the <b>shape</b>: "items is a list of numbers". Our own code checks the <b>rules</b>: "at most 13 items", "one of each item", "30 days have passed".</p>
 <p>Why not put "at most 13" in Pydantic? Because 13 is a <b>setting</b> the coordinator can change. Pydantic's checks are fixed in the code, but settings live in the database.</p>
 
 <div class="warn"><p><b>A trap we'll handle.</b> When Pydantic refuses something, FastAPI's error repeats the bad input back. If a student mistypes their ID number, that number could end up in an error message or a log. Rule <span class="rule">P10</span> says it never can, so we'll change the error format and write a test for it.</p></div>
@@ -545,9 +545,9 @@ showTime(slot.startAt);   <span class="bad">// typo: red underline in the editor
     with pytest.raises(TooSoon):
         book(ana, slot_on(date(2026, 10, 26)))           <span class="c"># Monday 26 Oct: only 25 days</span>
 
-def test_allowed_after_28_days():
+def test_allowed_after_30_days():
     ana = make_student(last_pickup=date(2026, 10, 1))
-    book(ana, slot_on(date(2026, 10, 29)))               <span class="c"># Thursday 29 Oct: 28 days, fine</span></pre>
+    book(ana, slot_on(date(2026, 11, 2)))                <span class="c"># Monday 2 Nov: 32 days, fine</span></pre>
 
 <span class="label">Why a real PostgreSQL, not SQLite?</span>
 <p>Our most important test: two students try to book the last slot at the same moment, and exactly one may win. That test checks the row lock and the database rules from part 2. SQLite has neither, so the test would pass without testing anything real.</p>
@@ -620,12 +620,12 @@ def test_allowed_after_28_days():
 <div class="down">↓</div>
 <div class="step sys"><b class="n">4</b><b>Pydantic</b> checks the shape: items and substitutes are lists of numbers. If something's wrong, she gets an error, and the error never repeats her ID number back. <span class="rule">P10</span></div>
 <div class="down">↓</div>
-<div class="step sys"><b class="n">5</b><b>Booking rules (plain Python):</b> is booking open? 28 days? no other booking? didn't cancel for this day? is the hold still hers? at most 13 items, one of each? <span class="rule">S5</span> <span class="rule">F1</span> <span class="rule">F2</span> <span class="rule">S6</span> <span class="rule">S8</span> <span class="rule">I3</span> <span class="you">you write this</span></div>
+<div class="step sys"><b class="n">5</b><b>Booking rules (plain Python):</b> is booking open? 30 days? no other booking? didn't cancel for this day? is the hold still hers? at most 13 items, one of each? <span class="rule">S5</span> <span class="rule">F1</span> <span class="rule">F2</span> <span class="rule">S6</span> <span class="rule">S8</span> <span class="rule">I3</span> <span class="you">you write this</span></div>
 <div class="down">↓</div>
 <div class="step db"><b class="n">6</b><b>SQLAlchemy → PostgreSQL, one transaction:</b> lock the slot, take each item off the stock (never below zero), save the booking. If our code missed anything, the database's own rules stop it. <span class="rule">S2</span> <span class="rule">I4</span> <span class="rule">B4</span> <span class="you">you write this</span></div>
 <div class="down">↓</div>
 <div class="step ok"><b class="n">7</b>Back to Ana: "Booked. Your booking code is K3P."</div>
-<div class="why"><p><b>Why check the rules twice</b>, in step 5 and again in step 6? Step 5 gives Ana a clear message, like "28 days haven't passed yet". Step 6 is the safety net: even if step 5 has a bug, or two people press Book at the same moment, the database refuses anything that breaks the key rules.</p></div>
+<div class="why"><p><b>Why check the rules twice</b>, in step 5 and again in step 6? Step 5 gives Ana a clear message, like "30 days haven't passed yet". Step 6 is the safety net: even if step 5 has a bug, or two people press Book at the same moment, the database refuses anything that breaks the key rules.</p></div>
 
 <!-- 14 -->
 <h2 id="summary"><span class="num">14</span>Everything in one table</h2>

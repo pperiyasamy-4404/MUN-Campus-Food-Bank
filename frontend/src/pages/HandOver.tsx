@@ -88,7 +88,7 @@ export function HandOver() {
               <Field
                 key="card"
                 label="MUN card number"
-                hint="From the student's card. Use this when they don't have their code."
+                hint="From the student's card, when they don't have their code. No card, no food: a student who lost it gets a new MUN card first."
                 inputMode="numeric"
                 value={card}
                 onChange={setCard}
@@ -271,7 +271,7 @@ function TheBag({
           <Problem message={problem} />
           <Field
             label="ID number on their MUN card"
-            hint="It must match the booking. If it doesn't, don't hand over the bag."
+            hint="Type it from the card itself. It must match the booking. If it doesn't, or there's no card, don't hand over the bag."
             inputMode="numeric"
             value={card}
             onChange={setCard}

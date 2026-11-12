@@ -77,6 +77,7 @@ export function SetupCode() {
             <Problem message={problem} />
             <Field
               label="ID number on the MUN card"
+              hint="Type it from the card itself. No card, no food: a student who lost it gets a new MUN card first."
               inputMode="numeric"
               value={values.id_number}
               onChange={set('id_number')}
@@ -84,7 +85,7 @@ export function SetupCode() {
               required
             />
             <Field
-              label="Type it again"
+              label="Re-enter ID number"
               inputMode="numeric"
               value={values.again}
               onChange={set('again')}

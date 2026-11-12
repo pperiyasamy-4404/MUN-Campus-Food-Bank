@@ -16,7 +16,7 @@ from app.services.pickup_days import make_days_ahead
 
 # The sample values from CONSTRAINTS.md.
 SAMPLE_SETTINGS = dict(
-    pickup_gap_days=28,
+    pickup_gap_days=30,
     slot_minutes=10,
     slot_capacity=1,
     hold_minutes=10,

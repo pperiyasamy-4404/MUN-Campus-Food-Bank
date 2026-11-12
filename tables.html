@@ -262,7 +262,7 @@
   <div class="card">
     <h3><span class="k code">code</span></h3>
     <p>The rules in Python. They give clear messages, and they can use dates, settings and many rows at once.</p>
-    <p><b>Example.</b> The 28-day gap needs the last pickup date, today's date in Newfoundland, and the pickup gap setting. <span class="rule">F1</span></p>
+    <p><b>Example.</b> The 30-day gap needs the last pickup date, today's date in Newfoundland, and the pickup gap setting. <span class="rule">F1</span></p>
   </div>
 </div>
 
@@ -298,7 +298,7 @@
   <tr><td>41</td><td>a91f…(64 characters)</td><td>$argon2id$…</td><td>2026-10-12</td><td class="empty">—</td><td>2</td></tr>
 </table>
 <p>Student 41 came to the counter on Monday 12 October. Sam (staff 2) made the account, and the student took food as a walk-in that day. There's no column for a name, email, phone number, or the ID number itself. The safest data is data we never keep. <span class="rule">P2</span> <span class="rule">P3</span></p>
-<p><b>Why <code>last_pickup_on</code> lives here:</b> booking details are deleted after 90 days <span class="rule">P7</span>, but "no pickup for a year" <span class="rule">P13</span> needs the last pickup date even after that. The 28-day check reads it too, so it doesn't have to search old bookings. <span class="rule">F1</span></p>
+<p><b>Why <code>last_pickup_on</code> lives here:</b> booking details are deleted after 90 days <span class="rule">P7</span>, but "no pickup for a year" <span class="rule">P13</span> needs the last pickup date even after that. The 30-day check reads it too, so it doesn't have to search old bookings. <span class="rule">F1</span></p>
 <p><b><code>password_reset_at</code></b> lets the student see "password reset on 4 Nov". <span class="rule">R4</span></p>
 <p><b>Database rules:</b> <code>id_hash</code> is unique, so one card means one account <span class="rule">P1</span>. And <code>id_hash</code> must be exactly 64 characters of 0–9 and a–f, which is what an HMAC looks like. If some code ever tried to save a raw 9-digit ID number by mistake, the database would refuse it. <span class="rule">P2</span></p>
 
@@ -422,7 +422,7 @@
   <tr><td>login_tries</td><td>5</td><td>login_window_minutes</td><td>15</td></tr>
 </table>
 <p><b>Why one row with real columns,</b> not a list of name/value pairs: each setting keeps its own type and its own rule. In a name/value list, everything is text, and "13" and "thirteen" would both fit.</p>
-<p><b>Database rules:</b> the table holds only one row. The numbers make sense (a slot holds at least 1 student, the item limit is at least 1, and so on). And the retention period is at least the pickup gap, so we never delete a pickup the 28-day rule still needs.</p>
+<p><b>Database rules:</b> the table holds only one row. The numbers make sense (a slot holds at least 1 student, the item limit is at least 1, and so on). And the retention period is at least the pickup gap, so we never delete a pickup the 30-day rule still needs.</p>
 
 <h3><code>pickup_hours</code>: the weekly pattern</h3>
 <table class="data">
@@ -543,7 +543,7 @@
 <table>
   <tr><th style="width:24%">Kind</th><th style="width:30%">Example</th><th>Why</th></tr>
   <tr><td><b>A moment</b>: <code>timestamptz</code></td><td><code>booked_at</code>, <code>held_until</code>, <code>booking_opens_at</code></td><td>Saved as one exact moment (in UTC) and shown in Newfoundland time. Summer time and the half hour are handled for us.</td></tr>
-  <tr><td><b>A calendar date</b>: <code>date</code></td><td><code>pickup_date</code>, <code>last_pickup_on</code></td><td>The 28-day rule counts calendar days in Newfoundland <span class="rule">F1</span>, so a pickup at 5 pm and a slot at 3:30 pm four weeks later are 28 days apart.</td></tr>
+  <tr><td><b>A calendar date</b>: <code>date</code></td><td><code>pickup_date</code>, <code>last_pickup_on</code></td><td>The 30-day rule counts calendar days in Newfoundland <span class="rule">F1</span>, so a pickup at 5 pm and a slot at 3:30 pm four weeks later are 30 days apart.</td></tr>
   <tr><td><b>A clock time</b>: <code>time</code></td><td>The settings: 17:00, 12:00, 18:00</td><td>Means "this time on a Newfoundland clock". It's turned into a moment when a pickup day is made, so each day gets the right summer or winter time.</td></tr>
 </table>
 <p><b>Why not save plain clock times everywhere?</b> On 1 November the clocks went back, and 1:30 am happened twice. A plain clock time can't say which one it means. A moment can.</p>

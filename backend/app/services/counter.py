@@ -371,7 +371,7 @@ def _why_not_walk_in(
 ) -> tuple[str | None, Booking | None]:
     """Why this student can't be served as a walk-in today, and any booking it would cancel.
 
-    The pickup gap has no exception (decided 7 Nov): one pickup every 28 days, however they come.
+    The pickup gap has no exception (decided 7 Nov): one pickup every 30 days, however they come.
     """
     allowed_on = booking_rules.next_pickup_allowed_on(db, student, settings)
     if allowed_on is not None and day.pickup_date < allowed_on:
