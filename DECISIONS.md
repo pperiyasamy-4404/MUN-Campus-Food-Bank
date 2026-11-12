@@ -702,3 +702,20 @@ From what-could-go-wrong.html, problem 3: with one coordinator, nobody could clo
 - Someone made a volunteer loses the coordinator pages on their next click, because every request reads the role from the database. They stay logged in, as a volunteer.
 - The setup script still only makes the **first** coordinator, or gives an existing coordinator a new code.
 - The page is now called **Staff** (it was Volunteers) and lists coordinators first. The role is under each name rather than in its own column, so the table fits a 320-pixel phone. The web addresses still say `/api/volunteers`, to keep them stable.
+
+## 2026-11-12
+
+**The stock number is optional. Most food is just "In stock" or "Few left". Only food worth sharing out exactly is counted (I1, I6, I8 updated).**
+From what-could-go-wrong.html, problem 5: a count *sets* the number, a no-show *adds* the bag's food back, so food counted after 6 pm and before the jobs ran was counted twice. Prakash's idea went further: volunteers don't know exact quantities and don't have time to count, so drop the numbers and let staff mark food "few left". Claude pointed out what that loses: with no numbers, 30 students can book 12 rice, and 18 bags go out without it. Substitutes soften that, but the booking still promised rice. So the two were combined. Prakash chose **optional numbers**, and **any volunteer** can mark food, not only the coordinator.
+- Each variety has three choices on the Stock page: **In stock**, **Few left** and **Out of stock**, plus **Count it** for a number. In stock and Few left save no number (`varieties.stock` is NULL). Out of stock is a count of 0.
+- Food with no number can be booked by any number of students. Booking, cancelling, packing, the counter, no-shows, fixes and closing a day take nothing off and put nothing back for it. So it can't be counted twice. `Variety.has()`, `take()` and `put_back()` in `models/food.py` do this in one place.
+- Food with a number works as before: "6 left", and nobody can book it at 0.
+- Students see "In stock", "Few left" (amber), "6 left" or "Out of stock". At the counter it's the same.
+- When a packer taps Out of stock, the food becomes 0 (and "few left" goes), so nobody else books it, and other bags with it are flagged (U7). Tapping In stock, or counting, takes the flag off.
+- "Few left" is only for food with no number (database rule `ck_varieties_few_left_only_without_a_number`): with a number, students see "3 left" anyway. A count clears it.
+- `stock` has no default now: food added without a number has none. Bug found by a test: with the old default of 0, SQLAlchemy left out the empty value and the database saved 0, which quietly turned "no number" into "out of stock".
+- Adding food: the count box is optional, and empty means In stock.
+- The Stock page only lists as needing checking: food marked out of stock while packing, and food with a number counted before the last pickup ended. Food with no number never needs counting.
+- The sample food now has mostly no numbers, two foods marked Few left, and numbers only on a few (peanut butter, gluten-free food, chicken, chickpeas).
+Why not no numbers at all: overbooking scarce food. Why not numbers for everything: the counting work, and the double counting. What's left of problem 5: food with a number counted in the minutes before the jobs run, listed under Known issues. Food bank question 13 now only matters for that.
+Checked: 525 tests (16 new); in a browser on the demo the three buttons, counting, the student's food page and the counter-style notes, with axe in light and dark (no problems) and a 320-pixel screen.

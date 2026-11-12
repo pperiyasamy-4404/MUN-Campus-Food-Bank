@@ -45,14 +45,14 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 
 ### Items and stock
 
-- **I1** An item is a kind of food, such as oats, pasta or canned chicken. Each item has one or more varieties, such as quick oats and steel-cut oats. Stock is counted per variety.
+- **I1** An item is a kind of food, such as oats, pasta or canned chicken. Each item has one or more varieties, such as quick oats and steel-cut oats. Stock is kept per variety. The number is optional: most food has none and is just "In stock" or "Few left" (any volunteer can mark it). Only food worth sharing out exactly, like 6 jars from one donation, is counted. Food with no number can be booked by any number of students, and nothing is taken off or put back for it. When a packer taps Out of stock, it becomes 0 until someone checks the shelf (decided 12 November).
 - **I2** Every variety has a category and dietary tags (vegetarian, halal, gluten-free, contains nuts).
 - **I3** Each booking is for one person. It has up to the item limit, and at most the per-item maximum of each item, counting all its varieties together. For example, one canned chicken, even if there are several kinds and plenty in stock.
 - **I4** Stock never goes below zero, even when two students take the last one at the same moment.
 - **I5** Items are reserved when the booking is confirmed, not while the student is choosing.
-- **I6** Cancelled bookings and no-shows return their items to stock.
+- **I6** Cancelled bookings and no-shows return their items to stock. Food with no number has nothing to return.
 - **I7** Once a booking is made, its items and substitutes can't be changed.
-- **I8** Volunteers or the coordinator update the items and stock counts before each booking window opens, for example to add new donations. Existing bookings keep the items they booked.
+- **I8** Volunteers or the coordinator check the food before each booking window opens, for example to add new donations: food marked out of stock while packing, and food with a number that was counted before the last pickup. Existing bookings keep the items they booked.
 
 ### Extras
 
@@ -78,7 +78,7 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 
 ### Walk-ins
 
-- **W1** Walk-ins are recorded in the same system. The volunteer checks the student's card and enters the ID number, the system checks the pickup gap, the volunteer selects the items given on the Walk-in screen, and the pickup is done. A walk-in who hasn't reached the pickup gap is refused. There's no override. This keeps the pickup gap fair (nobody can walk in one week and book online the next) and keeps the stock count right without recounting.
+- **W1** Walk-ins are recorded in the same system. The volunteer checks the student's card and enters the ID number, the system checks the pickup gap, the volunteer selects the items given on the Walk-in screen, and the pickup is done. A walk-in who hasn't reached the pickup gap is refused. There's no override. This keeps the pickup gap fair (nobody can walk in one week and book online the next) and keeps any stock number right without recounting.
 - **W3** Walk-ins are served in their own line, by their own volunteers, side by side with online pickups. They don't use slots. They are served only during pickup hours (3:30 to 5:30 pm with the sample hours). A student with a booking can still collect their bag until the no-show time.
 - **W4** If a walk-in already has an upcoming booking, the volunteer cancels the booking and serves them now.
 
@@ -136,6 +136,7 @@ Problems we know about and accept for now.
 - **Internet down at the counter.** Volunteers can't check cards or the pickup gap. We'll plan for this later.
 - **First visit in person.** A new student can't book online until they've been to the counter for an account. They can take food as a walk-in on that visit.
 - **A stranger guessing can delay a reset on a new phone.** If someone keeps guessing a student's password, the student's usual phone still gets in. A phone that has never logged in to the account shares the stranger's wrong-try count, so it may wait up to 15 minutes to use a new setup code. It needs someone who knows the ID number and keeps guessing.
+- **Food with a number can still be counted twice.** If a volunteer counts it after 6 pm, before the jobs mark a bag as a no-show, the no-show adds the bag's food back on top of the count. Only food with a number, which is now a few foods at a time, and only in the minutes before the jobs run (they run every 15 minutes). Food with no number can't be counted twice (decided 12 November).
 - **A fix to no-show can shorten the year rule.** Fixing a bag to no-show sets the pickup gap from the last pickup still on record. If the only earlier pickup is older than the retention period, its record is gone, and the year rule (P13) counts from when the account was made. Rare: the student would get a new account at the counter.
 
 ## Before going live

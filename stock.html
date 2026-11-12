@@ -56,6 +56,12 @@
 <h1>Food and stock</h1>
 <p class="lead">Volunteers and the coordinator now have a <b>Stock</b> page. Before each booking window opens, they count what's on the shelf and type the numbers in. When a donation of something new comes in, they add it. This page explains how it works and why.</p>
 
+<div class="warn">
+  <p><b>Changed on 12 November: the number is optional.</b> Most food now has no number. A volunteer taps <b>In stock</b> or <b>Few left</b>, and any number of students can book it. Only food worth sharing out exactly is counted, like 6 jars of peanut butter from one donation: the first 6 students get one, then it's out of stock.</p>
+  <p>Example: rice has no number. 20 students book it, and nothing is taken off. If a packer finds the shelf empty and taps Out of stock, rice becomes 0 and nobody else can book it until a volunteer taps In stock again. Peanut butter says 6: it works exactly as this page describes below.</p>
+  <p>Why: volunteers don't have time to count everything, and a count followed by a no-show could count the same food twice (what-could-go-wrong.html, problem 5). In the database, "no number" is <code>varieties.stock</code> = NULL, and "few left" is <code>varieties.few_left</code>. The rest of this page is about food <i>with</i> a number.</p>
+</div>
+
 <ol class="toc">
   <li><a href="#stock">What "stock" means</a></li>
   <li><a href="#count">Counting: what's on the shelf</a></li>
