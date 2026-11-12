@@ -176,6 +176,7 @@ export type StockVariety = {
   counted_at: string | null
   counted_by: string | null
   ran_out_at: string | null // none on the shelf while packing. Cleared by the next check (U7).
+  found_at: string | null // then another volunteer found some (Found it). Still 0 until the next check.
 }
 
 export type StockItem = {

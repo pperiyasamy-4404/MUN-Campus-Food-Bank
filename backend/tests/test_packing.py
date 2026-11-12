@@ -560,6 +560,76 @@ def test_counting_the_shelf_clears_the_flag(db, monday, food, sam):
     assert {bag.booking.id: bag.ran_out for bag in packing.queue(db, monday)}[second.id] == []
 
 
+def test_found_it_takes_the_flag_off_every_bag(db, monday, food, sam):
+    """Sam marked the oil out of stock, then Jo found some at the back (decided 12 Nov)."""
+    first, second, third = (book_a_bag(db, monday, food) for _ in range(3))
+    packing.pack(db, first.id, missing(food, "sunflower oil"), [], [food["rice"].id], sam, PACKING)
+    oil = food["sunflower oil"]
+
+    later = PACKING + timedelta(minutes=10)
+    packing.pack(db, second.id, [], [], [], sam, later, found=[oil.id])
+
+    assert {bag.booking.id: bag.ran_out for bag in packing.queue(db, monday)}[third.id] == []
+    # Nobody knows how many are left, so students still can't book it until someone checks.
+    assert (oil.stock, oil.ran_out_at, oil.found_at) == (0, None, later)
+
+
+def test_checking_the_shelf_after_found_it_lets_students_book_again(db, monday, food, sam):
+    first, second = book_a_bag(db, monday, food), book_a_bag(db, monday, food)
+    packing.pack(db, first.id, missing(food, "sunflower oil"), [], [food["rice"].id], sam, PACKING)
+    oil = food["sunflower oil"]
+    packing.pack(db, second.id, [], [], [], sam, PACKING, found=[oil.id])
+
+    stock.count_shelf(db, oil.id, 4, sam, PACKING + timedelta(minutes=5))
+
+    assert (oil.stock, oil.found_at) == (4, None)
+
+
+def test_running_out_again_after_found_it_flags_the_bags_again(db, monday, food, sam):
+    first, second, third, fourth = (book_a_bag(db, monday, food) for _ in range(4))
+    oil = food["sunflower oil"]
+    packing.pack(db, first.id, missing(food, "sunflower oil"), [], [food["rice"].id], sam, PACKING)
+    packing.pack(db, second.id, [], [], [], sam, PACKING, found=[oil.id])
+
+    later = PACKING + timedelta(minutes=20)
+    packing.pack(db, third.id, missing(food, "sunflower oil"), [], [food["rice"].id], sam, later)
+
+    assert (oil.ran_out_at, oil.found_at) == (later, None)
+    assert {bag.booking.id: bag.ran_out for bag in packing.queue(db, monday)}[fourth.id] == ["Sunflower oil"]
+
+
+def test_found_it_does_nothing_to_food_nobody_marked(db, monday, food, sam):
+    bag = book_a_bag(db, monday, food)
+    oil = food["sunflower oil"]
+    before = oil.stock
+
+    packing.pack(db, bag.id, [], [], [], sam, PACKING, found=[oil.id])
+
+    assert (oil.stock, oil.ran_out_at, oil.found_at) == (before, None, None)
+
+
+def test_only_this_bags_food_can_be_found(db, monday, food, sam):
+    bag = book_a_bag(db, monday, food, "quick oats", "rice", substitutes=())
+
+    problem = refused(
+        db, Problem, lambda: packing.pack(db, bag.id, [], [], [], sam, PACKING, found=[food["sunflower oil"].id])
+    )
+
+    assert problem.message == "Only food booked for this bag can be marked as found."
+
+
+def test_a_count_says_who_is_packing_that_food(db, monday, food, sam):
+    """Some of it may be in Sam's bag already, not on the shelf, so the count is a little low."""
+    bag = book_a_bag(db, monday, food)
+    packing.start_packing(db, bag.id, sam, PACKING)
+
+    counted = stock.count_shelf(db, food["sunflower oil"].id, 3, sam, PACKING)
+
+    assert counted.being_packed_by == [sam.username]
+    packing.pack(db, bag.id, [], [], [], sam, PACKING)
+    assert stock.count_shelf(db, food["sunflower oil"].id, 3, sam, PACKING).being_packed_by == []
+
+
 def test_the_queue_is_in_pickup_time_order_without_cancelled_bookings(db, monday, food, sam):
     first, cancelled, third = (book_a_bag(db, monday, food) for _ in range(3))
     booking_rules.cancel(db, db.get(Student, cancelled.student_id), OPEN)

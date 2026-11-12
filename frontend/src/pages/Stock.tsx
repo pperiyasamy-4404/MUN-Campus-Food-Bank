@@ -175,6 +175,27 @@ function ItemBlock({
   )
 }
 
+/** What the server says after a count. */
+type Counted = { variety: StockVariety; short_by: number; being_packed_by: string[] }
+
+/**
+ * Someone has a bag with this food open while it was counted. Picked ticks stay
+ * on their phone, so some may be in their bag, not on the shelf: the number
+ * comes out a little low (on the safe side). Example: " Jo is packing a bag
+ * with this right now, so some may be in that bag. Count again after Jo presses Packed."
+ */
+function packingNow(counted: Counted): string {
+  const who = counted.being_packed_by
+  if (who.length === 0) return ''
+  const names = who.length === 1 ? who[0] : `${who.slice(0, -1).join(', ')} and ${who[who.length - 1]}`
+  const bags = who.length === 1 ? 'a bag' : 'bags'
+  const presses = who.length === 1 ? 'presses' : 'press'
+  return (
+    ` ${names} ${who.length === 1 ? 'is' : 'are'} packing ${bags} with this right now, so some may be in ` +
+    `${who.length === 1 ? 'that bag' : 'those bags'}, not on the shelf. Count again after ${names} ${presses} Packed.`
+  )
+}
+
 const LEVELS = ['In stock', 'Few left', 'Out of stock'] as const
 type Level = (typeof LEVELS)[number]
 
@@ -209,7 +230,7 @@ function VarietyRow({
     event.preventDefault()
     if (onShelf.trim() === '') return setMessage({ kind: 'problem', text: 'Type how many are on the shelf.' })
     setSaving(true)
-    const answer = await change<{ variety: StockVariety; short_by: number }>(
+    const answer = await change<Counted>(
       tools,
       `/api/varieties/${variety.id}/count`,
       { on_shelf: Number(onShelf) },
@@ -223,11 +244,11 @@ function VarietyRow({
     setMessage({
       kind: 'saved',
       text:
-        short === 0
+        (short === 0
           ? 'Saved.'
           : `Saved. ${short} booked ${short === 1 ? 'one is' : 'ones are'} missing from the shelf: ${
               short === 1 ? 'that bag' : 'those bags'
-            } will need a substitute.`,
+            } will need a substitute.`) + packingNow(answer.data),
     })
     tools.counted(answer.data.variety)
   }
@@ -237,7 +258,7 @@ function VarietyRow({
     setSaving(true)
     const answer =
       choice === 'Out of stock'
-        ? await change<{ variety: StockVariety; short_by: number }>(tools, `/api/varieties/${variety.id}/count`, {
+        ? await change<Counted>(tools, `/api/varieties/${variety.id}/count`, {
             on_shelf: 0,
           })
         : await change<StockVariety>(tools, `/api/varieties/${variety.id}/in-stock`, { few_left: choice === 'Few left' })
@@ -248,11 +269,11 @@ function VarietyRow({
     setMessage({
       kind: 'saved',
       text:
-        short === 0
+        (short === 0
           ? `Saved: ${choice.toLowerCase()}.`
           : `Saved: out of stock. ${short} booked ${short === 1 ? 'one is' : 'ones are'} missing from the shelf: ${
               short === 1 ? 'that bag' : 'those bags'
-            } will need a substitute.`,
+            } will need a substitute.`) + ('short_by' in answer.data ? packingNow(answer.data) : ''),
     })
     if (choice !== 'Out of stock') setCounting(false)
     tools.counted(newer)
@@ -300,6 +321,12 @@ function VarietyRow({
           <p className="stock-age stock-ran-out">
             Marked out of stock while packing, {showDayAndClock(variety.ran_out_at)}. Tap In stock, or count it, to
             take the flag off other bags.
+          </p>
+        )}
+        {variety.found_at && (
+          <p className="stock-age stock-ran-out">
+            Marked out of stock, then found while packing, {showDayAndClock(variety.found_at)}. Students can't book it
+            until you tap In stock, or count it.
           </p>
         )}
       </div>

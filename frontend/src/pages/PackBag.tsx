@@ -6,10 +6,13 @@ import { useMe } from '../me.ts'
 import { showClock, showDate } from '../time.ts'
 import {
   foodKey,
+  forgetProgress,
+  foundAfterAll,
+  keepProgress,
   lookedKey,
   needsALook,
   outcomeWords,
-  startingFindings,
+  startingProgress,
   STATUS_WORDS,
   stillToTick,
   substituteKey,
@@ -27,7 +30,9 @@ import { PageHeading } from '../PageHeading.tsx'
 // the sticky note. Nothing is saved until Packed, so a wrong tap is just tapped
 // again. Packed waits until every line is Picked or Out of stock (decided 11 Nov).
 // Food another volunteer marked out of stock opens marked, but needs one look:
-// Still out of stock, or Found it (decided 12 Nov).
+// Still out of stock, or Found it (decided 12 Nov). Found it takes the warning
+// off every other bag too, once this one is Packed (decided 12 Nov, later).
+// Every tap is kept on this phone until Packed, so a reload doesn't lose them.
 
 type Load = { state: 'loading' } | { state: 'failed'; message: string } | { state: 'ready'; bag: Bag }
 
@@ -209,9 +214,11 @@ function Packer({
   onChanged: () => void
   onLoggedOut: () => void
 }) {
-  const [findings, setFindings] = useState<Findings>(() => startingFindings(bag))
+  // The taps kept on this phone if the page reloaded, or a fresh start.
+  const [start] = useState(() => startingProgress(bag))
+  const [findings, setFindings] = useState<Findings>(start.findings)
   // What's in the bag so far. Not sent to the server, so ticking asks for no new plan.
-  const [picked, setPicked] = useState<Picked>(() => new Set())
+  const [picked, setPicked] = useState<Picked>(start.picked)
   // The server's plan, and which findings it was worked out for.
   const [plan, setPlan] = useState<{ for: Findings; plan: PackingPlan } | null>(null)
   const [planVersion, setPlanVersion] = useState(0)
@@ -234,6 +241,9 @@ function Packer({
       stillWanted = false
     }
   }, [bag.id, findings, planVersion, onLoggedOut, onChanged])
+
+  // Every tap is kept on this phone until Packed, so a reload doesn't lose it.
+  useEffect(() => keepProgress(bag.id, findings, picked), [bag.id, findings, picked])
 
   // Packed only goes with a plan worked out for exactly what's on screen.
   const current = plan !== null && plan.for === findings ? plan.plan : null
@@ -262,9 +272,16 @@ function Packer({
   async function packed() {
     if (current === null) return
     setSending(true)
-    const answer = await send<Bag>(`/api/packing/bags/${bag.id}/packed`, { ...findings, uses: current.uses })
+    const answer = await send<Bag>(`/api/packing/bags/${bag.id}/packed`, {
+      ...findings,
+      uses: current.uses,
+      found: foundAfterAll(bag, findings),
+    })
     setSending(false)
-    if (answer.ok) return onPacked(answer.data)
+    if (answer.ok) {
+      forgetProgress(bag.id)
+      return onPacked(answer.data)
+    }
     if (answer.status === 401) return onLoggedOut()
     setProblem(answer.message)
     // 409: the plan changed (another bag took the last of a substitute), or someone else
@@ -449,9 +466,11 @@ function FoodRow({
             ? line.quantity === 1
               ? 'Have a quick look on the shelf, then tap Still out of stock or Found it.'
               : 'Have a quick look on the shelf, then tap Still out of stock or choose how many are there.'
-            : line.quantity === 1
-              ? 'If there is some, tap Found it.'
-              : 'If there is some, choose how many are on the shelf.'}
+            : missing === 0
+              ? 'You found it, so Packed takes this warning off every other bag too.'
+              : line.quantity === 1
+                ? 'If there is some, tap Found it.'
+                : 'If there is some, choose how many are on the shelf.'}
         </span>
       )}
     </li>

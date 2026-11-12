@@ -35,6 +35,9 @@ class Count:
     booked_not_packed: int
     # How many booked ones are missing from the shelf. Those bookings will need a substitute.
     short_by: int
+    # Who is packing a bag with this food right now. Some may already be in
+    # their bag, not on the shelf, so the count comes out a little low.
+    being_packed_by: list[str]
 
 
 def count_shelf(db: Session, variety_id: int, on_shelf: int, staff: Staff, now: datetime) -> Count:
@@ -58,7 +61,12 @@ def count_shelf(db: Session, variety_id: int, on_shelf: int, staff: Staff, now: 
     # With a number, students see "3 left", so "few left" isn't needed.
     variety.few_left = False
     _checked(variety, staff, now)
-    return Count(variety=variety, booked_not_packed=promised, short_by=max(0, promised - on_shelf))
+    return Count(
+        variety=variety,
+        booked_not_packed=promised,
+        short_by=max(0, promised - on_shelf),
+        being_packed_by=being_packed_by(db, variety.id),
+    )
 
 
 def no_number(db: Session, variety_id: int, few_left: bool, staff: Staff, now: datetime) -> Variety:
@@ -96,6 +104,26 @@ def _checked(variety: Variety, staff: Staff, now: datetime) -> None:
     variety.counted_by_staff_id = staff.id
     # Someone looked at the shelf, so a "none on the shelf" from packing no longer applies (U7).
     variety.ran_out_at = None
+    variety.found_at = None
+
+
+def being_packed_by(db: Session, variety_id: int) -> list[str]:
+    """Who has a bag with this food open right now, A to Z (what-could-go-wrong, small things).
+
+    Picked ticks stay on the volunteer's phone, so the server can't know how much
+    is already in their bag. The count is still saved: the volunteer is told, and
+    counts again once the bag is packed.
+    """
+    return list(
+        db.scalars(
+            select(Staff.username)
+            .join(Booking, Booking.packing_by_staff_id == Staff.id)
+            .join(BookingItem, BookingItem.booking_id == Booking.id)
+            .where(Booking.status == "booked", BookingItem.variety_id == variety_id)
+            .distinct()
+            .order_by(Staff.username)
+        )
+    )
 
 
 def booked_not_packed(db: Session, variety_ids: list[int]) -> dict[int, int]:

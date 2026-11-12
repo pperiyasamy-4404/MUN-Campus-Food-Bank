@@ -281,7 +281,8 @@
     <li><b class="opt">B.</b> Leave it. The Stock page already lists the food in red as "needs a count", and a count clears it.</li>
   </ul>
   <div class="suggest"><p><b>What I'd pick:</b> <b>A</b>. It costs one tap per bag, only for the food that ran out, and it fits the Picked idea: every line gets looked at.</p></div>
-  <div class="note"><p><b>Built on 12 November (choice A):</b> the line opens as "Marked out of stock earlier", with <b>Still out of stock</b> and <b>Found it</b>. Packed waits until one of them is tapped. Found it on one bag doesn't clear the food for everyone: that's still done on the Stock page.</p></div>
+  <div class="note"><p><b>Built on 12 November (choice A):</b> the line opens as "Marked out of stock earlier", with <b>Still out of stock</b> and <b>Found it</b>. Packed waits until one of them is tapped. Found it on one bag doesn't clear the food for everyone: that's still done on the Stock page.</p>
+  <p><b>Changed later on 12 November:</b> Found it <b>does</b> take the warning off every bag, once that bag is Packed. The food stays at 0, so students can't book it, and the Stock page lists it: "Marked out of stock, then found while packing". Tap In stock, or count it, and students can book it again.</p></div>
 </div>
 
 <div class="card" id="q7">
@@ -443,8 +444,8 @@
 <div class="card small">
   <ul>
     <li><b>"Staff log in" shows when staff are already logged in.</b> <i>Gone (12 Nov): the bottom bar is removed. Staff now find "Staff? Log in here" on the Log in page, which logged-in staff never see.</i></li>
-    <li><b>Picked ticks are lost if the page reloads.</b> Example: Jo's phone browser reloads the page after a call, and the ticks are gone. The Out of stock taps were already lost the same way before today. The fix: remember the ticks in the phone's browser until Packed.</li>
-    <li><b>Counting a food while a bag is half packed makes the number a little low.</b> Example: Jo has put 1 rice in a bag but hasn't pressed Packed. Sam counts the shelf: that rice isn't on the shelf <i>and</i> it's still "booked, not packed", so it's taken off twice. Stock is 1 lower than it should be. It's on the safe side (it never offers food that isn't there), so a note for volunteers is enough: count before 12 pm or after packing.</li>
+    <li><b>Picked ticks are lost if the page reloads.</b> <i>Fixed (12 Nov): every tap (Picked, Out of stock, Found it) is kept in the phone's browser until Packed, for up to 12 hours. Example: Jo ticked 4 of 6 lines, the page reloaded, and the 4 ticks are still there.</i></li>
+    <li><b>Counting a food while a bag is half packed makes the number a little low.</b> Example: Jo has put 1 rice in a bag but hasn't pressed Packed, and Sam counts the shelf. <i>Fixed as far as it can be (12 Nov): the count is saved, and Sam is told "Jo is packing a bag with this right now, so some may be in that bag. Count again after Jo presses Packed." The exact fix would need the server to know every Picked tick, and those stay on Jo's phone.</i></li>
     <li><b>No real screen reader test yet</b> (already on the "Before going live" list).</li>
   </ul>
 </div>

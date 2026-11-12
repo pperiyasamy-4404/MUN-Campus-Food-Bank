@@ -62,6 +62,8 @@ class VarietyRow(BaseModel):
     counted_by: str | None
     # A volunteer packing a bag found none on the shelf. Cleared by the next check (U7).
     ran_out_at: datetime | None
+    # Then another volunteer found some (Found it). Still 0 until the next check.
+    found_at: datetime | None
 
 
 class ItemRow(BaseModel):
@@ -163,6 +165,7 @@ def variety_row(variety: Variety, tag_ids: list[int], promised: int, counters: d
         counted_at=_newfoundland(variety.counted_at),
         counted_by=counters.get(variety.counted_by_staff_id) if variety.counted_by_staff_id else None,
         ran_out_at=_newfoundland(variety.ran_out_at),
+        found_at=_newfoundland(variety.found_at),
     )
 
 
@@ -198,6 +201,8 @@ class Counted(BaseModel):
     variety: VarietyRow
     # Booked ones missing from the shelf: those bookings will need a substitute.
     short_by: int
+    # Who has a bag with this food open right now: the count may be a little low.
+    being_packed_by: list[str]
 
 
 @router.post("/varieties/{variety_id}/count")
@@ -206,7 +211,7 @@ def count_shelf(variety_id: int, count: ShelfCount, staff: CurrentStaff, db: DB,
     db.commit()
     tag_ids = list(db.scalars(select(VarietyTag.tag_id).where(VarietyTag.variety_id == variety_id)))
     row = variety_row(counted.variety, tag_ids, counted.booked_not_packed, {staff.id: staff.username})
-    return Counted(variety=row, short_by=counted.short_by)
+    return Counted(variety=row, short_by=counted.short_by, being_packed_by=counted.being_packed_by)
 
 
 class NoNumber(BaseModel):

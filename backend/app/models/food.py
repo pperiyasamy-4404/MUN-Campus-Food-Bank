@@ -70,6 +70,10 @@ class Variety(Base):
     # A volunteer packing a bag found none on the shelf (U7). Every bag still to
     # pack with this food is flagged until someone checks the shelf again.
     ran_out_at: Mapped[datetime | None]
+    # Then a volunteer packing another bag found some after all, and tapped Found
+    # it (decided 12 Nov): the flag comes off every bag. It stays at 0, so
+    # students can't book it until someone checks the shelf; the Stock page asks.
+    found_at: Mapped[datetime | None]
 
     def has(self, quantity: int) -> bool:
         """Can this many more be taken? Food with no number always can."""

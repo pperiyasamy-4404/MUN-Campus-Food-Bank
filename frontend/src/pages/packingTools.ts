@@ -31,6 +31,16 @@ export function startingFindings(bag: Bag): Findings {
   }
 }
 
+/**
+ * Food someone else marked out of stock that this volunteer found after all
+ * (Found it). Sent with Packed, it takes the flag off every other bag (decided 12 Nov).
+ */
+export function foundAfterAll(bag: Bag, findings: Findings): number[] {
+  return bag.food
+    .filter((line) => line.ran_out_at !== null && !findings.missing.some((m) => m.variety_id === line.variety_id))
+    .map((line) => line.variety_id)
+}
+
 /** The findings with this much of one food missing. 0 takes it off the list; a new one goes last. */
 export function withMissing(findings: Findings, varietyId: number, howMany: number): Findings {
   const others = findings.missing.filter((line) => line.variety_id !== varietyId)
@@ -112,5 +122,86 @@ export function outcomeWords(outcome: Outcome, item: string, replaces: string | 
       return `Skipped: the bag already has ${item}`
     case 'not_needed':
       return 'Not needed'
+  }
+}
+
+// ---------- keeping the taps if the page reloads (what-could-go-wrong, small things) ----------
+
+/**
+ * The taps are kept in this phone's browser until Packed, so a reload (after a
+ * phone call, say) doesn't lose them. Example: Jo ticked 4 of 6 lines, the
+ * browser reloaded, and the 4 ticks are still there. Only this phone has them:
+ * the server still sees nothing until Packed. Kept for 12 hours, like a staff login.
+ */
+const KEPT_FOR_MS = 12 * 60 * 60 * 1000
+const PREFIX = 'packing-bag-'
+
+type Kept = { saved_at: number; findings: Findings; picked: string[] }
+
+/** Where a bag starts: the taps kept on this phone, if any, plus anything marked out of stock since. */
+export function startingProgress(bag: Bag, now = Date.now()): { findings: Findings; picked: Picked } {
+  const fresh = startingFindings(bag)
+  forgetOldBags(now)
+  const kept = read(bag.id)
+  if (kept === null || now - kept.saved_at > KEPT_FOR_MS) return { findings: fresh, picked: new Set() }
+
+  const food = new Set(bag.food.map((line) => line.variety_id))
+  const substitutes = new Set(bag.substitutes.map((line) => line.variety_id))
+  const picked: Picked = new Set(kept.picked)
+  const missing = kept.findings.missing.filter((line) => food.has(line.variety_id))
+  // Marked out of stock by someone else since the reload, and not looked at here yet.
+  for (const line of fresh.missing) {
+    if (!missing.some((m) => m.variety_id === line.variety_id) && !picked.has(lookedKey(line.variety_id))) {
+      missing.push(line)
+    }
+  }
+  const notOnShelf = kept.findings.not_on_shelf.filter((id) => substitutes.has(id))
+  return { findings: { missing, not_on_shelf: notOnShelf }, picked }
+}
+
+export function keepProgress(bagId: number, findings: Findings, picked: Picked, now = Date.now()) {
+  const kept: Kept = { saved_at: now, findings, picked: [...picked] }
+  try {
+    localStorage.setItem(PREFIX + bagId, JSON.stringify(kept))
+  } catch {
+    // A private window, or storage turned off: packing still works, the taps just aren't kept.
+  }
+}
+
+/** Packed: the taps aren't needed any more. */
+export function forgetProgress(bagId: number) {
+  try {
+    localStorage.removeItem(PREFIX + bagId)
+  } catch {
+    // Nothing was kept.
+  }
+}
+
+function read(bagId: number): Kept | null {
+  try {
+    const text = localStorage.getItem(PREFIX + bagId)
+    if (text === null) return null
+    const kept = JSON.parse(text) as Kept
+    const looksRight =
+      typeof kept.saved_at === 'number' &&
+      Array.isArray(kept.picked) &&
+      Array.isArray(kept.findings?.missing) &&
+      Array.isArray(kept.findings?.not_on_shelf)
+    return looksRight ? kept : null
+  } catch {
+    return null
+  }
+}
+
+/** Bags from an earlier day, or packed on another phone, are cleared away. */
+function forgetOldBags(now: number) {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (!key.startsWith(PREFIX)) continue
+      const kept = read(Number(key.slice(PREFIX.length)))
+      if (kept === null || now - kept.saved_at > KEPT_FOR_MS) localStorage.removeItem(key)
+    }
+  } catch {
+    // Storage turned off: nothing to clear.
   }
 }

@@ -73,6 +73,7 @@ def test_the_page_lists_hidden_food_and_what_is_booked(client, db, sam):
             "counted_at": None,
             "counted_by": None,
             "ran_out_at": None,
+            "found_at": None,
         }
     ]
     assert the_page(client)["tags"] == [{"id": vegetarian.id, "name": "Vegetarian"}]
@@ -109,6 +110,7 @@ def test_a_volunteer_saves_a_count(client, db, sam):
     assert response.status_code == 200
     counted = response.json()
     assert counted["short_by"] == 0
+    assert counted["being_packed_by"] == []
     assert counted["variety"]["stock"] == 14
     assert counted["variety"]["counted_by"] == "Sam"
     assert counted["variety"]["counted_at"] == "2026-11-08T14:30:00-03:30"

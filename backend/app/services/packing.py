@@ -17,6 +17,7 @@ from the lowest id up. Packing never needs the slot.
 """
 
 from collections import Counter, defaultdict
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
@@ -395,6 +396,7 @@ def pack(
     uses: list[int],
     staff: Staff,
     now: datetime,
+    found: Sequence[int] = (),
 ) -> Plan:
     """The bag is packed: save what went in it, in one transaction (U4, U7, B2).
 
@@ -405,6 +407,8 @@ def pack(
     4. Save: what was missing, which substitute replaced what, and the stock.
        Food nobody found on the shelf can't be booked again until it's counted,
        and every other bag with it is flagged.
+       Food someone else marked out of stock, that this volunteer found after all
+       (`found`: they tapped Found it), comes off every bag's list (decided 12 Nov).
     """
     settings = food_bank_settings(db)
 
@@ -439,10 +443,15 @@ def pack(
 
     # 4.
     how_many_missing = dict(packed.missing)
+    booked = {line.variety.id for line in food}
+    if any(variety_id not in booked for variety_id in found):
+        raise Problem("Only food booked for this bag can be marked as found.")
     for line in food:
         line.row.missing = how_many_missing.get(line.variety.id, 0)
         if line.row.missing:
             _ran_out(line.variety, now)
+        elif line.variety.id in found and line.variety.ran_out_at is not None:
+            _found(line.variety, now)
     replaced = {used: gap for gap, used in packed.refill.swaps if used is not None}
     for line in substitutes:
         if line.variety.id in not_on_shelf:
@@ -530,6 +539,18 @@ def _ran_out(variety: Variety, now: datetime) -> None:
     variety.few_left = False
     if variety.ran_out_at is None:
         variety.ran_out_at = now
+    variety.found_at = None
+
+
+def _found(variety: Variety, now: datetime) -> None:
+    """Someone marked it out of stock, but this volunteer found some (decided 12 Nov).
+
+    The flag comes off every bag. The stock stays at 0: there's some on the
+    shelf, but nobody knows how much, so students can't book it until someone
+    checks. The Stock page asks for that check.
+    """
+    variety.ran_out_at = None
+    variety.found_at = now
 
 
 @dataclass(frozen=True)

@@ -272,11 +272,16 @@ def what_goes_in(booking_id: int, findings: Findings, staff: CurrentStaff, db: D
 class PackedIn(Findings):
     # What the plan said to put in. If it has changed since, Packed is refused (409).
     uses: list[int] = Field(default=[], max_length=100)
+    # Food someone else marked out of stock that this volunteer found (Found it).
+    # It comes off every other bag's list too (decided 12 Nov).
+    found: list[int] = Field(default=[], max_length=100)
 
 
 @router.post("/packing/bags/{booking_id}/packed")
 def packed(booking_id: int, details: PackedIn, staff: CurrentStaff, db: DB, now: Now) -> Bag:
-    packing.pack(db, booking_id, details.missing_food(), details.not_on_shelf, details.uses, staff, now)
+    packing.pack(
+        db, booking_id, details.missing_food(), details.not_on_shelf, details.uses, staff, now, found=details.found
+    )
     db.commit()
     return bag_out(packing.find_bag(db, booking_id), db, now)
 
