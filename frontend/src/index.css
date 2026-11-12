@@ -3,27 +3,50 @@
   line-height: 1.5;
   color-scheme: light dark;
 
-  /* light-dark(): the first colour in light mode, the second in dark mode */
-  --ink: light-dark(#0f172a, #e2e8f0);
-  /* Dark mode's muted grey is light enough to read on the grey chips too (4.5:1, WCAG AA). */
-  --muted: light-dark(#475569, #a7b3c4);
-  --line: light-dark(#e2e8f0, #334155);
-  --page: light-dark(#f8fafc, #0f172a);
-  --card: light-dark(#ffffff, #1e293b);
-  --blue: light-dark(#2563eb, #60a5fa);
-  --blue-bg: light-dark(#dbeafe, #1e3a5f);
+  /* Light colours. Dark ones are in the prefers-color-scheme block below. Not light-dark():
+     phones from before 2024 (iOS older than 17.5) don't understand it, and the colours
+     would vanish. A media query works on every phone (what-could-go-wrong problem 10). */
+  --ink: #0f172a;
+  --muted: #475569;
+  --line: #e2e8f0;
+  --page: #f8fafc;
+  --card: #ffffff;
+  --blue: #2563eb;
+  --blue-bg: #dbeafe;
   /* Blue text on --blue-bg: darker in light mode, so it's easy to read. */
-  --blue-on-bg: light-dark(#1d4ed8, #60a5fa);
-  --green: light-dark(#065f46, #6ee7b7);
-  --green-bg: light-dark(#d1fae5, #064e3b);
-  --amber: light-dark(#92400e, #fcd34d);
-  --amber-bg: light-dark(#fef3c7, #451a03);
-  --red: light-dark(#b91c1c, #fca5a5);
-  --red-bg: light-dark(#fee2e2, #450a0a);
-  --grey-bg: light-dark(#f1f5f9, #334155);
+  --blue-on-bg: #1d4ed8;
+  --green: #065f46;
+  --green-bg: #d1fae5;
+  --amber: #92400e;
+  --amber-bg: #fef3c7;
+  --red: #b91c1c;
+  --red-bg: #fee2e2;
+  --grey-bg: #f1f5f9;
 
   color: var(--ink);
   background: var(--page);
+}
+
+/* Dark colours, for phones and computers set to dark mode. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e2e8f0;
+    /* Dark mode's muted grey is light enough to read on the grey chips too (4.5:1, WCAG AA). */
+    --muted: #a7b3c4;
+    --line: #334155;
+    --page: #0f172a;
+    --card: #1e293b;
+    --blue: #60a5fa;
+    --blue-bg: #1e3a5f;
+    --blue-on-bg: #60a5fa;
+    --green: #6ee7b7;
+    --green-bg: #064e3b;
+    --amber: #fcd34d;
+    --amber-bg: #451a03;
+    --red: #fca5a5;
+    --red-bg: #450a0a;
+    --grey-bg: #334155;
+  }
 }
 
 body {
@@ -1008,6 +1031,13 @@ h2.in-card {
 .pack-row-missing button.secondary,
 .pack-row-use button.secondary {
   background: var(--card);
+}
+
+/* "Sam is packing" in the packing queue (decided 12 Nov). */
+.packing-now {
+  display: block;
+  color: var(--blue-on-bg);
+  font-weight: 600;
 }
 
 .pack-hint {
