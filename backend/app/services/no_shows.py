@@ -76,7 +76,7 @@ def mark_no_show(db: Session, booking_id: int, now: datetime) -> Booking | None:
     contents = _contents(db, booking)
     _lock_food(db, {thing.variety.id for thing in contents})
     for thing in contents:
-        thing.variety.stock += thing.quantity
+        thing.variety.put_back(thing.quantity)
     booking.status = "no_show"
     booking.no_show_at = day.no_show_at
     db.flush()
@@ -108,6 +108,7 @@ def fix_to_picked_up(db: Session, booking_id: int, staff: Staff, now: datetime) 
     1. Lock the student, then the booking. It must still be a no-show.
     2. The food in the bag left with the student, so it comes off stock again.
        If the count is already lower, it stops at 0: the shelf can't have less than none.
+       Food with no number keeps no number.
     3. Picked up, recorded as by this volunteer, now. The pickup gap counts from that day (F1).
     4. Logged with who fixed it.
     """
@@ -117,7 +118,7 @@ def fix_to_picked_up(db: Session, booking_id: int, staff: Staff, now: datetime) 
     contents = _contents(db, booking)
     _lock_food(db, {thing.variety.id for thing in contents})
     for thing in contents:
-        thing.variety.stock = max(0, thing.variety.stock - thing.quantity)
+        thing.variety.take(min(thing.quantity, thing.variety.stock or 0))
 
     booking.status = "picked_up"
     booking.no_show_at = None
@@ -149,9 +150,9 @@ def fix_to_no_show(db: Session, booking_id: int, staff: Staff, now: datetime) ->
     at_counter = db.scalars(select(CounterItem).where(CounterItem.booking_id == booking.id)).all()
     _lock_food(db, {thing.variety.id for thing in contents} | {row.variety_id for row in at_counter})
     for thing in contents:
-        thing.variety.stock += thing.quantity
+        thing.variety.put_back(thing.quantity)
     for row in at_counter:
-        db.get(Variety, row.variety_id).stock += row.quantity
+        db.get(Variety, row.variety_id).put_back(row.quantity)
     db.execute(delete(CounterItem).where(CounterItem.booking_id == booking.id))
 
     booking.status = "no_show"

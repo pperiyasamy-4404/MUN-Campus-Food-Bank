@@ -391,6 +391,15 @@ def test_stock_can_not_go_below_zero(db):
         variety.stock = -1
 
 
+def test_few_left_is_only_for_food_with_no_number(db):
+    """With a number, students see "3 left" already (decided 12 Nov)."""
+    variety = make_variety(db, stock=None)
+    variety.few_left = True
+    db.flush()
+    with refused_by(db, "ck_varieties_few_left_only_without_a_number"):
+        variety.stock = 3
+
+
 def test_item_names_are_unique_ignoring_capitals(db):
     category = add(db, Category(name="Breakfast"))
     add(db, Item(name="Oats", category_id=category.id))

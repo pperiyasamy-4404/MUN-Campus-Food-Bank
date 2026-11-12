@@ -20,7 +20,7 @@ from collections import Counter
 from dataclasses import dataclass
 from datetime import date, datetime
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.models import (
@@ -206,9 +206,9 @@ def _take_from_shelf(
     """Take the food off stock (I4) and record it, for a booking or a walk-in. The food must be locked."""
     for variety_id, quantity in [(c.variety_id, c.quantity) for c in choices] + [(e, 1) for e in extras]:
         variety, item = found[variety_id]
-        if variety.stock < quantity:
+        if not variety.has(quantity):
             raise TimeTaken(f"There's no {variety.name} left. Choose something else.")
-        variety.stock -= quantity
+        variety.take(quantity)
         db.add(
             CounterItem(
                 booking_id=booking.id if booking else None,
@@ -459,7 +459,7 @@ def record_walk_in(
     _lock_food(db, set(found) | {thing.variety.id for thing in returned})
     if upcoming is not None:
         for thing in returned:
-            thing.variety.stock += thing.quantity
+            thing.variety.put_back(thing.quantity)
         slot.booked_count -= 1
         upcoming.status = "cancelled"
         upcoming.cancelled_at = now
@@ -487,11 +487,11 @@ class ShelfLine:
 
 
 def on_the_shelf(db: Session) -> list[ShelfLine]:
-    """Food with some left that nobody booked, A to Z, extras too. Hidden food is left out."""
+    """Food with some left that nobody booked, or with no number, A to Z, extras too. Hidden food is left out."""
     rows = db.execute(
         select(Variety, Item)
         .join(Item, Item.id == Variety.item_id)
-        .where(Variety.active, Variety.stock > 0)
+        .where(Variety.active, or_(Variety.stock.is_(None), Variety.stock > 0))
         .order_by(Item.name, Variety.name)
     )
     return [ShelfLine(variety, item) for variety, item in rows]

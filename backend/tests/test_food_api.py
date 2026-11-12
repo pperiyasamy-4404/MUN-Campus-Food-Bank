@@ -77,7 +77,7 @@ def test_bookable_food_shows_its_stock_even_at_zero(client, shelf):
     protein = food(client)["bookable"][1]
 
     assert without_ids(protein["items"][1]["varieties"]) == [
-        {"name": "Chickpeas (canned)", "stock": 0, "tags": ["Gluten-free", "Halal", "Vegetarian"]}
+        {"name": "Chickpeas (canned)", "stock": 0, "few_left": False, "tags": ["Gluten-free", "Halal", "Vegetarian"]}
     ]
 
 
@@ -86,7 +86,7 @@ def test_extras_are_listed_apart_with_no_count(client, shelf):
     [bakery] = food(client)["extras"]
     [bread] = bakery["items"]
     assert (bakery["name"], bread["name"]) == ("Bakery", "Bread")
-    assert without_ids(bread["varieties"]) == [{"name": "White bread", "stock": None, "tags": ["Vegetarian"]}]
+    assert without_ids(bread["varieties"]) == [{"name": "White bread", "stock": None, "few_left": False, "tags": ["Vegetarian"]}]
 
 
 def test_an_empty_shelf(client):
@@ -99,3 +99,29 @@ def test_extras_with_none_left_are_left_out(client, shelf, db):
     db.flush()
 
     assert food(client)["extras"] == []
+
+
+# ---------- food with no number (decided 12 Nov) ----------
+
+
+def test_food_with_no_number_says_in_stock_or_few_left(client, db, shelf):
+    """No number is sent: students see "In stock", or "Few left" when a volunteer marked it."""
+    quick, steel = (db.scalars(select(Variety).where(Variety.name == name)).one() for name in ["Quick oats", "Steel-cut oats"])
+    quick.stock = None
+    steel.stock, steel.few_left = None, True
+    db.flush()
+
+    [oats] = food(client)["bookable"][0]["items"]
+
+    assert [(v["name"], v["stock"], v["few_left"]) for v in oats["varieties"]] == [
+        ("Quick oats", None, False),
+        ("Steel-cut oats", None, True),
+    ]
+
+
+def test_extras_with_no_number_are_listed(client, db, shelf):
+    """No number isn't none left: the extra is in stock."""
+    db.scalars(select(Variety).where(Variety.name == "White bread")).one().stock = None
+    db.flush()
+
+    assert names(food(client)["extras"]) == ["Bakery > Bread > White bread"]

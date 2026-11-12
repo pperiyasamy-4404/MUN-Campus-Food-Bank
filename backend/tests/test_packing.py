@@ -701,3 +701,28 @@ def test_pressing_packed_twice_at_the_same_moment(engine, world):
     with Session(engine) as check:
         # Taken once, not twice.
         assert check.get(Variety, world["rice"]).stock == 0
+
+
+# ---------- food with no number (decided 12 Nov) ----------
+
+
+def test_a_substitute_with_no_number_is_used_and_keeps_no_number(db, monday, food, sam):
+    food["rice"].stock = None
+    bag = book_a_bag(db, monday, food)
+
+    packing.pack(db, bag.id, missing(food, "sunflower oil"), [], [food["rice"].id], sam, PACKING)
+    assert food["rice"].stock is None
+    packing.unpack(db, bag.id, sam, PACKING + timedelta(minutes=5))
+
+    assert food["rice"].stock is None
+
+
+def test_out_of_stock_gives_food_with_no_number_a_0(db, monday, food, sam):
+    """Nobody can book it any more, and "few left" goes: it's none left now (U7)."""
+    food["sunflower oil"].stock, food["sunflower oil"].few_left = None, True
+    bag = book_a_bag(db, monday, food)
+
+    packing.pack(db, bag.id, missing(food, "sunflower oil"), [], [food["rice"].id], sam, PACKING)
+
+    oil = food["sunflower oil"]
+    assert (oil.stock, oil.few_left, oil.ran_out_at) == (0, False, PACKING)

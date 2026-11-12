@@ -307,7 +307,7 @@ def _plan(
                 rank=line.row.rank,
                 variety_id=line.variety.id,
                 item_id=line.item.id,
-                can_take=line.variety.active and line.variety.stock >= 1,
+                can_take=line.variety.active and line.variety.has(1),
             )
             for line in substitutes
         ],
@@ -407,7 +407,7 @@ def pack(
             _ran_out(line.variety, now)
         if line.variety.id in replaced:
             # Substitutes weren't taken from stock when booking (U3). This one is now.
-            line.variety.stock -= 1
+            line.variety.take(1)
             line.row.replaces_variety_id = replaced[line.variety.id]
     booking.status = "packed"
     booking.packed_at = now
@@ -462,7 +462,7 @@ def unpack(db: Session, booking_id: int, staff: Staff, now: datetime) -> Booking
     ).all()
     for line in substitutes:
         if line.row.replaces_variety_id is not None:
-            line.variety.stock += 1
+            line.variety.put_back(1)
             line.row.replaces_variety_id = None
     for line in food:
         line.row.missing = 0
@@ -476,8 +476,10 @@ def unpack(db: Session, booking_id: int, staff: Staff, now: datetime) -> Booking
 
 def _ran_out(variety: Variety, now: datetime) -> None:
     """Out of stock while packing: nobody else can book it, and every bag still waiting
-    for it is flagged in the queue, until someone counts the shelf (U7)."""
+    for it is flagged in the queue, until someone checks the shelf (U7)."""
     variety.stock = 0
+    # A number now, so "few left" no longer applies (ck_varieties_few_left_only_without_a_number).
+    variety.few_left = False
     if variety.ran_out_at is None:
         variety.ran_out_at = now
 

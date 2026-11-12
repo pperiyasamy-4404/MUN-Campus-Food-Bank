@@ -36,8 +36,9 @@ class ShelfFood(BaseModel):
     item_id: int
     item: str
     photo_url: str | None
-    # Left that nobody booked.
-    stock: int
+    # Left that nobody booked. None: not counted, in stock (decided 12 Nov).
+    stock: int | None
+    few_left: bool
 
 
 class CounterLimits(BaseModel):
@@ -76,6 +77,7 @@ def counter_page(staff: CurrentStaff, db: DB, now: Now) -> CounterPage:
             item=line.item.name,
             photo_url=urls.get(line.item.id),
             stock=line.variety.stock,
+            few_left=line.variety.few_left,
         )
 
     return CounterPage(

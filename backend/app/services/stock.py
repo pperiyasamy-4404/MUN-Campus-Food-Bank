@@ -1,4 +1,7 @@
-"""Food and stock, for the staff stock page: counting the shelf, and adding food (I1, I2, I4, I8).
+"""Food and stock, for the staff stock page: checking the shelf, and adding food (I1, I2, I4, I8).
+
+The number is optional (decided 12 Nov). A volunteer can count the shelf and
+type a number, or just say "in stock" or "few left" with no number.
 
 Plain Python with a database session, like services/accounts.py. The routes in
 app/routes/stock.py commit.
@@ -49,6 +52,33 @@ def count_shelf(db: Session, variety_id: int, on_shelf: int, staff: Staff, now: 
     """
     if not 0 <= on_shelf <= MOST_ON_A_SHELF:
         raise Problem(f"Type a number from 0 to {MOST_ON_A_SHELF}.")
+    variety = _locked_variety(db, variety_id)
+    promised = booked_not_packed(db, [variety.id]).get(variety.id, 0)
+    variety.stock = max(0, on_shelf - promised)
+    # With a number, students see "3 left", so "few left" isn't needed.
+    variety.few_left = False
+    _checked(variety, staff, now)
+    return Count(variety=variety, booked_not_packed=promised, short_by=max(0, promised - on_shelf))
+
+
+def no_number(db: Session, variety_id: int, few_left: bool, staff: Staff, now: datetime) -> Variety:
+    """The volunteer didn't count: there's some on the shelf, maybe only a few (decided 12 Nov).
+
+    Any number of students can book it from now on. Nothing is taken off or
+    put back for it, so it can't be counted twice. If it runs out while
+    packing, the packer taps Out of stock, which makes it 0 again.
+
+    Locked like a count, so a student booking it at the same moment either
+    books before (and takes one off the old number) or after (and takes nothing).
+    """
+    variety = _locked_variety(db, variety_id)
+    variety.stock = None
+    variety.few_left = few_left
+    _checked(variety, staff, now)
+    return variety
+
+
+def _locked_variety(db: Session, variety_id: int) -> Variety:
     variety = db.scalar(
         select(Variety)
         .where(Variety.id == variety_id)
@@ -58,13 +88,14 @@ def count_shelf(db: Session, variety_id: int, on_shelf: int, staff: Staff, now: 
     )
     if variety is None:
         raise NotFound("There's no food with that number.")
-    promised = booked_not_packed(db, [variety.id]).get(variety.id, 0)
-    variety.stock = max(0, on_shelf - promised)
+    return variety
+
+
+def _checked(variety: Variety, staff: Staff, now: datetime) -> None:
     variety.counted_at = now
     variety.counted_by_staff_id = staff.id
-    # A count is what's really there, so a "none on the shelf" from packing no longer applies (U7).
+    # Someone looked at the shelf, so a "none on the shelf" from packing no longer applies (U7).
     variety.ran_out_at = None
-    return Count(variety=variety, booked_not_packed=promised, short_by=max(0, promised - on_shelf))
 
 
 def booked_not_packed(db: Session, variety_ids: list[int]) -> dict[int, int]:
@@ -88,7 +119,7 @@ def add_item(
     is_extra: bool,
     first_variety: str,
     tag_ids: list[int],
-    on_shelf: int,
+    on_shelf: int | None,
     staff: Staff,
     now: datetime,
 ) -> Variety:
@@ -101,13 +132,17 @@ def add_item(
 
 
 def add_variety(
-    db: Session, item_id: int, name: str, tag_ids: list[int], on_shelf: int, staff: Staff, now: datetime
+    db: Session, item_id: int, name: str, tag_ids: list[int], on_shelf: int | None, staff: Staff, now: datetime
 ) -> Variety:
-    """A new kind of an item, like penne next to spaghetti. Counted as it's added."""
+    """A new kind of an item, like penne next to spaghetti.
+
+    With a number, it's counted as it's added. With none (on_shelf is None),
+    it's in stock with no number, like most food.
+    """
     item = db.get(Item, item_id)
     if item is None:
         raise NotFound("There's no item with that number.")
-    if not 0 <= on_shelf <= MOST_ON_A_SHELF:
+    if on_shelf is not None and not 0 <= on_shelf <= MOST_ON_A_SHELF:
         raise Problem(f"Type a number from 0 to {MOST_ON_A_SHELF}.")
     tags = _tags_with_ids(db, tag_ids)
     variety = Variety(item_id=item.id, name=name, stock=on_shelf, counted_at=now, counted_by_staff_id=staff.id)

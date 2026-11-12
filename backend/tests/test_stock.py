@@ -317,3 +317,51 @@ def test_fixing_a_name(db, pantry):
         stock.rename(db, Variety, spaghetti.id, "penne")
     with pytest.raises(NotFound):
         stock.rename(db, Item, 999_999, "Anything")
+
+
+# ---------- no number: in stock, or few left (decided 12 Nov) ----------
+
+
+def test_food_can_be_in_stock_with_no_number(db):
+    sam = make_staff(db, "Sam")
+    oats = make_variety(db, stock=3)
+    oats.ran_out_at = NOW - timedelta(hours=1)
+
+    stock.no_number(db, oats.id, False, sam, NOW)
+
+    assert (oats.stock, oats.few_left) == (None, False)
+    assert (oats.counted_at, oats.counted_by_staff_id) == (NOW, sam.id)
+    # Someone looked at the shelf, so the "out of stock" flag from packing is gone (U7).
+    assert oats.ran_out_at is None
+
+
+def test_a_volunteer_can_say_few_left(db):
+    oats = make_variety(db, stock=None)
+
+    stock.no_number(db, oats.id, True, make_staff(db), NOW)
+
+    assert (oats.stock, oats.few_left) == (None, True)
+
+
+def test_a_count_takes_few_left_away(db, slot):
+    """Bookings made while it had no number took nothing off. A count takes them off now."""
+    oats = make_variety(db, stock=None)
+    oats.few_left = True
+    book(db, slot, oats)
+
+    stock.count_shelf(db, oats.id, 4, make_staff(db), NOW)
+
+    assert (oats.stock, oats.few_left) == (3, False)
+
+
+def test_marking_food_that_does_not_exist(db):
+    with pytest.raises(NotFound):
+        stock.no_number(db, 999_999, True, make_staff(db), NOW)
+
+
+def test_new_food_with_no_number(db, pantry):
+    sam = pantry["sam"]
+
+    lentils = stock.add_item(db, pantry["protein"].id, "Lentils", False, "Red lentils", [], None, sam, NOW)
+
+    assert (lentils.stock, lentils.few_left, lentils.counted_by_staff_id) == (None, False, sam.id)

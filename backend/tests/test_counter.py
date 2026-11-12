@@ -588,3 +588,17 @@ def test_two_walk_ins_take_the_last_tin_at_the_same_moment(engine, world):
     with Session(engine) as check:
         assert check.get(Variety, world["tin"]).stock == 0
         assert check.scalar(select(func.count()).select_from(WalkIn).where(WalkIn.pickup_day_id == world["days"][0])) == 1
+
+
+# ---------- food with no number (decided 12 Nov) ----------
+
+
+def test_food_with_no_number_is_on_the_counter_shelf_and_keeps_no_number(db, monday, food, sam):
+    food["rice"].stock = None
+    food["eggs"].stock = None
+
+    on_shelf = {line.variety.name for line in counter.on_the_shelf(db)}
+    counter.record_walk_in(db, ID_NUMBER, [Choice(food["rice"].id)], [food["eggs"].id], False, sam, COUNTER)
+
+    assert {"White rice", "Dozen eggs"} <= on_shelf
+    assert (food["rice"].stock, food["eggs"].stock) == (None, None)

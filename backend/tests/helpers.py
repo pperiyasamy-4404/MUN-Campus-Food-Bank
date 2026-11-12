@@ -85,7 +85,7 @@ def make_slot(db, day: PickupDay | None = None, capacity: int = 1, minutes_in: i
     return add(db, Slot(pickup_day_id=day.id, starts_at=starts_at, capacity=capacity))
 
 
-def make_variety(db, stock: int = 5) -> Variety:
+def make_variety(db, stock: int | None = 5) -> Variety:
     name = secrets.token_hex(3)
     category = add(db, Category(name=f"Category {name}"))
     item = add(db, Item(name=f"Item {name}", category_id=category.id))

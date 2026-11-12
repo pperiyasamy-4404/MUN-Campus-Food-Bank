@@ -503,3 +503,18 @@ def test_pressing_book_twice_at_the_same_moment(engine, world):
     assert isinstance(results["second"], AlreadyBooked)
     with engine.connect() as check:
         assert check.execute(select(func.count()).select_from(Booking).where(Booking.pickup_day_id == world["day"])).scalar_one() == 1
+
+
+# ---------- food with no number (decided 12 Nov) ----------
+
+
+def test_food_with_no_number_can_be_booked_by_anyone_and_keeps_no_number(db, monday, food):
+    """Nobody counts the rice, so every student can book it. Nothing is taken off or put back."""
+    food["rice"].stock = None
+    first = booked(db, make_student(db), monday, food, "rice")
+    booked(db, make_student(db), monday, food, "rice")
+    assert food["rice"].stock is None
+
+    rules.cancel(db, db.get(Student, first.student_id), OPEN + timedelta(hours=1))
+
+    assert food["rice"].stock is None

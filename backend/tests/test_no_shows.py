@@ -388,3 +388,19 @@ def test_hand_over_at_the_last_second_and_the_no_show_job_take_turns(engine, wor
     with Session(engine) as check:
         assert check.get(Booking, world["bag"]).status == "picked_up"
         assert check.get(Variety, world["oats"]).stock == 4
+
+
+# ---------- food with no number (decided 12 Nov) ----------
+
+
+def test_a_no_show_puts_nothing_back_on_food_with_no_number(db, monday, food, student, sam):
+    """What-could-go-wrong problem 5: a count, then a no-show adding the same rice back.
+    With no number there's nothing to add back, so it can't be counted twice."""
+    food["rice"].stock = None
+    bag = packed(db, monday, student, food, "quick oats", "rice")
+
+    no_shows.mark_no_show(db, bag.id, NO_SHOW)
+    assert (food["quick oats"].stock, food["rice"].stock) == (5, None)
+
+    no_shows.fix_to_picked_up(db, bag.id, sam, AFTER)
+    assert (food["quick oats"].stock, food["rice"].stock) == (4, None)

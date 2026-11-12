@@ -117,7 +117,7 @@ def close_day(db: Session, pickup_date: date, reason: str, staff: Staff, now: da
     were_packed = 0
     for booking in bookings:
         for thing in contents[booking.id]:
-            thing.variety.stock += thing.quantity
+            thing.variety.put_back(thing.quantity)
         slots[booking.slot_id].booked_count -= 1
         were_packed += booking.status == "packed"
         booking.status = "cancelled"

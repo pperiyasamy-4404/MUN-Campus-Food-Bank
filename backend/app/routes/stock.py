@@ -1,7 +1,8 @@
 """The staff stock page: every item and variety, hidden ones too, with counts (I8, R2, R3).
 
 Students see the food at /api/food (routes/food.py). This is the staff side,
-where the food is added and counted.
+where the food is added and checked: counted, or marked in stock or few left
+with no number (decided 12 Nov).
 """
 
 from collections import defaultdict
@@ -50,14 +51,16 @@ class VarietyRow(BaseModel):
     id: int
     name: str
     shown: bool
-    # How many more students can book it.
-    stock: int
+    # How many more students can book it. None: not counted, any number can book it.
+    stock: int | None
+    # A volunteer saw only a few on the shelf. Only for food with no number.
+    few_left: bool
     # Booked, not packed yet: still on the shelf, already promised.
     booked_not_packed: int
     tag_ids: list[int]
     counted_at: datetime | None
     counted_by: str | None
-    # A volunteer packing a bag found none on the shelf. Cleared by the next count (U7).
+    # A volunteer packing a bag found none on the shelf. Cleared by the next check (U7).
     ran_out_at: datetime | None
 
 
@@ -154,6 +157,7 @@ def variety_row(variety: Variety, tag_ids: list[int], promised: int, counters: d
         name=variety.name,
         shown=variety.active,
         stock=variety.stock,
+        few_left=variety.few_left,
         booked_not_packed=promised,
         tag_ids=sorted(tag_ids),
         counted_at=_newfoundland(variety.counted_at),
@@ -205,13 +209,28 @@ def count_shelf(variety_id: int, count: ShelfCount, staff: CurrentStaff, db: DB,
     return Counted(variety=row, short_by=counted.short_by)
 
 
+class NoNumber(BaseModel):
+    few_left: bool
+
+
+@router.post("/varieties/{variety_id}/in-stock")
+def in_stock(variety_id: int, level: NoNumber, staff: CurrentStaff, db: DB, now: Now) -> VarietyRow:
+    """In stock with no number, or "few left" (decided 12 Nov)."""
+    variety = stock.no_number(db, variety_id, level.few_left, staff, now)
+    db.commit()
+    tag_ids = list(db.scalars(select(VarietyTag.tag_id).where(VarietyTag.variety_id == variety_id)))
+    promised = stock.booked_not_packed(db, [variety_id]).get(variety_id, 0)
+    return variety_row(variety, tag_ids, promised, {staff.id: staff.username})
+
+
 # ---------- adding food (any staff) ----------
 
 
 class NewVariety(BaseModel):
     name: FoodName
     tag_ids: list[int] = []
-    on_shelf: OnShelf
+    # Left out (or null) for food that won't be counted: it's in stock with no number.
+    on_shelf: OnShelf | None = None
 
 
 class NewItem(BaseModel):

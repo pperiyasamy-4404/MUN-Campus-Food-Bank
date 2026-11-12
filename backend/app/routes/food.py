@@ -17,7 +17,9 @@ class VarietyOut(BaseModel):
     id: int
     name: str
     # None for extras: they only show as "may be available" (E2).
+    # None for food nobody counts, too: "In stock", or "Few left" (decided 12 Nov).
     stock: int | None
+    few_left: bool
     tags: list[str]
 
 
@@ -48,7 +50,7 @@ Shelf = dict[str, dict[tuple[int, str], list[VarietyOut]]]
 @router.get("/food")
 def food_on_the_shelf(db: DB) -> FoodOut:
     """Every variety still on the list, A to Z. Hidden varieties (active = false) are left out,
-    and so are extras with none left.
+    and so are extras with none left (0). Extras with no number are listed.
 
     An item with no varieties left on the list doesn't appear, and neither does
     a category with no items.
@@ -62,11 +64,13 @@ def food_on_the_shelf(db: DB) -> FoodOut:
             Variety.id,
             Variety.name,
             Variety.stock,
+            Variety.few_left,
         )
         .join(Item, Item.category_id == Category.id)
         .join(Variety, Variety.item_id == Item.id)
         # Extras with none left aren't "available today" (E2), so they're left out.
-        .where(Variety.active, or_(~Item.is_extra, Variety.stock > 0))
+        # Extras with no number are in stock.
+        .where(Variety.active, or_(~Item.is_extra, Variety.stock.is_(None), Variety.stock > 0))
         .order_by(func.lower(Category.name), func.lower(Item.name), func.lower(Variety.name))
     ).all()
 
@@ -90,6 +94,7 @@ def food_on_the_shelf(db: DB) -> FoodOut:
             id=row.id,
             name=row.name,
             stock=None if row.is_extra else row.stock,
+            few_left=row.few_left,
             tags=tags_by_variety[row.id],
         )
         shelf.setdefault(row.category, {}).setdefault((row.item_id, row.item), []).append(variety)

@@ -67,6 +67,7 @@ def test_the_page_lists_hidden_food_and_what_is_booked(client, db, sam):
             "name": oats.name,
             "shown": False,
             "stock": 6,
+            "few_left": False,
             "booked_not_packed": 0,
             "tag_ids": [vegetarian.id],
             "counted_at": None,
@@ -225,3 +226,36 @@ def test_the_coordinator_fixes_a_name(client, db, alex):
 
     assert db.scalar(select(Variety.name).where(Variety.id == oats.id)) == "Quick oats"
     assert client.patch("/api/varieties/999999", json={"name": "Quick oats"}).status_code == 404
+
+
+# ---------- no number: in stock, or few left (decided 12 Nov) ----------
+
+
+def test_a_volunteer_marks_food_few_left_with_no_number(client, db, sam):
+    oats = make_variety(db, stock=3)
+
+    response = client.post(f"/api/varieties/{oats.id}/in-stock", json={"few_left": True})
+
+    assert response.status_code == 200
+    row = response.json()
+    assert (row["stock"], row["few_left"], row["counted_by"]) == (None, True, "Sam")
+    assert row["counted_at"] == "2026-11-08T14:30:00-03:30"
+
+
+def test_marking_in_stock_needs_a_login(client, db):
+    stop_the_clock_at(NOW)
+    oats = make_variety(db, stock=3)
+
+    assert client.post(f"/api/varieties/{oats.id}/in-stock", json={"few_left": False}).status_code == 401
+    assert oats.stock == 3
+
+
+def test_new_food_can_be_added_with_no_number(client, db, sam, protein):
+    response = client.post(
+        "/api/items",
+        json={"category_id": protein.id, "name": "Lentils", "is_extra": False, "first_variety": {"name": "Red lentils"}},
+    )
+
+    assert response.status_code == 201
+    lentils = db.scalars(select(Variety).where(Variety.name == "Red lentils")).one()
+    assert (lentils.stock, lentils.few_left) == (None, False)

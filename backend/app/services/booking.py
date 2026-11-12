@@ -235,9 +235,9 @@ def book(db: Session, student: Student, items: list[Choice], substitutes: list[i
             .with_for_update()
             .execution_options(populate_existing=True)
         )
-        if variety.stock < choice.quantity:
+        if not variety.has(choice.quantity):
             raise TimeTaken(f"Sorry, {variety.name} has just run out. Choose something else.")
-        variety.stock -= choice.quantity
+        variety.take(choice.quantity)
 
     # 6. Save it all.
     booking = Booking(
@@ -365,7 +365,7 @@ def cancel(db: Session, student: Student, now: datetime) -> Booking:
         variety = db.scalar(
             select(Variety).where(Variety.id == item.variety_id).with_for_update().execution_options(populate_existing=True)
         )
-        variety.stock += item.quantity
+        variety.put_back(item.quantity)
     booking.status = "cancelled"
     booking.cancelled_at = now
     booking.cancel_reason = "student"

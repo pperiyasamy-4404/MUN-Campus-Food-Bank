@@ -40,29 +40,32 @@ SAMPLE_PICKUP_HOURS = [(1, time(15, 30), time(17, 30)), (4, time(15, 30), time(1
 TAGS = ["Vegetarian", "Halal", "Gluten-free", "Contains nuts"]
 
 # category -> item -> [(variety, stock, tags)]
+# Most food has no number (None): it's in stock, and nobody counts it (decided 12 Nov).
+# "few" is in stock with no number, marked "few left". Only food worth sharing out
+# exactly has a number, like one donation of gluten-free food.
 SAMPLE_FOOD = {
     "Breakfast": {
-        "Oats": [("Quick oats", 14, ["Vegetarian"]), ("Steel-cut oats", 6, ["Vegetarian"])],
-        "Cereal": [("Corn flakes", 10, ["Vegetarian"]), ("Gluten-free cereal", 4, ["Vegetarian", "Gluten-free"])],
+        "Oats": [("Quick oats", None, ["Vegetarian"]), ("Steel-cut oats", "few", ["Vegetarian"])],
+        "Cereal": [("Corn flakes", None, ["Vegetarian"]), ("Gluten-free cereal", 4, ["Vegetarian", "Gluten-free"])],
         "Peanut butter": [("Smooth peanut butter", 8, ["Vegetarian", "Contains nuts"])],
     },
     "Grains": {
-        "Pasta": [("Spaghetti", 12, ["Vegetarian"]), ("Gluten-free pasta", 5, ["Vegetarian", "Gluten-free"])],
-        "Rice": [("White rice", 15, ["Vegetarian", "Gluten-free"]), ("Brown rice", 6, ["Vegetarian", "Gluten-free"])],
+        "Pasta": [("Spaghetti", None, ["Vegetarian"]), ("Gluten-free pasta", 5, ["Vegetarian", "Gluten-free"])],
+        "Rice": [("White rice", None, ["Vegetarian", "Gluten-free"]), ("Brown rice", "few", ["Vegetarian", "Gluten-free"])],
     },
     "Protein": {
         "Canned chicken": [("Chunk chicken", 6, ["Halal"])],
-        "Canned tuna": [("Tuna in water", 9, [])],
+        "Canned tuna": [("Tuna in water", None, [])],
         "Chickpeas": [("Chickpeas (canned)", 1, ["Vegetarian", "Halal", "Gluten-free"])],
     },
     "Cooking": {
-        "Cooking oil": [("Sunflower oil", 12, ["Vegetarian"]), ("Vegetable oil", 7, ["Vegetarian"])],
+        "Cooking oil": [("Sunflower oil", None, ["Vegetarian"]), ("Vegetable oil", None, ["Vegetarian"])],
     },
 }
 
 # Extras aren't booked online, so their counts only guide "may be available" (E1, E2).
 SAMPLE_EXTRAS = {
-    "Bakery": {"Bread": [("White bread", 10, ["Vegetarian"]), ("Whole wheat bread", 8, ["Vegetarian"])]},
+    "Bakery": {"Bread": [("White bread", None, ["Vegetarian"]), ("Whole wheat bread", 8, ["Vegetarian"])]},
     "Dairy and eggs": {"Eggs": [("Dozen eggs", 6, ["Vegetarian", "Gluten-free"])]},
 }
 
@@ -77,7 +80,10 @@ def add_food(db, food: dict, is_extra: bool, tags: dict[str, Tag]) -> None:
             db.add(item)
             db.flush()
             for variety_name, stock, tag_names in varieties:
-                variety = Variety(item_id=item.id, name=variety_name, stock=stock)
+                if stock == "few":
+                    variety = Variety(item_id=item.id, name=variety_name, stock=None, few_left=True)
+                else:
+                    variety = Variety(item_id=item.id, name=variety_name, stock=stock)
                 db.add(variety)
                 db.flush()
                 for tag_name in tag_names:
