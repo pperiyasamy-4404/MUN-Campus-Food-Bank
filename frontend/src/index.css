@@ -580,6 +580,45 @@ button.link-button:hover:not(:disabled) {
   align-items: center;
 }
 
+/* Student | Staff on the Log in page: two halves of one claret-edged box.
+   The one you're on is filled claret, the other is white with claret words. */
+.login-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 1rem;
+  border: 2px solid var(--action-primary-bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.login-switch a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--text-link);
+  background: var(--bg-page);
+}
+
+.login-switch a:hover {
+  background: var(--bg-surface);
+}
+
+.login-switch a[aria-current='page'] {
+  color: var(--action-primary-text);
+  background: var(--action-primary-bg);
+}
+
+.login-switch a:focus-visible {
+  outline-offset: -5px;
+}
+
+.login-switch a[aria-current='page']:focus-visible {
+  outline-color: var(--focus-ring-on-dark);
+}
+
 .after-form {
   margin-top: 1.5rem;
   color: var(--text-secondary);

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, NavLink, useNavigate } from 'react-router'
 import { send, type Me } from '../api.ts'
 import { Field, Problem } from '../forms.tsx'
 import { useValues } from '../useValues.ts'
@@ -51,7 +51,18 @@ function LogIn({ who }: { who: 'student' | 'staff' }) {
 
   return (
     <div className="narrow">
-      <PageHeading>{student ? 'Log in' : 'Staff log in'}</PageHeading>
+      <PageHeading>Log in</PageHeading>
+      {/* Two tabs, Student and Staff (decided 12 Nov): staff find their way in from
+          the same page, without a link in the top bar or at the bottom. They're
+          links, so /staff/login can still be bookmarked. */}
+      <nav aria-label="Who is logging in" className="login-switch">
+        <NavLink to="/login" end>
+          Student
+        </NavLink>
+        <NavLink to="/staff/login" end>
+          Staff
+        </NavLink>
+      </nav>
       <form onSubmit={logIn} noValidate>
         <Problem message={problem} />
         {student ? (
@@ -96,9 +107,6 @@ function LogIn({ who }: { who: 'student' | 'staff' }) {
             <Link to="/setup">set up your account</Link>.
           </p>
           <p>Forgot your password? Ask at the counter for a new setup code.</p>
-          <p>
-            Staff? <Link to="/staff/login">Log in here</Link>.
-          </p>
         </div>
       ) : (
         <div className="after-form">

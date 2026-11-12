@@ -120,8 +120,8 @@ export function Volunteers() {
           onDone={() => setIssued(null)}
         >
           <p>
-            Give it to {issued.username} with their username. They choose a password on the "Staff log in"
-            page, under "Choose your password".
+            Give it to {issued.username} with their username. They choose a password on the Log in page,
+            under Staff, then "Choose your password".
             {issued.why === 'new code' && ' Their old password keeps working until they use this code.'}
             {issued.why === 'switched back on' && ' Their old password no longer works.'}
           </p>
