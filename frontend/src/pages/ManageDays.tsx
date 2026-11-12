@@ -209,6 +209,20 @@ function CloseForm({
   )
 }
 
+function closedRangeMessage(range: ClosedRange): string {
+  const days = range.closed
+  const said =
+    days.length === 0
+      ? 'Nothing was closed.'
+      : days.length === 1
+        ? `${showDate(days[0])} is closed.`
+        : `${days.length} pickup days are closed, ${showDate(days[0])} to ${showDate(days[days.length - 1])}.`
+  const cancelled = range.cancelled > 0 ? ` ${count(range.cancelled, 'booking was', 'bookings were')} cancelled.` : ''
+  const packed = range.were_packed > 0 ? ` Unpack the ${count(range.were_packed, 'packed bag')}.` : ''
+  const skipped = range.skipped.length > 0 ? ` Left as they were: ${range.skipped.join(' ')}` : ''
+  return `${said}${cancelled}${packed}${skipped}`
+}
+
 function closedMessage(closed: ClosedDay): string {
   const said = `${showDate(closed.day.pickup_date)} is closed.`
   if (closed.cancelled === 0) return said
@@ -293,7 +307,12 @@ function MoveForm({
   )
 }
 
-/** Close a date further ahead than the days made so far, like the Christmas break. */
+type ClosedRange = { closed: string[]; cancelled: number; were_packed: number; skipped: string[] }
+
+/**
+ * Close one date or several, like a term break: every pickup day from the first
+ * date to the last, made or not yet made, with one reason (decided 12 Nov).
+ */
 function CloseLater({
   page,
   onChanged,
@@ -303,42 +322,62 @@ function CloseLater({
   onChanged: (message: string) => void
   onLoggedOut: () => void
 }) {
-  const [date, setDate] = useState('')
+  const [first, setFirst] = useState('')
+  const [last, setLast] = useState('')
   const [reason, setReason] = useState('')
   const [problem, setProblem] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
+  // Empty last date: just the first one.
+  const until = last || first
+  // Bookings on days already made in the range: closing cancels them.
+  const inRange = page.days.filter(
+    (day) => first !== '' && day.pickup_date >= first && day.pickup_date <= until && day.why_not_close === null,
+  )
+  const booked = inRange.reduce((sum, day) => sum + day.booked, 0)
+  const packed = inRange.reduce((sum, day) => sum + day.packed, 0)
 
   async function close(event: FormEvent) {
     event.preventDefault()
     setProblem(null)
     setSending(true)
-    const answer = await send<ClosedDay>(`/api/coordinator/days/${date}/close`, { reason })
+    const answer = await send<ClosedRange>('/api/coordinator/days/close-range', { first, last: until, reason })
     setSending(false)
     if (answer.ok) {
-      setDate('')
+      setFirst('')
+      setLast('')
       setReason('')
-      return onChanged(closedMessage(answer.data))
+      return onChanged(closedRangeMessage(answer.data))
     }
     if (answer.status === 401) return onLoggedOut()
-    setProblem(answer.message)
+    setProblem(answer.fields.first || answer.fields.last ? 'Enter both dates.' : answer.message)
   }
 
   return (
     <section className="card">
-      <h2 className="in-card">Close a later date</h2>
+      <h2 className="in-card">Close dates</h2>
       <p className="muted">
-        For a date further ahead, up to a year, like the Christmas break. Pickups are on{' '}
-        {sayWeekdays(page.pickup_weekdays)}. The date is closed now, and stays closed when its time comes.
+        One date, or a whole break, up to a year ahead. Every pickup day from the first date to the last is closed:
+        pickups are on {sayWeekdays(page.pickup_weekdays)}. Dates further ahead are closed now, and stay closed when
+        their time comes. Days already closed are left as they are.
       </p>
       <form className="narrow" onSubmit={close}>
         <Field
-          label="Date"
+          label="First date"
           type="date"
-          value={date}
-          onChange={setDate}
+          value={first}
+          onChange={setFirst}
           min={todayInStJohns()}
           max={page.close_until}
           required
+        />
+        <Field
+          label="Last date"
+          hint="Leave it empty to close just the first date."
+          type="date"
+          value={last}
+          onChange={setLast}
+          min={first || todayInStJohns()}
+          max={page.close_until}
         />
         <Field
           label="Why is it closed?"
@@ -348,9 +387,19 @@ function CloseLater({
           maxLength={200}
           required
         />
+        {booked > 0 && (
+          <p>
+            <strong>
+              This cancels {count(booked, 'booking')}
+              {packed > 0 && `, ${packed} of them packed`}.
+            </strong>{' '}
+            {packed > 0 && 'Unpack those bags: their food goes back on the stock count. '}
+            Those students can book another day.
+          </p>
+        )}
         <Problem message={problem} />
-        <button type="submit" className="danger" disabled={sending}>
-          {sending ? 'Closing...' : 'Close that date'}
+        <button type="submit" className="danger" disabled={sending || first === ''}>
+          {sending ? 'Closing...' : last && last !== first ? 'Close those dates' : 'Close that date'}
         </button>
       </form>
     </section>

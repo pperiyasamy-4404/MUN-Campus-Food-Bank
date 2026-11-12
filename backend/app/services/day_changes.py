@@ -75,7 +75,7 @@ def close_day(db: Session, pickup_date: date, reason: str, staff: Staff, now: da
 
     Bags already handed over and walk-ins already served stay as they are.
     """
-    reason = _tidy_reason(reason)
+    reason = tidy_reason(reason)
     day = _lock_day(db, pickup_date)
     if day is None:
         day = _make_to_close(db, pickup_date, now)
@@ -132,7 +132,7 @@ def close_day(db: Session, pickup_date: date, reason: str, staff: Staff, now: da
     return Closed(day=day, cancelled=len(bookings), were_packed=were_packed)
 
 
-def _tidy_reason(reason: str) -> str:
+def tidy_reason(reason: str) -> str:
     reason = " ".join(reason.split())
     if not reason:
         raise Problem("Say why it's closed. Students see the reason.")
@@ -151,6 +151,54 @@ def _make_to_close(db: Session, pickup_date: date, now: datetime) -> PickupDay:
     if db.get(PickupHours, pickup_date.isoweekday()) is None:
         raise Problem(f"{say_day(pickup_date)} isn't a pickup day, so there's nothing to close.")
     return make_pickup_day(db, pickup_date)
+
+
+# ---------- closing several days, like a term break (decided 12 Nov) ----------
+
+
+@dataclass
+class ToClose:
+    # Pickup dates from the first to the last, in order, that can be closed.
+    dates: list[date]
+    # Why the others in the range can't be, like "Thursday, November 12 is closed already."
+    skipped: list[str]
+
+
+def pickup_dates_between(db: Session, first: date, last: date, now: datetime) -> ToClose:
+    """Every pickup date from first to last, both included: days already made,
+    and later dates on a pickup weekday, which close_day makes and then closes.
+
+    Days already closed or over are skipped, with the reason, rather than
+    stopping the rest: closing 19 December to 5 January shouldn't fail
+    because 22 December was closed last week.
+
+    The route closes each date with close_day, one transaction per day. Several
+    days in one transaction would hold one day's food locks while waiting for
+    the next day's slots, and a student booking that next day takes those
+    locks the other way round: the two could wait for each other forever.
+    """
+    if last < first:
+        raise Problem("The last date is before the first date.")
+    today = now.astimezone(NEWFOUNDLAND).date()
+    if last > today + FURTHEST_AHEAD:
+        raise Problem("Dates can be closed up to a year ahead.")
+    made = {
+        day.pickup_date: day
+        for day in db.scalars(select(PickupDay).where(PickupDay.pickup_date.between(first, last)))
+    }
+    weekdays = set(db.scalars(select(PickupHours.weekday)))
+    every_day = (first + timedelta(days=n) for n in range((last - first).days + 1))
+    dates = sorted(set(made) | {d for d in every_day if d > today and d.isoweekday() in weekdays})
+    if not dates:
+        raise Problem(f"There are no pickup days from {say_day(first)} to {say_day(last)}.")
+    to_close, skipped = [], []
+    for pickup_date in dates:
+        refusal = why_not_close(made[pickup_date], now) if pickup_date in made else None
+        if refusal is None:
+            to_close.append(pickup_date)
+        else:
+            skipped.append(refusal)
+    return ToClose(dates=to_close, skipped=skipped)
 
 
 # ---------- opening it again ----------

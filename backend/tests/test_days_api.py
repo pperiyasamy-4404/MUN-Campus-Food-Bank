@@ -41,6 +41,7 @@ def week(client, db_with_sample_week):
     [
         ("GET", "/api/coordinator/days"),
         ("POST", "/api/coordinator/days/2026-11-09/close"),
+        ("POST", "/api/coordinator/days/close-range"),
         ("POST", "/api/coordinator/days/2026-11-09/reopen"),
         ("PUT", "/api/coordinator/days/2026-11-09/booking-times"),
         ("GET", "/api/totals"),
@@ -170,3 +171,50 @@ def test_moving_times_once_booking_is_over_is_refused(client, db_with_sample_wee
 
     assert answer.status_code == 400
     assert answer.json() == {"detail": "Booking for Monday, November 9 is over, and packing has started."}
+
+
+# ---------- closing several days (decided 12 Nov) ----------
+
+
+def test_closing_a_break_closes_made_and_later_days_and_skips_closed_ones(client, week, db_with_sample_week):
+    """Monday 9 is booked, Thursday 12 is closed already, Monday 16 to Monday 23 aren't made yet."""
+    client.post("/api/coordinator/days/2026-11-12/close", json={"reason": "Staff training"})
+
+    answer = client.post(
+        "/api/coordinator/days/close-range",
+        json={"first": "2026-11-09", "last": "2026-11-23", "reason": "  Fall break,  back on 26 November "},
+    )
+
+    assert answer.status_code == 200
+    assert answer.json() == {
+        "closed": ["2026-11-09", "2026-11-16", "2026-11-19", "2026-11-23"],
+        "cancelled": 1,
+        "were_packed": 0,
+        "skipped": ["Thursday, November 12 is closed already."],
+    }
+    days = {day.pickup_date.isoformat(): day.closed_reason for day in db_with_sample_week.scalars(select(PickupDay))}
+    assert days == {
+        "2026-11-09": "Fall break, back on 26 November",
+        "2026-11-12": "Staff training",
+        "2026-11-16": "Fall break, back on 26 November",
+        "2026-11-19": "Fall break, back on 26 November",
+        "2026-11-23": "Fall break, back on 26 November",
+    }
+    assert week["oats"].stock == 5
+
+
+@pytest.mark.parametrize(
+    "body, message",
+    [
+        ({"first": "2026-11-16", "last": "2026-11-09", "reason": "Break"}, "The last date is before the first date."),
+        ({"first": "2026-11-17", "last": "2026-11-18", "reason": "Break"}, "There are no pickup days from Tuesday, November 17 to Wednesday, November 18."),
+        ({"first": "2026-11-16", "last": "2028-01-01", "reason": "Break"}, "Dates can be closed up to a year ahead."),
+        ({"first": "2026-11-16", "last": "2026-11-19", "reason": "   "}, "Say why it's closed. Students see the reason."),
+    ],
+)
+def test_closing_several_days_needs_sensible_dates_and_a_reason(client, week, db_with_sample_week, body, message):
+    answer = client.post("/api/coordinator/days/close-range", json=body)
+
+    assert answer.status_code == 400
+    assert answer.json() == {"detail": message}
+    assert db_with_sample_week.scalar(select(PickupDay).where(PickupDay.closed_reason.is_not(None))) is None

@@ -122,6 +122,39 @@ def close_day(pickup_date: date, details: CloseIn, coordinator: CurrentCoordinat
     return ClosedOut(day=_one_row(db, pickup_date, now), cancelled=closed.cancelled, were_packed=closed.were_packed)
 
 
+class CloseRangeIn(BaseModel):
+    first: date
+    # The same as first, to close one date.
+    last: date
+    # One reason for them all, like "Christmas break, back on 7 January".
+    reason: str
+
+
+class ClosedRangeOut(BaseModel):
+    closed: list[date]
+    cancelled: int
+    were_packed: int
+    # Dates in the range that couldn't be closed, and why, like "Thursday, November 12 is closed already."
+    skipped: list[str]
+
+
+@router.post("/days/close-range")
+def close_days(details: CloseRangeIn, coordinator: CurrentCoordinator, db: DB, now: Now) -> ClosedRangeOut:
+    """Close every pickup day from first to last, for a term break (S7, decided 12 Nov).
+
+    Each day is closed and saved on its own (see day_changes.pickup_dates_between).
+    """
+    reason = day_changes.tidy_reason(details.reason)
+    to_close = day_changes.pickup_dates_between(db, details.first, details.last, now)
+    cancelled = were_packed = 0
+    for pickup_date in to_close.dates:
+        closed = day_changes.close_day(db, pickup_date, reason, coordinator, now)
+        db.commit()
+        cancelled += closed.cancelled
+        were_packed += closed.were_packed
+    return ClosedRangeOut(closed=to_close.dates, cancelled=cancelled, were_packed=were_packed, skipped=to_close.skipped)
+
+
 @router.post("/days/{pickup_date}/reopen")
 def reopen_day(pickup_date: date, coordinator: CurrentCoordinator, db: DB, now: Now) -> DayRow:
     day_changes.reopen_day(db, pickup_date, coordinator, now)
