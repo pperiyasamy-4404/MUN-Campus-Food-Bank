@@ -1,4 +1,4 @@
-import type { Bag, Outcome, PackingPlan } from '../api.ts'
+import type { Bag, BagFood, Outcome, PackingPlan } from '../api.ts'
 
 /** A bag's status, in words. */
 export const STATUS_WORDS: Record<string, string> = {
@@ -19,7 +19,8 @@ export type Findings = {
 
 /**
  * Where a bag starts: food another volunteer already found none of is marked
- * missing, so nobody searches the shelf for it again (U7). Untick it if there is some.
+ * missing, so the substitutes show straight away (U7). It still needs one look
+ * (needsALook): a wrong tap shouldn't spread to every bag (decided 12 Nov).
  */
 export function startingFindings(bag: Bag): Findings {
   return {
@@ -52,6 +53,18 @@ export type Picked = ReadonlySet<string>
 
 export const foodKey = (varietyId: number) => `food-${varietyId}`
 export const substituteKey = (varietyId: number) => `substitute-${varietyId}`
+/** The volunteer looked at the shelf for food someone else marked out of stock. */
+export const lookedKey = (varietyId: number) => `looked-${varietyId}`
+
+/**
+ * Food another volunteer marked out of stock, that this volunteer hasn't looked
+ * for yet (what-could-go-wrong problem 6, decided 12 Nov). It needs one tap:
+ * Still out of stock, or Found it. Any change to the line counts as looking.
+ */
+export function needsALook(line: BagFood, findings: Findings, picked: Picked): boolean {
+  const missing = findings.missing.find((m) => m.variety_id === line.variety_id)?.how_many ?? 0
+  return line.ran_out_at !== null && missing > 0 && !picked.has(lookedKey(line.variety_id))
+}
 
 /** Picked with one line ticked, or unticked. */
 export function withPicked(picked: Picked, key: string, on: boolean): Picked {
@@ -63,11 +76,13 @@ export function withPicked(picked: Picked, key: string, on: boolean): Picked {
 
 /**
  * How many lines still need a tap before Packed: booked food that is neither
- * Picked nor all out of stock, substitutes the plan puts in that aren't Picked,
- * and substitutes Picked earlier that the plan no longer needs (take them out).
+ * Picked nor all out of stock, food someone else marked out of stock that
+ * nobody has looked for on this bag, substitutes the plan puts in that aren't
+ * Picked, and substitutes Picked earlier that the plan no longer needs (take them out).
  */
 export function stillToTick(bag: Bag, findings: Findings, plan: PackingPlan, picked: Picked): number {
   const food = bag.food.filter((line) => {
+    if (needsALook(line, findings, picked)) return true
     const missing = findings.missing.find((m) => m.variety_id === line.variety_id)?.how_many ?? 0
     return missing < line.quantity && !picked.has(foodKey(line.variety_id))
   }).length

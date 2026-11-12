@@ -6,6 +6,8 @@ import { useMe } from '../me.ts'
 import { showClock, showDate } from '../time.ts'
 import {
   foodKey,
+  lookedKey,
+  needsALook,
   outcomeWords,
   startingFindings,
   STATUS_WORDS,
@@ -24,6 +26,8 @@ import { PageHeading } from '../PageHeading.tsx'
 // the server works out what goes in instead (the refill rule) and what to write on
 // the sticky note. Nothing is saved until Packed, so a wrong tap is just tapped
 // again. Packed waits until every line is Picked or Out of stock (decided 11 Nov).
+// Food another volunteer marked out of stock opens marked, but needs one look:
+// Still out of stock, or Found it (decided 12 Nov).
 
 type Load = { state: 'loading' } | { state: 'failed'; message: string } | { state: 'ready'; bag: Bag }
 
@@ -165,6 +169,12 @@ function Packer({
     setPicked((old) => withPicked(old, untick, false))
   }
 
+  /** A change to a booked food line. Any change means the volunteer has looked at the shelf. */
+  function changeFood(next: Findings, varietyId: number) {
+    change(next, foodKey(varietyId))
+    setPicked((old) => withPicked(old, lookedKey(varietyId), true))
+  }
+
   function tick(key: string, on: boolean) {
     setProblem(null)
     setPicked((old) => withPicked(old, key, on))
@@ -201,10 +211,10 @@ function Packer({
               line={line}
               missing={howManyMissing(line)}
               picked={picked.has(foodKey(line.variety_id))}
+              toLook={needsALook(line, findings, picked)}
               onPicked={(on) => tick(foodKey(line.variety_id), on)}
-              onChange={(howMany) =>
-                change(withMissing(findings, line.variety_id, howMany), foodKey(line.variety_id))
-              }
+              onStillOut={() => tick(lookedKey(line.variety_id), true)}
+              onChange={(howMany) => changeFood(withMissing(findings, line.variety_id, howMany), line.variety_id)}
             />
           ))}
         </ul>
@@ -283,13 +293,18 @@ function FoodRow({
   line,
   missing,
   picked,
+  toLook,
   onPicked,
+  onStillOut,
   onChange,
 }: {
   line: BagFood
   missing: number
   picked: boolean
+  // Another volunteer marked it out of stock, and nobody has looked on this bag yet.
+  toLook: boolean
   onPicked: (on: boolean) => void
+  onStillOut: () => void
   onChange: (howMany: number) => void
 }) {
   const onShelf = line.quantity - missing
@@ -302,13 +317,20 @@ function FoodRow({
         <span className="muted">{line.item}</span>
         {line.quantity > 1 && <span>× {line.quantity}</span>}
         {picked && !allOut && <span className="pack-state pack-state-use">In the bag</span>}
-        {missing > 0 && <span className="pack-state">{allOut ? 'Out of stock' : `${missing} out of stock`}</span>}
+        {missing > 0 && (
+          <span className="pack-state">
+            {toLook ? 'Marked out of stock earlier' : allOut ? 'Out of stock' : `${missing} out of stock`}
+          </span>
+        )}
       </span>
       {line.quantity === 1 ? (
         allOut ? (
-          <button type="button" className="secondary" aria-label={`Found it: ${line.variety}`} onClick={() => onChange(0)}>
-            Found it
-          </button>
+          <span className="pack-buttons">
+            {toLook && <StillOutButton name={line.variety} onStillOut={onStillOut} />}
+            <button type="button" className="secondary" aria-label={`Found it: ${line.variety}`} onClick={() => onChange(0)}>
+              Found it
+            </button>
+          </span>
         ) : (
           <span className="pack-buttons">
             <PickedButton name={line.variety} picked={picked} onPicked={onPicked} />
@@ -336,6 +358,7 @@ function FoodRow({
               ))}
             </select>
           </label>
+          {toLook && <StillOutButton name={line.variety} onStillOut={onStillOut} />}
           {onShelf > 0 && <PickedButton name={line.variety} picked={picked} onPicked={onPicked} />}
         </span>
       )}
@@ -343,10 +366,25 @@ function FoodRow({
         <span className="hint pack-hint">
           {/* No full stop after the time: it ends in "a.m." or "p.m." already. */}
           A volunteer marked this out of stock at {showClock(line.ran_out_at)}{' '}
-          {line.quantity === 1 ? 'If there is some, tap Found it.' : 'If there is some, choose how many are on the shelf.'}
+          {toLook
+            ? line.quantity === 1
+              ? 'Have a quick look on the shelf, then tap Still out of stock or Found it.'
+              : 'Have a quick look on the shelf, then tap Still out of stock or choose how many are there.'
+            : line.quantity === 1
+              ? 'If there is some, tap Found it.'
+              : 'If there is some, choose how many are on the shelf.'}
         </span>
       )}
     </li>
+  )
+}
+
+/** For food someone else marked out of stock: "I looked, and there's still none." */
+function StillOutButton({ name, onStillOut }: { name: string; onStillOut: () => void }) {
+  return (
+    <button type="button" className="secondary" aria-label={`Still out of stock: ${name}`} onClick={onStillOut}>
+      Still out of stock
+    </button>
   )
 }
 

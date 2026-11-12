@@ -1003,6 +1003,13 @@ h2.in-card {
   align-items: center;
 }
 
+/* On a red or green line, an outline button keeps the card's background,
+   so its blue text stays readable (axe found blue on the tint too faint). */
+.pack-row-missing button.secondary,
+.pack-row-use button.secondary {
+  background: var(--card);
+}
+
 .pack-hint {
   flex-basis: 100%;
   margin: 0;
