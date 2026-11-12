@@ -108,12 +108,12 @@
   <tr><td>4</td><td><a href="#q4">Who looks after it when you leave MUN</a></td><td><span class="tag big">Before real use</span></td><td><b>Later (11 Nov):</b> once the food bank accepts it</td></tr>
   <tr><td>5</td><td><a href="#q5">Food counted twice after a no-show</a></td><td><span class="tag mid">Worth fixing</span></td><td><b>Built 12 Nov:</b> stock numbers are optional</td></tr>
   <tr><td>6</td><td><a href="#q6">One wrong "Out of stock" tap spreads to every bag</a></td><td><span class="tag mid">Worth fixing</span></td><td><b>Built 12 Nov:</b> A, one look per bag</td></tr>
-  <tr><td>7</td><td><a href="#q7">Two volunteers pack the same bag</a></td><td><span class="tag mid">Worth fixing</span></td><td>Wait for question 14</td></tr>
-  <tr><td>8</td><td><a href="#q8">Still logged in on a shared computer</a></td><td><span class="tag big">Before real use</span></td><td>A</td></tr>
-  <tr><td>9</td><td><a href="#q9">Forgot the code, and the phone is dead</a></td><td><span class="tag mid">Worth fixing</span></td><td>A</td></tr>
-  <tr><td>10</td><td><a href="#q10">Older phones may show broken colours</a></td><td><span class="tag mid">Worth fixing</span></td><td>A</td></tr>
-  <tr><td>11</td><td><a href="#q11">Holidays and term breaks</a></td><td><span class="tag mid">Worth fixing</span></td><td>A</td></tr>
-  <tr><td>12</td><td><a href="#q12">No "Delete my account" button</a></td><td><span class="tag mid">Worth fixing</span></td><td>A</td></tr>
+  <tr><td>7</td><td><a href="#q7">Two volunteers pack the same bag</a></td><td><span class="tag mid">Worth fixing</span></td><td><b>Built 12 Nov:</b> A, "Sam is packing"</td></tr>
+  <tr><td>8</td><td><a href="#q8">Still logged in on a shared computer</a></td><td><span class="tag big">Before real use</span></td><td><b>Left as it is (12 Nov):</b> university computers log out anyway</td></tr>
+  <tr><td>9</td><td><a href="#q9">Forgot the code, and the phone is dead</a></td><td><span class="tag mid">Worth fixing</span></td><td><b>Built 12 Nov:</b> A, find by MUN card</td></tr>
+  <tr><td>10</td><td><a href="#q10">Older phones may show broken colours</a></td><td><span class="tag mid">Worth fixing</span></td><td><b>Built 12 Nov:</b> a media query instead of light-dark()</td></tr>
+  <tr><td>11</td><td><a href="#q11">Holidays and term breaks</a></td><td><span class="tag mid">Worth fixing</span></td><td><b>Built 12 Nov:</b> A, close several days</td></tr>
+  <tr><td>12</td><td><a href="#q12">No "Delete my account" button</a></td><td><span class="tag mid">Worth fixing</span></td><td><b>Left as it is (12 Nov):</b> deleted after a year</td></tr>
   <tr><td>13–16</td><td><a href="#foodbank">Four questions for the food bank</a></td><td><span class="tag fb">Ask the food bank</span></td><td>—</td></tr>
   <tr><td>—</td><td><a href="#small">Small things</a> and <a href="#known">problems we already knew about</a></td><td>—</td><td>—</td></tr>
 </table>
@@ -305,6 +305,7 @@
     <li><b class="opt">B.</b> Leave it. Volunteers split the bags among themselves, for example Sam takes 3:30–4:30 and Jo takes 4:30–5:30.</li>
   </ul>
   <div class="suggest"><p><b>What I'd pick:</b> wait for <a href="#q14">question 14</a>. If only one person packs at a time, B is enough. If several pack together, A.</p></div>
+  <div class="note"><p><b>Built on 12 November (choice A):</b> opening a bag to pack it puts "Sam is packing (since 12:31 p.m.)" on the queue. Anyone else who opens it sees a warning first, with <b>Pack it anyway</b>. Packed or Undo clears it. Built without waiting for question 14: it costs nothing when one person packs.</p></div>
 </div>
 
 <!-- ============================================================ -->
@@ -330,6 +331,7 @@
     <li><b class="opt">C.</b> Leave it, and put a sentence on the page: "On a shared computer, always press Log out."</li>
   </ul>
   <div class="suggest"><p><b>What I'd pick:</b> <b>A</b>. Your own phone stays easy, and a shared computer stays safe. Banks and email sites work the same way. It also helps students without smartphones (already on the "Before going live" list), who will use shared computers more.</p></div>
+  <div class="note"><p><b>Decided on 12 November: left as it is.</b> University computers log everyone out at the end of a session anyway. Listed under Known issues in CONSTRAINTS.md.</p></div>
 </div>
 
 <div class="card" id="q9">
@@ -345,6 +347,7 @@
     <li><b class="opt">B.</b> Leave it. Tell students to write the code down.</li>
   </ul>
   <div class="suggest"><p><b>What I'd pick:</b> <b>A</b>. It's a small change, and a dead phone is common.</p></div>
+  <div class="note"><p><b>Built on 12 November (choice A):</b> the counter page has <b>No code? Use their MUN card</b>. It finds today's bag for that card, and the hand-over box starts with the number.</p></div>
 </div>
 
 <div class="card" id="q10">
@@ -361,6 +364,7 @@
     <li><b class="opt">B.</b> Leave it.</li>
   </ul>
   <div class="suggest"><p><b>What I'd pick:</b> <b>A</b>.</p></div>
+  <div class="note"><p><b>Built on 12 November, a little differently:</b> a colour variable doesn't fall back to an earlier value, so "a plain value first" wouldn't have worked. Instead, light colours are set plainly and dark ones under a dark-mode media query, which every phone understands. Old phones now get dark mode too. Checked with axe in both modes, not on a real old iPhone.</p></div>
 </div>
 
 <div class="card" id="q11">
@@ -376,6 +380,7 @@
     <li><b class="opt">B.</b> Leave it. The coordinator closes each date, at the start of each term.</li>
   </ul>
   <div class="suggest"><p><b>What I'd pick:</b> <b>A</b>, and ask the food bank for their closure dates (they may already have a list).</p></div>
+  <div class="note"><p><b>Built on 12 November (choice A):</b> <b>Close dates</b> on the Pickup days page takes a first date, a last date and one reason. Days already closed are left as they are, and the page says how many bookings it will cancel first. The food bank's closure dates are still worth asking for.</p></div>
 </div>
 
 <div class="card" id="q12">
@@ -392,6 +397,7 @@
     <li><b class="opt">C.</b> Leave it: deleted automatically after a year.</li>
   </ul>
   <div class="suggest"><p><b>What I'd pick:</b> <b>A</b>. It's a strong privacy point, and a privacy review is likely to ask for it.</p></div>
+  <div class="note"><p><b>Decided on 12 November: left as it is.</b> Accounts are deleted after a year with no pickup (P13). Listed under Known issues in CONSTRAINTS.md.</p></div>
 </div>
 
 <!-- ============================================================ -->
@@ -409,7 +415,7 @@
   <h3><span class="num">14</span>How do volunteers share out the packing? <span class="tag fb">Ask the food bank</span></h3>
   <p>Does one person pack all the bags, or do several people pack at the same time? If several, how do they split the bags today: by time, by table, or by a paper list?</p>
   <p class="label">Why we ask</p>
-  <p>It decides whether we need "Sam is packing" in the queue (<a href="#q7">question 7</a>).</p>
+  <p>It decides whether we need "Sam is packing" in the queue (<a href="#q7">question 7</a>). Built anyway on 12 November, so this is now only good to know.</p>
 </div>
 
 <div class="card ask" id="q15">

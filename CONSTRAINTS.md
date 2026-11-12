@@ -17,7 +17,7 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 - **P2** The ID number itself is never stored. Only a keyed hash (HMAC) is stored, and the secret key is kept outside the database.
 - **P3** No student names, emails, phone numbers or MCP numbers are stored anywhere, including logs. Volunteers have a username, which can be a first name or a nickname.
 - **P4** Volunteers never see the ID number or its hash. They see a booking code and the items.
-- **P5** Booking online doesn't prove eligibility. At pickup, the volunteer types the number from the student's MUN card and the system checks that it matches the booking.
+- **P5** Booking online doesn't prove eligibility. At pickup, the volunteer types the number from the student's MUN card and the system checks that it matches the booking. A student without their code (a dead phone, say) can be found by the card number instead (decided 12 November).
 - **P6** To book, view or cancel, the student logs in with their ID number and password.
 - **P7** Booking details are deleted after the retention period. Only totals are kept, such as pickups per week and items given out. Each day's totals are saved just before its details are deleted.
 - **P8** Passwords are stored only as a hash, never as text. The setup page asks students not to reuse their MUN password.
@@ -39,7 +39,7 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 - **S2** A slot never goes over its capacity, even when many people book at once.
 - **S5** Booking for a pickup day opens at the booking open time and closes at the booking close time. All of a day's slots open together. With the sample settings, Monday's slots can be booked from Sunday 5 pm until Monday 12 pm, and Thursday's from Wednesday 5 pm until Thursday 12 pm.
 - **S6** Students can cancel until the booking close time. The cancelled slot can be booked by someone else straight away. A student who cancels can't book again for that same pickup day.
-- **S7** The coordinator can close a day for a holiday, bad weather or the Christmas break, with a reason students see. Every booking that day is cancelled, even if it's already packed, and those students can book again. Packed bags are unpacked so the shelf matches the stock count. Bags already handed over and walk-ins already served stay recorded. A day can be closed until its no-show time, and a date up to a year ahead can be closed before its day is made. A closed day can be opened again only if closing it cancelled no bookings, because those students couldn't book that day again.
+- **S7** The coordinator can close a day for a holiday, bad weather or the Christmas break, with a reason students see. Every booking that day is cancelled, even if it's already packed, and those students can book again. Packed bags are unpacked so the shelf matches the stock count. Bags already handed over and walk-ins already served stay recorded. A day can be closed until its no-show time, and a date up to a year ahead can be closed before its day is made. A closed day can be opened again only if closing it cancelled no bookings, because those students couldn't book that day again. Several days can be closed at once, from a first date to a last, with one reason, like "Christmas break, back on 7 January". Days already closed or over are left as they are (decided 12 November).
 - **S8** The student picks a slot first and then chooses items. The slot is held for them for the slot hold time, with a countdown on screen. If they don't book in that time, the slot is free again straight away and they start over. A student can hold only one slot at a time. Before holding, the system checks the pickup gap, that they have no other upcoming booking, and that they didn't cancel for this day. It checks again when they press Book.
 - **S9** The coordinator can move one day's booking open and close times, for example if the website was down, without changing the settings for other days. Only until booking closes, because packing starts then. Booking must still close by the time pickup starts.
 
@@ -75,6 +75,7 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 ### Packing
 
 - **K1** Volunteers pack on the pickup day, after booking closes and before pickup starts. With the sample settings, between 12 pm and 3 pm. A bag that isn't packed by then can still be packed until the no-show time, while the student waits.
+- **K2** When a volunteer opens a bag to pack it, the packing queue says "Sam is packing". Anyone else who opens it is warned first, and can still pack it anyway (Sam went home, say). Packed, or undoing Packed, clears it (decided 12 November).
 
 ### Walk-ins
 
@@ -137,6 +138,8 @@ Problems we know about and accept for now.
 - **First visit in person.** A new student can't book online until they've been to the counter for an account. They can take food as a walk-in on that visit.
 - **A stranger guessing can delay a reset on a new phone.** If someone keeps guessing a student's password, the student's usual phone still gets in. A phone that has never logged in to the account shares the stranger's wrong-try count, so it may wait up to 15 minutes to use a new setup code. It needs someone who knows the ID number and keeps guessing.
 - **Food with a number can still be counted twice.** If a volunteer counts it after 6 pm, before the jobs mark a bag as a no-show, the no-show adds the bag's food back on top of the count. Only food with a number, which is now a few foods at a time, and only in the minutes before the jobs run (they run every 15 minutes). Food with no number can't be counted twice (decided 12 November).
+- **Still logged in on a shared computer.** A student login lasts 30 days. On a shared computer, the next person could see their booking if they don't press Log out. Left as it is: university computers log everyone out at the end of a session anyway (decided 12 November).
+- **No "Delete my account" button.** A student account is deleted after a year with no pickup (P13), and not sooner. Left as it is: few students would ask (decided 12 November).
 - **A fix to no-show can shorten the year rule.** Fixing a bag to no-show sets the pickup gap from the last pickup still on record. If the only earlier pickup is older than the retention period, its record is gone, and the year rule (P13) counts from when the account was made. Rare: the student would get a new account at the counter.
 
 ## Before going live
