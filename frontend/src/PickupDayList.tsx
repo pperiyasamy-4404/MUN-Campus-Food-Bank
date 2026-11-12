@@ -47,7 +47,7 @@ function PickupDayCard({ day }: { day: PickupDay }) {
           </p>
           <ul className="slots">
             {day.slots.map((slot) => (
-              <SlotChip key={slot.starts_at} slot={slot} />
+              <SlotChip key={slot.starts_at} slot={slot} bookable={day.booking_status === 'open'} />
             ))}
           </ul>
         </>
@@ -56,10 +56,13 @@ function PickupDayCard({ day }: { day: PickupDay }) {
   )
 }
 
-function SlotChip({ slot }: { slot: Slot }) {
+// Green "1 place" only while booking is open. Before it opens or after it
+// closes, the places show in grey, since nobody can take them right now.
+function SlotChip({ slot, bookable }: { slot: Slot; bookable: boolean }) {
   const full = slot.places_left === 0
+  const className = full ? 'slot slot-full' : bookable ? 'slot' : 'slot slot-not-bookable'
   return (
-    <li className={full ? 'slot slot-full' : 'slot'}>
+    <li className={className}>
       <span className="slot-time">{showClock(slot.starts_at)}</span>
       <span className="slot-places">
         {full ? 'Full' : `${slot.places_left} ${slot.places_left === 1 ? 'place' : 'places'}`}

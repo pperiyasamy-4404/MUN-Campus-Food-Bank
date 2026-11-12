@@ -1,0 +1,99 @@
+/*
+ * The Campus Food Bank colours, from Memorial University's brand palette
+ * (MUN Brand Standards, Version 3, March 2026). Decided 12 November.
+ *
+ * Two layers:
+ * 1. Brand tokens: the official MUN values, copied exactly. Nothing else in
+ *    the app may use a colour that isn't one of these.
+ * 2. Semantic tokens: what each colour is FOR. The rest of the CSS uses only
+ *    these, so a colour can change in one place.
+ *
+ * Rules that go with them:
+ * - Claret is always at 100%: no tints, no gradients. It's for buttons, links,
+ *   selected things, focus rings, error text, titles and section headings, the
+ *   line on top of each card, the title strip across the top of a card (like
+ *   the my.mun.ca portal), and the header bar. Prakash chose the full claret
+ *   header on 12 Nov night, although MUN's guide keeps claret to small accents.
+ *   Never a page, section or card background.
+ * - Green and gold are fills behind black text, or borders beside a word that
+ *   already says what they mean. Never text on white (they fail contrast).
+ * - Light mode only. No gradients. No MUN logo or crest.
+ */
+
+:root {
+  /* ---------- 1. Brand tokens (official MUN values) ---------- */
+
+  /* University colour */
+  --color-claret: #862633; /* MUN Claret, PMS 202 */
+
+  /* Neutrals: MUN primary palette */
+  --color-black: #231f20; /* MUN Black */
+  --color-grey-10: #63666a; /* Cool Grey 10 */
+  --color-grey-7: #97999b; /* Cool Grey 7 */
+  --color-warm-grey-8: #8c8279; /* Warm Grey 8 (decorative only) */
+  --color-warm-grey-6: #a59c94; /* Warm Grey 6 (decorative only) */
+  --color-white: #ffffff;
+  --color-surface: #f5f5f5; /* Cool Grey 7 at 10% */
+  --color-border-subtle: #dbdbdc; /* Cool Grey 7 at 35% */
+
+  /* MUN secondary "pop" colours: only these two are used in this app */
+  --color-green: #78be20; /* PMS 368 */
+  --color-gold: #ffb81c; /* PMS 1235 */
+
+  /* Pale washes of those two: 25% of the colour on white, worked out by hand
+     (not color-mix(), which phones from before 2023 don't understand).
+     MUN's guide forbids tints of claret only. Decided 12 Nov night. */
+  --color-green-25: #ddefc7; /* green #78BE20 at 25% */
+  --color-gold-25: #ffedc6; /* gold #FFB81C at 25% */
+
+  /* ---------- 2. Semantic tokens (the CSS uses these) ---------- */
+
+  --bg-page: var(--color-white);
+  --bg-surface: var(--color-surface);
+
+  --text-primary: var(--color-black);
+  --text-secondary: var(--color-grey-10);
+  --text-on-claret: var(--color-white);
+  --text-link: var(--color-claret);
+
+  --action-primary-bg: var(--color-claret);
+  --action-primary-text: var(--color-white);
+  --action-primary-hover-bg: var(--color-black);
+
+  --border-input: var(--color-grey-10);
+  --border-subtle: var(--color-border-subtle);
+  --focus-ring: var(--color-claret);
+
+  /* Badges: a pale wash behind black words, with a strong 3px edge of the full colour. */
+  --status-available-bg: var(--color-green-25); /* always with black text */
+  --status-available-edge: var(--color-green);
+  --status-limited-bg: var(--color-gold-25); /* always with black text */
+  --status-limited-edge: var(--color-gold);
+  --status-on-color-text: var(--color-black);
+  --status-full-bg: var(--color-surface);
+  --status-full-text: var(--color-grey-10);
+  --status-full-edge: var(--color-grey-7); /* a decorative line: grey-7 is never text */
+
+  --alert-success-accent: var(--color-green);
+  --alert-warning-accent: var(--color-gold);
+  --alert-error-accent: var(--color-claret);
+
+  --radius: 6px;
+  --font-sans: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+
+  /* A few more semantic names this app needs, all made from the brand tokens above. */
+  --selected-border: var(--color-claret); /* a chosen food card, "✓ Added" */
+  --page-title: var(--color-claret); /* the main title (h1) on each page */
+  --sticky-note-bg: var(--color-gold); /* the paper sticky note on a packed bag: black text on it */
+  --sticky-note-shadow: var(--color-border-subtle); /* a flat edge under it, no transparent black */
+
+  /* More MUN (decided 12 Nov night): a claret header with tabs, and title strips like my.mun.ca. */
+  --header-bg: var(--color-claret); /* the bar at the top of every page */
+  --header-text: var(--color-white); /* 8.98 on claret */
+  --tab-active-bar: var(--color-white); /* the line under the tab you're on */
+  --strip-bg: var(--color-claret); /* a card's title strip, like "Student Self-Service" */
+  --strip-text: var(--color-white); /* 8.98 on claret */
+  --focus-ring-on-dark: var(--color-white); /* claret can't be seen on claret */
+  --section-title: var(--color-claret); /* h2 */
+  --accent-line: var(--color-claret); /* under each h2, and along the top of each card */
+}

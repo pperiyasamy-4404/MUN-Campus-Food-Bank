@@ -96,6 +96,9 @@ function LogIn({ who }: { who: 'student' | 'staff' }) {
             <Link to="/setup">set up your account</Link>.
           </p>
           <p>Forgot your password? Ask at the counter for a new setup code.</p>
+          <p>
+            Staff? <Link to="/staff/login">Log in here</Link>.
+          </p>
         </div>
       ) : (
         <div className="after-form">

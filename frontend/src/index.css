@@ -1,51 +1,24 @@
+/* Colours, the font and the corner radius come from styles/theme.css (MUN brand,
+   decided 12 Nov). Only the semantic tokens are used here, never a colour value.
+   Light mode only, as the brand asks: there are no dark colours any more. */
 :root {
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 100%; /* 16px: body text is never smaller */
   line-height: 1.5;
-  color-scheme: light dark;
-
-  /* Light colours. Dark ones are in the prefers-color-scheme block below. Not light-dark():
-     phones from before 2024 (iOS older than 17.5) don't understand it, and the colours
-     would vanish. A media query works on every phone (what-could-go-wrong problem 10). */
-  --ink: #0f172a;
-  --muted: #475569;
-  --line: #e2e8f0;
-  --page: #f8fafc;
-  --card: #ffffff;
-  --blue: #2563eb;
-  --blue-bg: #dbeafe;
-  /* Blue text on --blue-bg: darker in light mode, so it's easy to read. */
-  --blue-on-bg: #1d4ed8;
-  --green: #065f46;
-  --green-bg: #d1fae5;
-  --amber: #92400e;
-  --amber-bg: #fef3c7;
-  --red: #b91c1c;
-  --red-bg: #fee2e2;
-  --grey-bg: #f1f5f9;
-
-  color: var(--ink);
-  background: var(--page);
+  color-scheme: light;
+  color: var(--text-primary);
+  background: var(--bg-page);
 }
 
-/* Dark colours, for phones and computers set to dark mode. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ink: #e2e8f0;
-    /* Dark mode's muted grey is light enough to read on the grey chips too (4.5:1, WCAG AA). */
-    --muted: #a7b3c4;
-    --line: #334155;
-    --page: #0f172a;
-    --card: #1e293b;
-    --blue: #60a5fa;
-    --blue-bg: #1e3a5f;
-    --blue-on-bg: #60a5fa;
-    --green: #6ee7b7;
-    --green-bg: #064e3b;
-    --amber: #fcd34d;
-    --amber-bg: #451a03;
-    --red: #fca5a5;
-    --red-bg: #450a0a;
-    --grey-bg: #334155;
+/* For anyone whose phone asks for less movement. The app has no animations
+   today; this keeps it that way if one is added. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -62,6 +35,17 @@ main {
 h1 {
   margin: 0.2rem 0 0.5rem;
   line-height: 1.2;
+  color: var(--page-title);
+}
+
+/* Links: claret and underlined. On hover the line gets thicker; the colour stays. */
+a {
+  color: var(--text-link);
+  text-decoration: underline;
+}
+
+a:hover {
+  text-decoration-thickness: 3px;
 }
 
 /* A page heading takes the focus when a page opens (PageHeading.tsx), for
@@ -70,9 +54,20 @@ h1[tabindex='-1']:focus {
   outline: none;
 }
 
+/* Section headings: claret, with a short thick claret line under them, like MUN's pages. */
 h2 {
   margin: 2.2rem 0 0.6rem;
   font-size: 1.35rem;
+  color: var(--section-title);
+}
+
+h2::after {
+  content: '';
+  display: block;
+  width: 2.5rem;
+  height: 4px;
+  margin-top: 0.35rem;
+  background: var(--accent-line);
 }
 
 h3,
@@ -82,26 +77,31 @@ h4 {
 
 .eyebrow {
   margin: 0;
-  color: var(--blue);
+  color: var(--text-link);
   font-weight: 700;
 }
 
 .lead,
 .muted {
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 .problem {
-  color: var(--red);
-  background: var(--red-bg);
+  color: var(--alert-error-accent);
+  font-weight: 700;
+  background: var(--bg-page);
   padding: 0.6rem 0.9rem;
-  border-radius: 0.5rem;
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--alert-error-accent);
+  border-radius: var(--radius);
 }
 
+/* Cards: white, with a 4px claret line along the top, like the header. */
 .card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 0.8rem;
+  background: var(--bg-page);
+  border: 1px solid var(--border-subtle);
+  border-top: 4px solid var(--accent-line);
+  border-radius: var(--radius);
   padding: 1rem 1.2rem;
   margin: 0.9rem 0;
 }
@@ -118,32 +118,78 @@ h4 {
   margin: 0.3rem 0 0.8rem;
 }
 
-/* Booking status badges */
+/* Booking status badges. The words always say it; the colour only helps. */
 .status {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  padding: 0.1rem 0.6rem;
-  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius);
 }
 
 .status-open {
-  color: var(--green);
-  background: var(--green-bg);
+  color: var(--status-on-color-text);
+  background: var(--status-available-bg);
+  border-left: 3px solid var(--status-available-edge);
 }
 
 .status-not_open_yet {
-  color: var(--amber);
-  background: var(--amber-bg);
+  color: var(--status-on-color-text);
+  background: var(--status-limited-bg);
+  border-left: 3px solid var(--status-limited-edge);
 }
 
-.status-booking_over {
-  color: var(--muted);
-  background: var(--grey-bg);
-}
-
+.status-booking_over,
 .status-day_closed {
-  color: var(--red);
-  background: var(--red-bg);
+  color: var(--status-full-text);
+  background: var(--status-full-bg);
+  border-left: 3px solid var(--status-full-edge);
+}
+
+/* ---------- badges: short words on a pale wash, with a strong 3px edge (14px, bold) ---------- */
+
+.slot-places,
+.stock-left,
+.stock-few,
+.stock-out,
+.flag,
+.pack-state,
+.food-badge {
+  display: inline-block;
+  width: fit-content;
+  padding: 0.05rem 0.5rem;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* Limited, or something to look at: pale gold, a gold edge, black words. */
+.stock-few,
+.flag,
+.pack-state {
+  color: var(--status-on-color-text);
+  background: var(--status-limited-bg);
+  border-left: 3px solid var(--status-limited-edge);
+}
+
+/* Available: pale green, a green edge, black words. (After the gold rule, so "In the bag" wins over .pack-state.) */
+.slot-places,
+.stock-left,
+.pack-state.pack-state-use {
+  color: var(--status-on-color-text);
+  background: var(--status-available-bg);
+  border-left: 3px solid var(--status-available-edge);
+}
+
+/* None left, full, or booking not open: grey, a grey edge. */
+.stock-out,
+.slot-full .slot-places,
+.slot-not-bookable .slot-places,
+.slot-button:disabled .slot-places {
+  color: var(--status-full-text);
+  background: var(--status-full-bg);
+  border: none;
+  border-left: 3px solid var(--status-full-edge);
 }
 
 /* Slots, as a grid of small tiles */
@@ -157,8 +203,8 @@ h4 {
 }
 
 .slot {
-  border: 1px solid var(--line);
-  border-radius: 0.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
   padding: 0.35rem 0.6rem;
   display: flex;
   flex-direction: column;
@@ -168,17 +214,9 @@ h4 {
   font-weight: 600;
 }
 
-.slot-places {
-  font-size: 0.85rem;
-  color: var(--green);
-}
-
 .slot-full {
-  background: var(--grey-bg);
-}
-
-.slot-full .slot-places {
-  color: var(--muted);
+  color: var(--status-full-text);
+  background: var(--status-full-bg);
 }
 
 /* Food */
@@ -193,7 +231,7 @@ h4 {
 }
 
 .item h4 {
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 .varieties {
@@ -208,7 +246,7 @@ h4 {
   align-items: center;
   gap: 0.3rem;
   padding: 0.25rem 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .variety:last-child {
@@ -219,91 +257,148 @@ h4 {
   margin-right: 0.2rem;
 }
 
+/* A dietary tag, like "Vegetarian": a small grey chip (14px). */
 .tag {
-  font-size: 0.72rem;
+  font-size: 0.875rem;
   padding: 0 0.45rem;
-  border-radius: 999px;
-  background: var(--grey-bg);
-  color: var(--muted);
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
 }
 
 .stock {
   margin-left: auto;
-  font-size: 0.85rem;
-  color: var(--green);
   white-space: nowrap;
 }
 
 .variety-out .stock {
-  color: var(--red);
+  color: var(--text-secondary);
 }
 
 /* ---------- the bar at the top, and the line at the bottom ---------- */
 
+/* The header: claret all the way across, white words, one row. The name on the
+   left, the tabs (with icons, like my.mun.ca) next to it, the account links on
+   the right. Everything is centred on the same line (decided 12 Nov night). */
 .top {
-  background: var(--card);
-  border-bottom: 1px solid var(--line);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+  background: var(--header-bg);
+  color: var(--header-text);
 }
 
-.top nav {
+.top-inner {
   max-width: 66rem;
   margin: 0 auto;
-  padding: 0.6rem 1rem;
+  padding: 0 1rem;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem 1.1rem;
-}
-
-.top a {
-  color: var(--muted);
-  text-decoration: none;
-  padding: 0.3rem 0.65rem;
-  border-radius: 999px;
-}
-
-.top a:hover {
-  color: var(--ink);
-  background: var(--grey-bg);
-}
-
-.top a.active {
-  color: var(--blue-on-bg);
-  background: var(--blue-bg);
-  font-weight: 600;
+  column-gap: 1.5rem;
 }
 
 .top .brand {
-  color: var(--blue);
-  font-weight: 800;
-  font-size: 1.1rem;
-  padding-left: 0;
-  margin-right: 0.4rem;
+  order: 0;
+  color: var(--header-text);
+  font-weight: 700;
+  font-size: 1.15rem;
+  white-space: nowrap;
+  text-decoration: none;
 }
 
-.top .brand:hover {
-  background: none;
-}
-
-.spacer {
+/* The tabs. The one you're on is bold, with a 4px white line under it. The line
+   is always there, see-through when it isn't you, so nothing moves. */
+.tabs {
+  order: 1;
   flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.tabs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 3.25rem;
+  box-sizing: border-box;
+  padding: 4px 0.75rem 0;
+  color: var(--header-text);
+  font-weight: 400;
+  text-decoration: none;
+  border-bottom: 4px solid transparent;
+}
+
+.tabs a:hover {
+  border-bottom-color: var(--tab-active-bar);
+}
+
+.tabs a.active {
+  font-weight: 700;
+  border-bottom-color: var(--tab-active-bar);
+}
+
+.tab-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* Who's logged in, and Log out (or Set up / Log in), on the right. */
+.account-links {
+  order: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 1rem;
+}
+
+.account-links a,
+.account-links button.link-button,
+.account-links button.link-button:hover:not(:disabled) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0;
+  color: var(--header-text);
+  font-weight: 400;
+  text-decoration: underline;
+  border: none;
+}
+
+.account-links a:hover,
+.account-links button.link-button:hover:not(:disabled) {
+  text-decoration-thickness: 3px;
+}
+
+.account-links a.active {
+  font-weight: 700;
+}
+
+/* On claret, a claret focus ring wouldn't show: white instead. */
+.top a:focus-visible,
+.top button:focus-visible {
+  outline-color: var(--focus-ring-on-dark);
+}
+
+/* On a phone: the name and the account links on the first line, the tabs under them. */
+@media (width < 48rem) {
+  .top-inner {
+    justify-content: space-between;
+    padding-top: 0.3rem;
+  }
+
+  .tabs {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .tabs a {
+    padding: 4px 0.55rem 0;
+    min-height: 2.9rem;
+  }
 }
 
 .who {
-  font-weight: 600;
-}
-
-.bottom {
-  max-width: 52rem;
-  margin: 0 auto 2rem;
-  padding: 1rem;
-  border-top: 1px solid var(--line);
-  font-size: 0.9rem;
-}
-
-.bottom a {
-  color: var(--muted);
+  font-weight: 700;
 }
 
 .banner {
@@ -332,8 +427,7 @@ form {
 
 .hint {
   margin: 0.1rem 0 0;
-  font-size: 0.9rem;
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 input:not([type='checkbox']),
@@ -345,17 +439,27 @@ select {
   /* 16px or more, so phones don't zoom in when the box is tapped */
   font: inherit;
   font-size: max(1rem, 16px);
-  color: var(--ink);
-  background: var(--page);
-  border: 1px solid var(--muted);
-  border-radius: 0.5rem;
+  min-height: 2.75rem;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius);
 }
 
+/* Every control shows a claret ring when it's reached with the keyboard. */
 input:focus-visible,
+select:focus-visible,
 button:focus-visible,
-a:focus-visible {
-  outline: 3px solid var(--blue);
+a:focus-visible,
+label:focus-within:has(input[type='file']) {
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
+}
+
+/* Ticks and radio dots in claret. */
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--action-primary-bg);
 }
 
 /* Shown in capitals, like the code on the slip. The server doesn't mind either way. */
@@ -365,19 +469,21 @@ a:focus-visible {
 }
 
 .field-wrong input {
-  border: 2px solid var(--red);
+  border: 2px solid var(--alert-error-accent);
 }
 
 .field-error {
   margin: 0.3rem 0 0;
-  color: var(--red);
-  font-weight: 600;
+  color: var(--alert-error-accent);
+  font-weight: 700;
 }
 
+/* A tick box and its words: the whole line can be tapped, and it's 44px tall. */
 .check {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  min-height: 2.75rem;
   margin: -0.3rem 0 1.2rem;
 }
 
@@ -386,43 +492,85 @@ a:focus-visible {
   height: 1.1rem;
 }
 
+/* Buttons. Primary: claret, white words, black on hover. Every button is at least 44px tall. */
 button,
 a.button {
   display: inline-block;
+  box-sizing: border-box;
+  min-height: 2.75rem;
   font: inherit;
-  font-weight: 600;
+  font-weight: 700;
   padding: 0.6rem 1.1rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--blue);
-  background: var(--blue);
-  color: var(--page);
+  border-radius: var(--radius);
+  border: 1px solid var(--action-primary-bg);
+  background: var(--action-primary-bg);
+  color: var(--action-primary-text);
   cursor: pointer;
   text-decoration: none;
 }
 
+button:hover:not(:disabled),
+a.button:hover {
+  background: var(--action-primary-hover-bg);
+  border-color: var(--action-primary-hover-bg);
+  color: var(--action-primary-text);
+}
+
 button:disabled {
-  opacity: 0.6;
-  cursor: wait;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border-color: var(--border-subtle);
+  cursor: not-allowed;
 }
 
-button.secondary {
-  background: transparent;
-  color: var(--blue);
+/* Secondary, and things that undo or cancel: white, claret words and edge. No red. */
+button.secondary,
+button.danger,
+a.button.ghost,
+button.level-button,
+button.chosen-button {
+  background: var(--bg-page);
+  color: var(--text-link);
+  border-color: var(--action-primary-bg);
 }
 
-button.danger {
-  background: transparent;
-  color: var(--red);
-  border-color: var(--red);
+button.secondary:hover:not(:disabled),
+button.danger:hover:not(:disabled),
+a.button.ghost:hover,
+button.level-button:hover:not(:disabled),
+button.chosen-button:hover:not(:disabled) {
+  background: var(--bg-surface);
+  color: var(--text-link);
+  border-color: var(--action-primary-bg);
 }
 
+/* Disabled, whatever kind of button it is: grey, and it says it can't be pressed. */
+button.secondary:disabled,
+button.danger:disabled,
+button.level-button:disabled,
+button.chosen-button:disabled {
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border-color: var(--border-subtle);
+}
+
+/* A button that reads like a link, such as "Edit" or "Log out". Still 44px to tap. */
 button.link-button {
-  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.25rem;
   border: none;
   background: none;
-  color: var(--muted);
+  color: var(--text-link);
   font-weight: 400;
   text-decoration: underline;
+}
+
+button.link-button:hover:not(:disabled) {
+  background: none;
+  border: none;
+  color: var(--text-link);
+  text-decoration-thickness: 3px;
 }
 
 .actions {
@@ -434,28 +582,29 @@ button.link-button {
 
 .after-form {
   margin-top: 1.5rem;
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
-.after-form a {
-  color: var(--blue);
-}
-
+/* A warning or something to know: gold bar, black words. */
 .notice {
-  color: var(--amber);
-  background: var(--amber-bg);
+  color: var(--text-primary);
+  background: var(--bg-page);
   padding: 0.6rem 0.9rem;
-  border-radius: 0.5rem;
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--alert-warning-accent);
+  border-radius: var(--radius);
 }
 
 /* ---------- a setup code, shown once ---------- */
 
+/* Done, and here's your code: green bar, black words. */
 .code-box {
   margin: 1rem 0 1.5rem;
   padding: 1rem 1.2rem;
-  border: 2px solid var(--green);
-  border-radius: 0.8rem;
-  background: var(--green-bg);
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--alert-success-accent);
+  border-radius: var(--radius);
+  background: var(--bg-page);
 }
 
 .code-box h2 {
@@ -467,11 +616,10 @@ button.link-button {
 
 .code {
   margin: 0.6rem 0;
-  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
   font-size: 2.2rem;
   font-weight: 700;
   letter-spacing: 0.15em;
-  color: var(--ink);
+  color: var(--text-primary);
 }
 
 .tell ol {
@@ -501,12 +649,11 @@ button.link-button {
   text-align: left;
   vertical-align: top;
   padding: 0.6rem 0.5rem;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .people thead th {
-  color: var(--muted);
-  font-size: 0.85rem;
+  color: var(--text-secondary);
 }
 
 .row-actions {
@@ -540,20 +687,31 @@ button.link-button {
 
 .row-actions button {
   padding: 0.3rem 0.7rem;
-  font-size: 0.9rem;
+}
+
+/* At 16px the button words are wider: on a phone they may go onto two lines,
+   so the table still fits 320 pixels. */
+@media (width < 40rem) {
+  .people td:last-child,
+  .people .row-actions button {
+    white-space: normal;
+  }
+
+  .people .row-actions button {
+    max-width: 8.5rem;
+  }
 }
 
 /* "Coordinator" or "Volunteer", under the username on the Staff page. */
 .role-line {
   display: block;
-  color: var(--muted);
-  font-size: 0.85rem;
+  color: var(--text-secondary);
   font-weight: 400;
 }
 
 .switched-off th,
 .switched-off td {
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 /* Read out by screen readers, but not shown. !important, so the general
@@ -601,8 +759,8 @@ button.link-button {
   align-items: center;
   padding: 0.6rem 0.7rem;
   margin: 0.4rem 0;
-  border: 1px solid var(--line);
-  border-radius: 0.6rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
 }
 
 @media (width < 40rem) {
@@ -612,12 +770,12 @@ button.link-button {
 }
 
 .stock-row-stale {
-  border-left: 4px solid var(--amber);
+  border-left: 4px solid var(--alert-warning-accent);
 }
 
 .stock-row-hidden {
-  background: var(--grey-bg);
-  color: var(--muted);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
 }
 
 .stock-row > .count-saved,
@@ -641,14 +799,13 @@ button.link-button {
 
 button.level-button {
   padding: 0.35rem 0.7rem;
-  font-size: 0.9rem;
-  background: transparent;
-  color: var(--blue);
 }
 
-button.level-button-on {
-  background: var(--blue);
-  color: var(--page);
+/* The one that's chosen: claret, white words, and a tick. */
+button.level-button-on,
+button.level-button-on:hover:not(:disabled) {
+  background: var(--action-primary-bg);
+  color: var(--text-on-claret);
 }
 
 button.level-button-on::before {
@@ -666,18 +823,14 @@ button.level-button-on::before {
   align-items: center;
 }
 
-.stock-numbers {
-  font-size: 0.95rem;
-}
-
 .stock-age {
-  font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
+/* Needs checking: black and bold. The row's gold bar marks it too. */
 .stock-age-stale {
-  color: var(--amber);
-  font-weight: 600;
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .count-form {
@@ -686,8 +839,7 @@ button.level-button-on::before {
 
 .count-form label {
   display: block;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .count-controls {
@@ -707,8 +859,8 @@ button.level-button-on::before {
 
 .count-saved {
   margin: 0.2rem 0 0;
-  color: var(--green);
-  font-weight: 600;
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .editor,
@@ -716,9 +868,9 @@ button.level-button-on::before {
 .rename {
   margin: 0.5rem 0;
   padding: 0.7rem 0.9rem;
-  border-radius: 0.6rem;
-  background: var(--page);
-  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-subtle);
 }
 
 .tag-checks {
@@ -748,10 +900,6 @@ button.level-button-on::before {
   margin-bottom: 0.5rem;
 }
 
-button.link-button.small {
-  font-size: 0.85rem;
-}
-
 h2.in-card {
   margin-top: 0;
   padding-top: 0;
@@ -770,26 +918,29 @@ h2.in-card {
   list-style: none;
 }
 
-.slot-button {
+/* A time to choose: a white card with a grey edge. On hover the edge turns claret. */
+.slot-button,
+.slot-button:hover:not(:disabled) {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  gap: 0.2rem;
   padding: 0.4rem 0.7rem;
-  background: var(--card);
-  color: var(--ink);
-  border: 2px solid var(--blue);
+  background: var(--bg-page);
+  color: var(--text-primary);
+  border: 2px solid var(--border-subtle);
 }
 
-.slot-button .slot-places {
-  font-weight: 400;
+.slot-button:hover:not(:disabled) {
+  border-color: var(--action-primary-bg);
 }
 
+/* Taken: grey, and it can't be pressed. */
 .slot-button:disabled {
-  border-color: var(--line);
-  background: var(--grey-bg);
-  color: var(--muted);
-  cursor: not-allowed;
+  border-color: var(--border-subtle);
+  background: var(--status-full-bg);
+  color: var(--status-full-text);
 }
 
 /* The held time and the countdown stay at the top while the student scrolls. */
@@ -799,18 +950,21 @@ h2.in-card {
   z-index: 1;
   margin: 0.5rem 0 1rem;
   padding: 0.6rem 0.9rem;
-  border-radius: 0.6rem;
-  color: var(--green);
-  background: var(--green-bg);
-  border: 1px solid var(--green);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  background: var(--bg-page);
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--alert-success-accent);
 }
 
 .hold-bar p {
   margin: 0.1rem 0;
 }
 
+/* Under a minute left to book. */
 .time-short {
-  color: var(--red);
+  color: var(--alert-error-accent);
+  font-weight: 700;
 }
 
 .item-name {
@@ -837,14 +991,14 @@ h2.in-card {
   align-items: center;
   gap: 0.4rem 1rem;
   padding: 0.45rem 0.5rem;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .ranked li::before {
   counter-increment: rank;
   content: counter(rank) ".";
   font-weight: 700;
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 .ranked li > span:first-of-type {
@@ -852,8 +1006,8 @@ h2.in-card {
 }
 
 .choose-row.chosen {
-  background: var(--green-bg);
-  border-radius: 0.4rem;
+  background: var(--bg-surface);
+  border-radius: var(--radius);
 }
 
 .choose-name {
@@ -885,8 +1039,8 @@ h2.in-card {
   bottom: 0;
   margin-top: 1rem;
   padding: 0.8rem 0;
-  background: var(--page);
-  border-top: 1px solid var(--line);
+  background: var(--bg-page);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .book-bar button {
@@ -903,8 +1057,7 @@ h2.in-card {
 }
 
 .why-not {
-  font-size: 0.9rem;
-  color: var(--muted);
+  color: var(--text-secondary);
   font-style: italic;
 }
 
@@ -928,9 +1081,9 @@ h2.in-card {
   align-items: center;
   padding: 0.55rem 0.7rem;
   margin: 0.4rem 0;
-  border: 1px solid var(--line);
-  border-radius: 0.6rem;
-  background: var(--card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  background: var(--bg-page);
 }
 
 @media (width < 40rem) {
@@ -946,15 +1099,14 @@ h2.in-card {
 
 /* U7: something this bag needs has run out. */
 .bag-row-flagged {
-  border-left: 4px solid var(--red);
+  border-left: 4px solid var(--alert-warning-accent);
 }
 
 .bag-time {
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 .bag-code {
-  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -962,12 +1114,6 @@ h2.in-card {
 .bag-about {
   display: flex;
   flex-direction: column;
-}
-
-.flag {
-  color: var(--red);
-  font-weight: 600;
-  font-size: 0.9rem;
 }
 
 .pack-list {
@@ -983,17 +1129,16 @@ h2.in-card {
   align-items: center;
   gap: 0.4rem 1rem;
   padding: 0.5rem;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
+/* Out of stock: a gold bar on the left. In the bag: a green one. The badge says which. */
 .pack-row-missing {
-  background: var(--red-bg);
-  border-radius: 0.4rem;
+  border-left: 4px solid var(--alert-warning-accent);
 }
 
 .pack-row-use {
-  background: var(--green-bg);
-  border-radius: 0.4rem;
+  border-left: 4px solid var(--alert-success-accent);
 }
 
 .pack-name {
@@ -1004,17 +1149,12 @@ h2.in-card {
   flex: 1;
 }
 
-.pack-state {
-  font-weight: 600;
-  color: var(--red);
-}
-
-.pack-state-use {
-  color: var(--green);
-}
-
+/* Skipped substitutes: plain grey words, not a badge. */
 .pack-state-skip {
-  color: var(--muted);
+  padding: 0;
+  color: var(--text-secondary);
+  background: none;
+  font-size: 1rem;
   font-weight: 400;
 }
 
@@ -1026,18 +1166,11 @@ h2.in-card {
   align-items: center;
 }
 
-/* On a red or green line, an outline button keeps the card's background,
-   so its blue text stays readable (axe found blue on the tint too faint). */
-.pack-row-missing button.secondary,
-.pack-row-use button.secondary {
-  background: var(--card);
-}
-
 /* "Sam is packing" in the packing queue (decided 12 Nov). */
 .packing-now {
   display: block;
-  color: var(--blue-on-bg);
-  font-weight: 600;
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .pack-hint {
@@ -1049,15 +1182,15 @@ h2.in-card {
   margin-left: 0.3rem;
 }
 
-/* The same yellow in light and dark mode: it's a picture of a real sticky note. */
+/* A picture of the real paper sticky note: gold, with black writing. */
 .sticky-note {
   max-width: 24rem;
   margin: 0.5rem 0 0.8rem;
   padding: 0.8rem 1rem;
-  background: #fde68a;
-  color: #1f2937;
-  border-radius: 0.2rem;
-  box-shadow: 2px 3px 0 rgb(0 0 0 / 0.18);
+  background: var(--sticky-note-bg);
+  color: var(--status-on-color-text);
+  border-radius: 2px;
+  box-shadow: 2px 3px 0 var(--sticky-note-shadow);
   font-size: 1.1rem;
 }
 
@@ -1065,48 +1198,94 @@ h2.in-card {
   margin: 0.15rem 0;
 }
 
+/* Done: green bar, black words. */
 .done-box {
   padding: 0.7rem 1rem;
-  border: 2px solid var(--green);
-  border-radius: 0.6rem;
-  color: var(--green);
-  background: var(--green-bg);
-  font-weight: 600;
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--alert-success-accent);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  background: var(--bg-page);
+  font-weight: 700;
 }
 
 .stock-ran-out {
-  color: var(--red);
-  font-weight: 600;
+  padding-left: 0.5rem;
+  border-left: 4px solid var(--alert-warning-accent);
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
+/* A card that starts with a heading gets a claret title strip across its top,
+   with white words, like "Student Self-Service" on my.mun.ca (decided 12 Nov night).
+   "Are you sure?" boxes (.undo-box) keep their gold bar instead. */
+.card:not(.undo-box) > h2:first-child,
+.card:not(.undo-box) > h3:first-child,
+.card:not(.undo-box) > .card-header:first-child {
+  margin: -1rem -1.2rem 0.9rem;
+  padding: 0.5rem 1.2rem;
+  background: var(--strip-bg);
+  color: var(--strip-text);
+  font-size: 1.05rem;
+}
+
+.card:not(.undo-box) > .card-header:first-child :is(h2, h3, .muted) {
+  color: var(--strip-text);
+  font-size: 1.05rem;
+}
+
+/* No short line under a heading that's already in a strip. */
+.card:not(.undo-box) > h2:first-child::after,
+.card:not(.undo-box) > .card-header:first-child h2::after {
+  content: none;
+}
+
+.card:not(.undo-box) > .card-header:first-child button.link-button,
+.card:not(.undo-box) > .card-header:first-child button.link-button:hover:not(:disabled) {
+  color: var(--strip-text);
+}
+
+.card:not(.undo-box) > :is(h2, h3, .card-header):first-child :focus-visible {
+  outline-color: var(--focus-ring-on-dark);
+}
+
+/* "Are you sure?" boxes: closing a day, packing a bag someone else opened. A gold bar, not red. */
 .undo-box {
-  border-color: var(--red);
+  border-top: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--alert-warning-accent);
 }
 
 /* ---------- the counter ---------- */
 
+/* Tabs under a page (the counter, the coordinator): like the top bar,
+   the one you're on is claret with a 3px claret line under it. */
 .sub-nav {
   display: flex;
-  width: fit-content;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: 0.3rem 0.8rem;
   margin: 0 0 0.8rem;
-  padding: 0.25rem;
-  border-radius: 0.6rem;
-  background: var(--grey-bg);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .sub-nav a {
-  padding: 0.35rem 0.8rem;
-  border-radius: 0.45rem;
-  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  box-sizing: border-box;
+  padding: 0 0.4rem;
+  color: var(--text-primary);
   text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+
+.sub-nav a:hover {
+  background: var(--bg-surface);
 }
 
 .sub-nav a.active {
-  background: var(--card);
+  color: var(--text-link);
   font-weight: 700;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+  border-bottom-color: var(--action-primary-bg);
 }
 
 .find-form {
@@ -1148,12 +1327,14 @@ button.extra-choice.picked .muted {
   color: inherit;
 }
 
+/* Refused (a walk-in too soon): claret bar and a claret bold heading, black words. */
 .refused-box {
   padding: 0.8rem 1rem;
-  border: 2px solid var(--red);
-  border-radius: 0.8rem;
-  color: var(--red);
-  background: var(--red-bg);
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--alert-error-accent);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  background: var(--bg-page);
 }
 
 .refused-box h2 {
@@ -1161,6 +1342,7 @@ button.extra-choice.picked .muted {
   padding: 0;
   border: none;
   font-size: 1.1rem;
+  color: var(--alert-error-accent);
 }
 
 /* ---------- food cards: a photo of each item, its varieties underneath ---------- */
@@ -1181,20 +1363,22 @@ button.extra-choice.picked .muted {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 1rem;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+  background: var(--bg-page);
+  border: 1px solid var(--border-subtle);
+  border-top: 4px solid var(--accent-line);
+  border-radius: var(--radius);
 }
 
+/* Chosen: a 2px claret edge, and the "✓ 1" badge on the photo. */
 .food-card-chosen {
-  border: 2px solid var(--green);
+  border: 2px solid var(--selected-border);
+  border-top-width: 4px;
 }
 
 .food-photo-frame {
   position: relative;
   aspect-ratio: 4 / 3;
-  background: var(--grey-bg);
+  background: var(--bg-surface);
 }
 
 .food-photo {
@@ -1208,21 +1392,16 @@ button.extra-choice.picked .muted {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
-  background: var(--grey-bg);
+  color: var(--text-secondary);
+  background: var(--bg-surface);
 }
 
 .food-badge {
   position: absolute;
   top: 0.6rem;
   left: 0.6rem;
-  padding: 0.15rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #fff;
-  background: #059669;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+  color: var(--text-on-claret);
+  background: var(--action-primary-bg);
 }
 
 .food-body {
@@ -1231,11 +1410,11 @@ button.extra-choice.picked .muted {
 
 .food-category {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 .food-name {
@@ -1255,13 +1434,13 @@ button.extra-choice.picked .muted {
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.5rem 0;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border-subtle);
 }
 
 /* Out of stock: the name goes grey. Not faded with opacity, which made the
    tags and "Out of stock" too faint to read. */
 .food-row-dim .food-row-name {
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 .food-row-about {
@@ -1272,7 +1451,7 @@ button.extra-choice.picked .muted {
 }
 
 .food-row-name {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .food-tags {
@@ -1282,21 +1461,7 @@ button.extra-choice.picked .muted {
 }
 
 .food-row-note {
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.stock-left {
-  color: var(--green);
-}
-
-.stock-out {
-  color: var(--red);
-}
-
-.stock-few {
-  color: var(--amber);
-  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .food-row-action {
@@ -1305,21 +1470,19 @@ button.extra-choice.picked .muted {
 
 .food-row-action .why-not {
   display: block;
-  max-width: 7rem;
+  max-width: 8rem;
   text-align: right;
-  font-size: 0.8rem;
 }
 
 button.add-button,
 button.chosen-button {
   padding: 0.35rem 0.9rem;
-  border-radius: 999px;
 }
 
-button.chosen-button {
-  color: #fff;
-  background: #059669;
-  border-color: #059669;
+/* "✓ Added": chosen, so a 2px claret edge, white inside, unlike the filled Add. */
+button.chosen-button,
+button.chosen-button:hover:not(:disabled) {
+  border: 2px solid var(--selected-border);
 }
 
 .food-section-title {
@@ -1329,11 +1492,13 @@ button.chosen-button {
 
 /* ---------- the home page ---------- */
 
+/* The welcome at the top of the home page: light grey, no gradient, a claret title. */
 .hero {
   padding: 1.6rem 1.5rem;
-  border-radius: 1.2rem;
-  color: #fff;
-  background: linear-gradient(135deg, #1d4ed8, #059669);
+  border-radius: var(--radius);
+  border-top: 4px solid var(--accent-line);
+  color: var(--text-primary);
+  background: var(--bg-surface);
 }
 
 .hero h1 {
@@ -1345,17 +1510,6 @@ button.chosen-button {
   margin: 0.2rem 0 0.9rem;
   max-width: 38rem;
   font-size: 1.05rem;
-}
-
-.hero .actions a.button {
-  background: #fff;
-  color: #1d4ed8;
-  border-color: #fff;
-}
-
-.hero .actions a.button.ghost {
-  background: transparent;
-  color: #fff;
 }
 
 /* ---------- photos on the stock page ---------- */
@@ -1376,7 +1530,7 @@ button.chosen-button {
 .photo-editor .food-photo {
   width: 6rem;
   height: 4.5rem;
-  border-radius: 0.6rem;
+  border-radius: var(--radius);
 }
 
 .photo-editor-actions {
@@ -1402,19 +1556,29 @@ button.chosen-button {
   gap: 0.8rem;
 }
 
+/* "Change photo": looks like a secondary button. It's a label around a hidden file box. */
 .photo-button {
-  display: inline-block;
-  padding: 0.2rem 0.7rem;
-  border: 1px solid var(--blue);
-  border-radius: 0.5rem;
-  color: var(--blue);
-  font-weight: 600;
-  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 2.75rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--action-primary-bg);
+  border-radius: var(--radius);
+  background: var(--bg-page);
+  color: var(--text-link);
+  font-weight: 700;
   cursor: pointer;
 }
 
+.photo-button:hover {
+  background: var(--bg-surface);
+}
+
 .photo-button.busy {
-  opacity: 0.6;
+  color: var(--text-secondary);
+  border-color: var(--border-subtle);
+  background: var(--bg-surface);
   cursor: wait;
 }
 
@@ -1433,7 +1597,7 @@ button.chosen-button {
 }
 
 .day-facts dt {
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 .day-facts dd {
@@ -1529,9 +1693,50 @@ button.chosen-button {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.15rem 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .item-totals li:last-child {
   border-bottom: none;
+}
+
+/* ---------- the style guide page (development only) ---------- */
+
+.sg-swatches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.5rem 1rem;
+}
+
+.sg-swatches li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sg-swatch {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+
+/* The hover and focus looks, to show them without a mouse. */
+button.sg-hover {
+  background: var(--action-primary-hover-bg);
+  border-color: var(--action-primary-hover-bg);
+}
+
+button.secondary.sg-hover {
+  background: var(--bg-surface);
+  border-color: var(--action-primary-bg);
+}
+
+button.sg-focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }

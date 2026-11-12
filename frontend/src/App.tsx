@@ -17,6 +17,7 @@ import { Totals } from './pages/Totals.tsx'
 import { Volunteers } from './pages/Volunteers.tsx'
 import { WalkIn } from './pages/WalkIn.tsx'
 import { PageHeading } from './PageHeading.tsx'
+import { StyleGuide } from './pages/StyleGuide.tsx'
 
 // Every page and its web address. The addresses never hold anything private:
 // no ID numbers, no codes (P10).
@@ -129,6 +130,8 @@ function App() {
               }
             />
             <Route path="volunteers" element={<Navigate to="/coordinator/volunteers" replace />} />
+            {/* Development only: every colour, button, badge and alert on one page (MUN theme, 12 Nov). */}
+            {import.meta.env.DEV && <Route path="style-guide" element={<StyleGuide />} />}
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

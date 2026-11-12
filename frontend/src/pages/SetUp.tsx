@@ -60,7 +60,7 @@ function SetUp({ who }: { who: 'student' | 'staff' }) {
       <PageHeading>{student ? 'Set up your account' : 'Choose your staff password'}</PageHeading>
       <p className="lead">
         {student
-          ? 'Use the setup code you got at the food bank counter. You can do this right there, or later at home.'
+          ? 'Use the setup code you got at the food bank counter.'
           : 'Use the setup code a coordinator gave you.'}
       </p>
       <form onSubmit={setUp} noValidate>
@@ -118,8 +118,8 @@ function SetUp({ who }: { who: 'student' | 'staff' }) {
         </p>
         <p>
           {student
-            ? 'Code not working, or run out? Ask at the counter for a new one.'
-            : 'Code not working, or run out? Ask a coordinator for a new one.'}
+            ? 'Code not working? Ask at the counter for a new one.'
+            : 'Code not working? Ask a coordinator for a new one.'}
         </p>
       </div>
     </div>

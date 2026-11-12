@@ -70,7 +70,7 @@ export function NewPasswordFields({
     <>
       <Field
         label="Choose a password"
-        hint="At least 8 characters. A short phrase is easy to remember. Please don't use your MUN password."
+        hint="At least 8 characters. Please don't use your MUN password."
         type={show ? 'text' : 'password'}
         autoComplete="new-password"
         value={password}
@@ -79,7 +79,7 @@ export function NewPasswordFields({
         required
       />
       <Field
-        label="Type it again"
+        label="Re-enter password"
         type={show ? 'text' : 'password'}
         autoComplete="new-password"
         value={again}

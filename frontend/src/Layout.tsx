@@ -15,37 +15,67 @@ export function Layout() {
 
   return (
     <>
+      {/* A claret bar (decided 12 Nov night): the name, the tabs with icons like the
+          my.mun.ca portal, and the account links on the right, in one row. */}
       <header className="top">
-        <nav aria-label="Main">
+        <div className="top-inner">
+          {/* TODO: Food bank logo goes here. Not MUN's logo or crest: the brand rules keep those for the university. */}
           <Link to="/" className="brand">
             Campus Food Bank
           </Link>
-          <NavLink to="/" end>
-            Pickup days
-          </NavLink>
-          {account?.kind === 'student' && <NavLink to="/book">Book</NavLink>}
-          {account?.kind === 'staff' && <NavLink to="/counter">Counter</NavLink>}
-          {account?.kind === 'staff' && <NavLink to="/packing">Packing</NavLink>}
-          {account?.kind === 'staff' && <NavLink to="/stock">Stock</NavLink>}
-          {account?.kind === 'staff' && account.role === 'coordinator' && (
-            <NavLink to="/coordinator">Coordinator</NavLink>
-          )}
-          <span className="spacer" />
-          {account === null && me.state !== 'loading' && (
-            <>
-              <NavLink to="/setup">Set up your account</NavLink>
-              <NavLink to="/login">Log in</NavLink>
-            </>
-          )}
-          {account !== null && (
-            <>
-              {account.kind === 'staff' && <span className="who">{account.username}</span>}
-              <button type="button" className="link-button" onClick={logOutAndLeave}>
-                Log out
-              </button>
-            </>
-          )}
-        </nav>
+          <nav aria-label="Account" className="account-links">
+            {account === null && me.state !== 'loading' && (
+              <>
+                <NavLink to="/setup">Set up your account</NavLink>
+                <NavLink to="/login">Log in</NavLink>
+              </>
+            )}
+            {account !== null && (
+              <>
+                {account.kind === 'staff' && <span className="who">{account.username}</span>}
+                <button type="button" className="link-button" onClick={logOutAndLeave}>
+                  Log out
+                </button>
+              </>
+            )}
+          </nav>
+          <nav aria-label="Main" className="tabs">
+            <NavLink to="/" end>
+              <TabIcon shape="calendar" />
+              Pickup days
+            </NavLink>
+            {account?.kind === 'student' && (
+              <NavLink to="/book">
+                <TabIcon shape="bag" />
+                Book
+              </NavLink>
+            )}
+            {account?.kind === 'staff' && (
+              <NavLink to="/counter">
+                <TabIcon shape="card" />
+                Counter
+              </NavLink>
+            )}
+            {account?.kind === 'staff' && (
+              <NavLink to="/packing">
+                <TabIcon shape="box" />
+                Packing
+              </NavLink>
+            )}
+            {account?.kind === 'staff' && (
+              <NavLink to="/stock">
+                <TabIcon shape="list" />
+                Stock
+              </NavLink>
+            )}
+            {account?.kind === 'staff' && account.role === 'coordinator' && (
+              <NavLink to="/coordinator">
+                <TabIcon shape="sliders" />
+                Coordinator
+              </NavLink>
+            )}
+          </nav>
+        </div>
       </header>
       {me.state === 'failed' && (
         <p className="problem banner">Could not reach the server. Is it running?</p>
@@ -53,10 +83,58 @@ export function Layout() {
       <main>
         <Outlet />
       </main>
-      <footer className="bottom">
-        <Link to="/staff/login">Staff log in</Link>
-      </footer>
     </>
+  )
+}
+
+/**
+ * A small line drawing for each tab, like the icons in the portal's tabs. Drawn
+ * here, so no icon package is needed. Hidden from screen readers: the tab's words say it.
+ */
+function TabIcon({ shape }: { shape: 'calendar' | 'bag' | 'card' | 'box' | 'list' | 'sliders' }) {
+  const lines = {
+    calendar: (
+      <>
+        <rect x="3" y="4" width="18" height="17" rx="2" />
+        <path d="M16 2v4M8 2v4M3 10h18" />
+      </>
+    ),
+    bag: (
+      <>
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+        <path d="M3 6h18M16 10a4 4 0 0 1-8 0" />
+      </>
+    ),
+    card: (
+      <>
+        <rect x="2" y="5" width="20" height="14" rx="2" />
+        <circle cx="8" cy="12" r="2" />
+        <path d="M13 10h5M13 14h5" />
+      </>
+    ),
+    box: (
+      <>
+        <path d="M21 8 12 3 3 8v8l9 5 9-5z" />
+        <path d="m3 8 9 5 9-5M12 13v8" />
+      </>
+    ),
+    list: <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />,
+    sliders: <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />,
+  }[shape]
+  return (
+    <svg
+      className="tab-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {lines}
+    </svg>
   )
 }
 
