@@ -49,6 +49,17 @@ export function FoodCard({
   )
 }
 
+/**
+ * How much is left, in words: "6 left", "Out of stock", or, for food nobody
+ * counts, "Few left" or "In stock" (decided 12 Nov).
+ */
+export function StockNote({ stock, fewLeft }: { stock: number | null; fewLeft: boolean }) {
+  if (stock === 0) return <span className="stock-out">Out of stock</span>
+  if (stock !== null) return <span className="stock-left">{stock} left</span>
+  if (fewLeft) return <span className="stock-few">Few left</span>
+  return <span className="stock-left">In stock</span>
+}
+
 /** One variety inside a card: its name and tags on the left, and whatever goes on the right. */
 export function FoodRow({
   name,

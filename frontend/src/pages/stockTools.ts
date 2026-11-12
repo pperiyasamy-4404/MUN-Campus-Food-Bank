@@ -24,15 +24,19 @@ export async function change<T>(
 }
 
 /**
- * Shown food that hasn't been counted since the last pickup ended. Pickups and
- * walk-ins have changed the shelf since, so the count should be done again
- * before booking opens (I8). Food a volunteer found none of while packing needs
- * a count too: until then it can't be booked, and bags with it are flagged (U7).
- * Hidden food doesn't need counting.
+ * Shown food that needs a look before booking opens (I8):
+ * - food a volunteer found none of while packing: until someone checks the
+ *   shelf it can't be booked, and bags with it are flagged (U7);
+ * - food with a number that hasn't been counted since the last pickup ended:
+ *   pickups and walk-ins have changed the shelf since.
+ * Food with no number never needs counting: that's the point of it (decided 12 Nov).
+ * Hidden food doesn't need anything.
  */
 export function needsCounting(variety: StockVariety, lastPickupEndedAt: string | null): boolean {
   if (!variety.shown) return false
-  if (variety.counted_at === null || variety.ran_out_at !== null) return true
+  if (variety.ran_out_at !== null) return true
+  if (variety.stock === null) return false
+  if (variety.counted_at === null) return true
   return lastPickupEndedAt !== null && new Date(variety.counted_at) < new Date(lastPickupEndedAt)
 }
 

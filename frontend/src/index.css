@@ -603,6 +603,35 @@ button.link-button {
   grid-column: 1 / -1;
 }
 
+/* In stock / Few left / Out of stock (decided 12 Nov). The pressed one is filled and ticked. */
+.stock-controls {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: start;
+}
+
+.level-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+button.level-button {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.9rem;
+  background: transparent;
+  color: var(--blue);
+}
+
+button.level-button-on {
+  background: var(--blue);
+  color: var(--page);
+}
+
+button.level-button-on::before {
+  content: "✓ ";
+}
+
 .stock-about p {
   margin: 0;
 }
@@ -1226,6 +1255,11 @@ button.extra-choice.picked .muted {
 
 .stock-out {
   color: var(--red);
+}
+
+.stock-few {
+  color: var(--amber);
+  font-weight: 600;
 }
 
 .food-row-action {

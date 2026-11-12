@@ -6,9 +6,10 @@ import { AddFood, AddVariety, CategoriesAndTags, ItemPhotoEditor, Rename, Variet
 import { change, needsCounting, withVariety, type StockTools } from './stockTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
 
-// The staff stock page (I8, R2): count the shelf before booking opens, and add
+// The staff stock page (I8, R2): check the shelf before booking opens, and add
 // new food when donations come in. Every staff member can do everything here,
-// categories, tags and names too (decided 7 Nov).
+// categories, tags and names too (decided 7 Nov). Most food has no number: it's
+// In stock or Few left. Only food worth sharing out exactly is counted (decided 12 Nov).
 
 type Load = { state: 'loading' } | { state: 'failed' } | { state: 'ready'; page: StockPage }
 
@@ -55,24 +56,25 @@ export function Stock() {
     <div>
       <PageHeading>Food and stock</PageHeading>
       <p className="lead">
-        Count what's on the shelf and type the number. Food that's booked but not packed yet is taken off for
-        you, so a count is right even while booking is open.
+        Most food needs no number: tap <strong>In stock</strong> or <strong>Few left</strong>, and any number of
+        students can book it. Count only food you want shared out exactly, like 6 jars from one donation: the first
+        6 students get one, and then it shows as out of stock. Food that's booked but not packed yet is taken off a
+        count for you.
       </p>
 
       <div className="notice stock-notice">
         <p>{whenBookingOpens(page)}</p>
         <p>
           {toCount.length === 0
-            ? 'Everything has been counted since the last pickup.'
-            : `${toCount.length} of ${shown.length} ${shown.length === 1 ? 'food needs' : 'foods need'} counting${
-                page.last_pickup_ended_at
-                  ? `: not counted since the last pickup ended, ${showDayAndClock(page.last_pickup_ended_at)}`
-                  : ''
+            ? 'Nothing needs checking.'
+            : // In brackets, so the time's "p.m." isn't followed by a second full stop.
+              `${toCount.length} of ${shown.length} ${shown.length === 1 ? 'food needs' : 'foods need'} checking: marked out of stock while packing, or counted before the last pickup${
+                page.last_pickup_ended_at ? ` (it ended ${showDayAndClock(page.last_pickup_ended_at)})` : ''
               }.`}
         </p>
         <label className="check">
           <input type="checkbox" checked={onlyToCount} onChange={(event) => setOnlyToCount(event.target.checked)} />
-          Only show food that needs counting
+          Only show food that needs checking
         </label>
       </div>
 
@@ -91,7 +93,7 @@ function whenBookingOpens(page: StockPage): string {
     return `Booking for ${day} is open until ${showDayAndClock(next.booking_closes_at)}`
   }
   // The time comes last: it ends in "p.m." already, so no full stop is added.
-  return `Count the shelf before booking for ${day} opens, ${showDayAndClock(next.booking_opens_at)}`
+  return `Check the shelf before booking for ${day} opens, ${showDayAndClock(next.booking_opens_at)}`
 }
 
 function Section({
@@ -119,7 +121,7 @@ function Section({
     <section>
       <h2>{title}</h2>
       {isExtra && <p className="muted">Not booked online. Students see them as "may be available" when there are some left.</p>}
-      {categories.length === 0 && <p className="muted">{onlyToCount ? 'Nothing here needs counting.' : 'Nothing yet.'}</p>}
+      {categories.length === 0 && <p className="muted">{onlyToCount ? 'Nothing here needs checking.' : 'Nothing yet.'}</p>}
       {categories.map((category) => (
         <article className="card" key={category.id}>
           <header className="card-header">
@@ -173,6 +175,16 @@ function ItemBlock({
   )
 }
 
+const LEVELS = ['In stock', 'Few left', 'Out of stock'] as const
+type Level = (typeof LEVELS)[number]
+
+/** Which of the three buttons shows as pressed. None when the food has a number above 0. */
+function levelOf(variety: StockVariety): Level | null {
+  if (variety.stock === 0) return 'Out of stock'
+  if (variety.stock !== null) return null
+  return variety.few_left ? 'Few left' : 'In stock'
+}
+
 function VarietyRow({
   variety,
   isExtra,
@@ -185,6 +197,8 @@ function VarietyRow({
   stale: boolean
 }) {
   const [onShelf, setOnShelf] = useState('')
+  // Food with a number opens with the count box; food with none doesn't need it.
+  const [counting, setCounting] = useState(variety.stock !== null && variety.stock > 0)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ kind: 'saved' | 'problem'; text: string } | null>(null)
   const [editing, setEditing] = useState(false)
@@ -218,6 +232,34 @@ function VarietyRow({
     tools.counted(answer.data.variety)
   }
 
+  /** In stock or Few left: no number (decided 12 Nov). Out of stock is a count of 0. */
+  async function mark(choice: Level) {
+    setSaving(true)
+    const answer =
+      choice === 'Out of stock'
+        ? await change<{ variety: StockVariety; short_by: number }>(tools, `/api/varieties/${variety.id}/count`, {
+            on_shelf: 0,
+          })
+        : await change<StockVariety>(tools, `/api/varieties/${variety.id}/in-stock`, { few_left: choice === 'Few left' })
+    setSaving(false)
+    if (!answer.ok) return setMessage({ kind: 'problem', text: answer.message })
+    const newer = 'variety' in answer.data ? answer.data.variety : answer.data
+    const short = 'short_by' in answer.data ? answer.data.short_by : 0
+    setMessage({
+      kind: 'saved',
+      text:
+        short === 0
+          ? `Saved: ${choice.toLowerCase()}.`
+          : `Saved: out of stock. ${short} booked ${short === 1 ? 'one is' : 'ones are'} missing from the shelf: ${
+              short === 1 ? 'that bag' : 'those bags'
+            } will need a substitute.`,
+    })
+    if (choice !== 'Out of stock') setCounting(false)
+    tools.counted(newer)
+  }
+
+  const level = levelOf(variety)
+
   const classes = ['stock-row', stale && 'stock-row-stale', !variety.shown && 'stock-row-hidden']
   return (
     <li className={classes.filter(Boolean).join(' ')}>
@@ -232,42 +274,78 @@ function VarietyRow({
           ))}
         </p>
         <p className="stock-numbers">
-          {/* Extras aren't booked online (E1): their number is just what's left. */}
-          <strong>{variety.stock}</strong> {isExtra ? 'left' : 'can be booked'}
+          {variety.stock === null ? (
+            <>
+              <strong className={variety.few_left ? 'stock-few' : undefined}>
+                {variety.few_left ? 'Few left' : 'In stock'}
+              </strong>{' '}
+              · no number
+            </>
+          ) : variety.stock === 0 ? (
+            <strong className="stock-out">Out of stock</strong>
+          ) : (
+            <>
+              {/* Extras aren't booked online (E1): their number is just what's left. */}
+              <strong>{variety.stock}</strong> {isExtra ? 'left' : 'can be booked'}
+            </>
+          )}
           {variety.booked_not_packed > 0 && ` · ${variety.booked_not_packed} booked, not packed yet`}
         </p>
         <p className={stale ? 'stock-age stock-age-stale' : 'stock-age'}>
           {variety.counted_at
-            ? `Counted ${showDayAndClock(variety.counted_at)} by ${variety.counted_by}`
-            : 'Never counted'}
+            ? `${variety.stock === null ? 'Checked' : 'Counted'} ${showDayAndClock(variety.counted_at)} by ${variety.counted_by}`
+            : 'Never checked'}
         </p>
         {variety.ran_out_at && (
           <p className="stock-age stock-ran-out">
-            Marked out of stock while packing, {showDayAndClock(variety.ran_out_at)}. Count it to take the flag off
-            other bags.
+            Marked out of stock while packing, {showDayAndClock(variety.ran_out_at)}. Tap In stock, or count it, to
+            take the flag off other bags.
           </p>
         )}
       </div>
-      <form className="count-form" onSubmit={save} noValidate>
-        <label htmlFor={box}>On the shelf now</label>
+      <div className="stock-controls">
+        <div className="level-buttons" role="group" aria-label={`How much ${variety.name} is on the shelf`}>
+          {LEVELS.map((choice) => (
+            <button
+              key={choice}
+              type="button"
+              className={level === choice ? 'level-button level-button-on' : 'level-button'}
+              aria-pressed={level === choice}
+              disabled={saving}
+              onClick={() => mark(choice)}
+            >
+              {choice}
+            </button>
+          ))}
+        </div>
         <div className="count-controls">
-          <input
-            id={box}
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={999}
-            value={onShelf}
-            onChange={(event) => setOnShelf(event.target.value)}
-          />
-          <button type="submit" disabled={saving}>
-            {saving ? 'Saving...' : 'Save'}
+          <button type="button" className="link-button" onClick={() => setCounting(!counting)} aria-expanded={counting}>
+            {counting ? 'Close count' : 'Count it'}
           </button>
           <button type="button" className="link-button" onClick={() => setEditing(!editing)} aria-expanded={editing}>
             {editing ? 'Close' : 'Edit'}
           </button>
         </div>
-      </form>
+        {counting && (
+          <form className="count-form" onSubmit={save} noValidate>
+            <label htmlFor={box}>On the shelf now</label>
+            <div className="count-controls">
+              <input
+                id={box}
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={999}
+                value={onShelf}
+                onChange={(event) => setOnShelf(event.target.value)}
+              />
+              <button type="submit" disabled={saving}>
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
       {message && (
         <p className={message.kind === 'saved' ? 'count-saved' : 'field-error'} role="status">
           {message.text}

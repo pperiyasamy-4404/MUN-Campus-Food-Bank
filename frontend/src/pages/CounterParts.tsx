@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router'
 import type { ShelfFood } from '../api.ts'
-import { FoodCard, FoodRow } from '../FoodCards.tsx'
+import { FoodCard, FoodRow, StockNote } from '../FoodCards.tsx'
 import { byItem, total, whyNotMore, type Chosen } from './counterTools.ts'
 
 // Pieces the counter pages share.
@@ -68,7 +68,7 @@ export function ShelfPicker({
                     key={line.variety_id}
                     name={line.variety}
                     dim={count === 0 && whyNot !== null}
-                    note={<span className="stock-left">{line.stock} left</span>}
+                    note={<StockNote stock={line.stock} fewLeft={line.few_left} />}
                   >
                     {count === 0 && whyNot !== null ? (
                       <span className="why-not">{whyNot}</span>
@@ -130,7 +130,7 @@ export function ExtrasPicker({
             {group.lines.map((line) => {
               const picked = pickedId === line.variety_id
               return (
-                <FoodRow key={line.variety_id} name={line.variety} note={<span className="stock-left">{line.stock} left</span>}>
+                <FoodRow key={line.variety_id} name={line.variety} note={<StockNote stock={line.stock} fewLeft={line.few_left} />}>
                   <button
                     type="button"
                     className={picked ? 'chosen-button' : 'add-button'}

@@ -75,7 +75,7 @@ export function AddFood({
       name: values.name,
       is_extra: isExtra,
       // An empty box is sent as -1, so the server's answer is "Type a number from 0 to 999."
-      first_variety: { name: values.variety, tag_ids: tagIds, on_shelf: Number(values.on_shelf || -1) },
+      first_variety: { name: values.variety, tag_ids: tagIds, on_shelf: optionalCount(values.on_shelf) },
     })
     if (!answer.ok) {
       setProblem(answer.message)
@@ -127,7 +127,8 @@ export function AddFood({
       />
       <TagChecks tags={tools.tags} chosen={tagIds} onChange={setTagIds} />
       <Field
-        label="On the shelf now"
+        label="How many on the shelf (optional)"
+        hint="Leave it empty if nobody will count it: students see In stock."
         type="number"
         inputMode="numeric"
         min={0}
@@ -135,7 +136,6 @@ export function AddFood({
         value={values.on_shelf}
         onChange={set('on_shelf')}
         error={fields['first_variety.on_shelf']}
-        required
       />
       <p className="actions">
         <button type="submit">Add</button>
@@ -168,7 +168,7 @@ export function AddVariety({ tools, itemId, itemName }: { tools: StockTools; ite
     const answer = await change(tools, `/api/items/${itemId}/varieties`, {
       name: values.name,
       tag_ids: tagIds,
-      on_shelf: Number(values.on_shelf || -1), // empty: the server says what to type
+      on_shelf: optionalCount(values.on_shelf),
     })
     if (!answer.ok) {
       setProblem(answer.message)
@@ -186,7 +186,8 @@ export function AddVariety({ tools, itemId, itemName }: { tools: StockTools; ite
       <Field label={`New variety of ${itemName}`} value={values.name} onChange={set('name')} error={fields.name} required />
       <TagChecks tags={tools.tags} chosen={tagIds} onChange={setTagIds} />
       <Field
-        label="On the shelf now"
+        label="How many on the shelf (optional)"
+        hint="Leave it empty if nobody will count it: students see In stock."
         type="number"
         inputMode="numeric"
         min={0}
@@ -194,7 +195,6 @@ export function AddVariety({ tools, itemId, itemName }: { tools: StockTools; ite
         value={values.on_shelf}
         onChange={set('on_shelf')}
         error={fields.on_shelf}
-        required
       />
       <p className="actions">
         <button type="submit">Add</button>
@@ -382,4 +382,9 @@ export function ItemPhotoEditor({ tools, item, children }: { tools: StockTools; 
       {problem && <p className="field-error">{problem}</p>}
     </div>
   )
+}
+
+/** An empty box means no number: in stock, and nobody counts it (decided 12 Nov). */
+function optionalCount(typed: string): number | null {
+  return typed.trim() === '' ? null : Number(typed)
 }

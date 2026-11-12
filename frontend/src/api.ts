@@ -22,7 +22,10 @@ export type PickupDay = {
 export type Variety = {
   id: number
   name: string
-  stock: number | null // null for extras, which only show as "may be available"
+  // null for extras, which only show as "may be available", and for food nobody
+  // counts: "In stock" or "Few left" (decided 12 Nov). 0 is out of stock.
+  stock: number | null
+  few_left: boolean
   tags: string[]
 }
 
@@ -166,12 +169,13 @@ export type StockVariety = {
   id: number
   name: string
   shown: boolean
-  stock: number // how many more students can book it
+  stock: number | null // how many more students can book it. null: no number, in stock (decided 12 Nov)
+  few_left: boolean // only for food with no number
   booked_not_packed: number // still on the shelf, already promised
   tag_ids: number[]
   counted_at: string | null
   counted_by: string | null
-  ran_out_at: string | null // none on the shelf while packing. Cleared by the next count (U7).
+  ran_out_at: string | null // none on the shelf while packing. Cleared by the next check (U7).
 }
 
 export type StockItem = {
@@ -318,7 +322,8 @@ export type ShelfFood = {
   item_id: number
   item: string
   photo_url: string | null
-  stock: number // left that nobody booked
+  stock: number | null // left that nobody booked. null: no number, in stock
+  few_left: boolean
 }
 
 export type CounterPage = {

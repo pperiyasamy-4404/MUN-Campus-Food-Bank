@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react'
 import { send, type BookingDetails, type Food, type HeldTime, type Limits, type Variety } from '../api.ts'
-import { FoodCard, FoodRow } from '../FoodCards.tsx'
+import { FoodCard, FoodRow, StockNote } from '../FoodCards.tsx'
 import { Problem } from '../forms.tsx'
 import { showDayAndClock } from '../time.ts'
 import { PageHeading } from '../PageHeading.tsx'
@@ -66,7 +66,8 @@ export function ChooseFood({
   /** Why one more of this can't be added, or null if it can. */
   function whyNotMore(line: Line): string | null {
     const have = chosen[line.variety.id] ?? 0
-    if (line.variety.stock === null || line.variety.stock <= have) return have === 0 ? 'Out of stock' : 'No more left'
+    // No number (null): any number of students can book it (decided 12 Nov).
+    if (line.variety.stock !== null && line.variety.stock <= have) return have === 0 ? 'Out of stock' : 'No more left'
     if (ofItem(line.itemKey) >= limits.max_per_item) {
       return limits.max_per_item === 1 ? `One ${line.item} only` : `${limits.max_per_item} ${line.item} at most`
     }
@@ -98,7 +99,7 @@ export function ChooseFood({
   }
 
   const substituteChoices = lines.filter(
-    (line) => !(line.variety.id in chosen) && !substitutes.includes(line.variety.id) && (line.variety.stock ?? 0) > 0,
+    (line) => !(line.variety.id in chosen) && !substitutes.includes(line.variety.id) && line.variety.stock !== 0,
   )
   const extras = food.extras.flatMap((category) => category.items.map((item) => item.name))
 
@@ -153,13 +154,7 @@ export function ChooseFood({
                         name={variety.name}
                         tags={variety.tags}
                         dim={have === 0 && notMore !== null}
-                        note={
-                          variety.stock === 0 ? (
-                            <span className="stock-out">Out of stock</span>
-                          ) : (
-                            <span className="stock-left">{variety.stock} left</span>
-                          )
-                        }
+                        note={<StockNote stock={variety.stock} fewLeft={variety.few_left} />}
                       >
                         {limits.max_per_item === 1 ? (
                           have > 0 ? (

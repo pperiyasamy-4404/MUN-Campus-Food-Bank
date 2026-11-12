@@ -62,7 +62,8 @@ export function whyNotMore(
   alreadyOfItem: number,
 ): string | null {
   const have = chosen[line.variety_id] ?? 0
-  if (have >= line.stock) return 'No more left'
+  // No number (null): in stock, nobody counts it (decided 12 Nov).
+  if (line.stock !== null && have >= line.stock) return 'No more left'
   const ofItem =
     alreadyOfItem +
     lines.filter((other) => other.item_id === line.item_id).reduce((sum, other) => sum + (chosen[other.variety_id] ?? 0), 0)

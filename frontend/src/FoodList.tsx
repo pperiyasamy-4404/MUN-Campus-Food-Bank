@@ -1,5 +1,5 @@
 import { useServerData, type Category, type Food } from './api.ts'
-import { FoodCard, FoodRow } from './FoodCards.tsx'
+import { FoodCard, FoodRow, StockNote } from './FoodCards.tsx'
 
 /** What's on the shelf this week, as cards with a photo of each item. */
 export function FoodList() {
@@ -44,10 +44,8 @@ function FoodGrid({ categories, empty, extras }: { categories: Category[]; empty
                 note={
                   extras ? (
                     'May be available'
-                  ) : variety.stock === 0 ? (
-                    <span className="stock-out">Out of stock</span>
                   ) : (
-                    <span className="stock-left">{variety.stock} left</span>
+                    <StockNote stock={variety.stock} fewLeft={variety.few_left} />
                   )
                 }
               />
