@@ -147,6 +147,8 @@ def test_the_id_number_never_leaks_at_the_counter(every_log_line, client, db_wit
     send("/api/walk-ins", {"id_number": ID_NUMBER, "food": [{"variety_id": rice.id}]})
     send("/api/walk-ins", {"id_number": ID_NUMBER, "food": [{"variety_id": rice.id}]})
     send("/api/walk-ins", {"id_number": TYPO, "food": [{"variety_id": rice.id}]})
+    send("/api/counter/find-by-card", {"id_number": TYPO})
+    send("/api/counter/find-by-card", {"id_number": ID_NUMBER})
     send("/api/counter/pickups", {"code": bag.code, "id_number": ID_NUMBER})
     send("/api/counter/pickups", {"code": "ZZZ", "id_number": ID_NUMBER})
 

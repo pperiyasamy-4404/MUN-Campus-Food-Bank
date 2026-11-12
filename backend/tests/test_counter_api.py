@@ -52,6 +52,7 @@ def setup(client, db_with_sample_week):
     [
         ("GET", "/api/counter"),
         ("POST", "/api/counter/find"),
+        ("POST", "/api/counter/find-by-card"),
         ("POST", "/api/counter/pickups"),
         ("POST", "/api/walk-ins/check"),
         ("POST", "/api/walk-ins"),
@@ -172,3 +173,42 @@ def test_counter_answers_show_nothing_about_the_student(client, setup):
     for answer in answers:
         assert setup["student"].id_hash not in answer
         assert "student" not in answer
+
+
+# ---------- no code: find the bag by the MUN card (decided 12 Nov) ----------
+
+
+def test_a_bag_can_be_found_by_the_mun_card(client, setup):
+    """The phone is dead and the student doesn't remember the code."""
+    response = client.post("/api/counter/find-by-card", json={"id_number": ID_NUMBER})
+
+    assert response.status_code == 200
+    assert response.json()["code"] == setup["bag"].code
+    # Handing over still checks the card, as with a code.
+    handed = client.post("/api/counter/pickups", json={"code": setup["bag"].code, "id_number": ID_NUMBER})
+    assert handed.status_code == 201
+
+
+def test_a_card_with_no_booking_today(client, setup):
+    response = client.post("/api/counter/find-by-card", json={"id_number": OTHER_ID_NUMBER})
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == (
+        "There's no booking today for that card. Check the number, or serve them as a walk-in."
+    )
+
+
+def test_a_card_number_must_look_like_one(client, setup):
+    response = client.post("/api/counter/find-by-card", json={"id_number": "12"})
+
+    assert response.status_code == 422
+    [problem] = response.json()["detail"]
+    assert problem["loc"] == ["body", "id_number"]
+
+
+def test_finding_by_card_waits_for_the_counter_to_open(client, setup):
+    stop_the_clock_at(MORNING)
+
+    response = client.post("/api/counter/find-by-card", json={"id_number": ID_NUMBER})
+
+    assert response.status_code == 400

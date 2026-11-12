@@ -11,12 +11,17 @@ import { PageHeading } from '../PageHeading.tsx'
 // Handing over a booked bag (P5, B3, U6, E3). The student says their code, the
 // volunteer finds the bag, adds any extras they ask for, types the number on
 // their MUN card, and hands the bag over. The server checks the card matches.
+// No code (a dead phone, say)? The bag can be found by the card instead (decided 12 Nov).
 
 export function HandOver() {
   const { forget } = useMe()
   const [version, setVersion] = useState(0)
   const load = useCounterPage(version, forget)
   const [code, setCode] = useState('')
+  const [byCard, setByCard] = useState(false)
+  const [card, setCard] = useState('')
+  // The card the bag was found by: already typed, so the hand-over box starts with it.
+  const [foundByCard, setFoundByCard] = useState('')
   const [bag, setBag] = useState<BagAtCounter | null>(null)
   const [done, setDone] = useState<HandedOver | null>(null)
   const [problem, setProblem] = useState<string | null>(null)
@@ -27,15 +32,29 @@ export function HandOver() {
     setProblem(null)
     setBag(null)
     setFinding(true)
-    const answer = await send<BagAtCounter>('/api/counter/find', { code })
+    const answer = byCard
+      ? await send<BagAtCounter>('/api/counter/find-by-card', { id_number: card })
+      : await send<BagAtCounter>('/api/counter/find', { code })
     setFinding(false)
-    if (answer.ok) return setBag(answer.data)
+    if (answer.ok) {
+      setFoundByCard(byCard ? card : '')
+      return setBag(answer.data)
+    }
     if (answer.status === 401) return forget()
-    setProblem(answer.fields.code ?? answer.message)
+    setProblem(answer.fields.code ?? answer.fields.id_number ?? answer.message)
+  }
+
+  function switchWay() {
+    setByCard(!byCard)
+    setProblem(null)
+    setBag(null)
   }
 
   function nextStudent() {
     setCode('')
+    setCard('')
+    setFoundByCard('')
+    setByCard(false)
     setBag(null)
     setDone(null)
     setProblem(null)
@@ -65,17 +84,35 @@ export function HandOver() {
         <>
           <form className="find-form" onSubmit={find} noValidate autoComplete="off">
             <Problem message={problem} />
-            <Field
-              label="Booking code"
-              hint="The student says it, like K3P."
-              className="code-input"
-              value={code}
-              onChange={(value) => setCode(value.toUpperCase())}
-              maxLength={10}
-            />
-            <button type="submit" disabled={finding || code.trim() === ''}>
-              {finding ? 'Finding...' : 'Find the bag'}
-            </button>
+            {byCard ? (
+              <Field
+                key="card"
+                label="MUN card number"
+                hint="From the student's card. Use this when they don't have their code."
+                inputMode="numeric"
+                value={card}
+                onChange={setCard}
+                maxLength={12}
+              />
+            ) : (
+              <Field
+                key="code"
+                label="Booking code"
+                hint="The student says it, like K3P."
+                className="code-input"
+                value={code}
+                onChange={(value) => setCode(value.toUpperCase())}
+                maxLength={10}
+              />
+            )}
+            <span className="actions">
+              <button type="submit" disabled={finding || (byCard ? card : code).trim() === ''}>
+                {finding ? 'Finding...' : 'Find the bag'}
+              </button>
+              <button type="button" className="link-button" onClick={switchWay}>
+                {byCard ? 'Use the booking code instead' : 'No code? Use their MUN card'}
+              </button>
+            </span>
           </form>
           {bag && (
             <TheBag
@@ -84,6 +121,7 @@ export function HandOver() {
               food={page.food}
               extras={page.extras}
               maxPerItem={page.limits.max_per_item}
+              cardTyped={foundByCard}
               onDone={setDone}
               onChanged={setBag}
               onLoggedOut={forget}
@@ -100,6 +138,7 @@ function TheBag({
   food,
   extras,
   maxPerItem,
+  cardTyped,
   onDone,
   onChanged,
   onLoggedOut,
@@ -108,13 +147,15 @@ function TheBag({
   food: ShelfFood[]
   extras: ShelfFood[]
   maxPerItem: number
+  // The card the bag was found by, if it was. Empty otherwise.
+  cardTyped: string
   onDone: (done: HandedOver) => void
   onChanged: (bag: BagAtCounter) => void
   onLoggedOut: () => void
 }) {
   const [choices, setChoices] = useState<Chosen>({})
   const [chosenExtras, setChosenExtras] = useState<Record<number, number>>({})
-  const [card, setCard] = useState('')
+  const [card, setCard] = useState(cardTyped)
   const [problem, setProblem] = useState<string | null>(null)
   const [fields, setFields] = useState<Record<string, string>>({})
   const [sending, setSending] = useState(false)

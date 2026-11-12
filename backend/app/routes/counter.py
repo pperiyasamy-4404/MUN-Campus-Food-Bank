@@ -171,6 +171,18 @@ def find_a_bag(details: BagCode, staff: CurrentStaff, db: DB, now: Now) -> BagAt
     return bag_at_counter(counter.find_bag(db, details.code, now), db)
 
 
+class CardNumber(BaseModel):
+    # The number on the student's MUN card, when they don't have their code.
+    id_number: IdNumber
+
+
+@router.post("/counter/find-by-card")
+def find_a_bag_by_card(details: CardNumber, staff: CurrentStaff, db: DB, now: Now) -> BagAtCounter:
+    """Today's bag for this MUN card: no code, say a dead phone (decided 12 Nov).
+    A POST, so the ID number never goes in a web address (P10)."""
+    return bag_at_counter(counter.find_bag_by_card(db, details.id_number.get_secret_value(), now), db)
+
+
 class ChoiceIn(BaseModel):
     variety_id: int
     quantity: int = Field(default=1, ge=1, le=99)

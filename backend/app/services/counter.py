@@ -242,6 +242,27 @@ def find_bag(db: Session, code: str, now: datetime) -> Booking:
     return _bag_by_code(db, _open_day(db, now), code)
 
 
+def find_bag_by_card(db: Session, id_number: str, now: datetime) -> Booking:
+    """Today's bag for the student with this MUN card, when they don't have their code:
+    a dead phone, say (what-could-go-wrong problem 9, decided 12 Nov).
+
+    The volunteer has the card in their hand, and handing over checks it
+    anyway (P5), so this shows them nothing the code wouldn't. A student has
+    at most one booking a day (uq_bookings_student_id_pickup_day_id).
+    """
+    day = _open_day(db, now)
+    booking = db.scalar(
+        select(Booking)
+        .join(Student, Student.id == Booking.student_id)
+        .where(Booking.pickup_day_id == day.id, Student.id_hash == id_hash(id_number))
+    )
+    if booking is None:
+        raise NotFound(
+            "There's no booking today for that card. Check the number, or serve them as a walk-in."
+        )
+    return booking
+
+
 def _bag_by_code(db: Session, day: PickupDay, code: str) -> Booking:
     code = code.strip().upper()
     booking = db.scalar(select(Booking).where(Booking.pickup_day_id == day.id, Booking.code == code))
