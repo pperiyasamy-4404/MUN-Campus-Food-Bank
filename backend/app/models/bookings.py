@@ -53,6 +53,11 @@ class Booking(Base):
     packed_at: Mapped[datetime | None]
     # Which volunteer pressed Packed (step 6).
     packed_by_staff_id: Mapped[int | None] = mapped_column(ForeignKey("staff.id"))
+    # Who opened the bag to pack it, and when, so the queue can say "Sam is packing"
+    # and nobody packs it twice (what-could-go-wrong problem 7, decided 12 Nov).
+    # Cleared when it's packed, or when Packed is undone.
+    packing_started_at: Mapped[datetime | None]
+    packing_by_staff_id: Mapped[int | None] = mapped_column(ForeignKey("staff.id"))
     picked_up_at: Mapped[datetime | None]
     picked_up_by_staff_id: Mapped[int | None] = mapped_column(ForeignKey("staff.id"))
     cancelled_at: Mapped[datetime | None]
@@ -84,6 +89,9 @@ class Booking(Base):
         CheckConstraint("status <> 'packed' OR packed_at IS NOT NULL", name="packed_has_a_time"),
         # A packed bag always says who packed it.
         CheckConstraint("(packed_at IS NULL) = (packed_by_staff_id IS NULL)", name="packed_by_a_volunteer"),
+        CheckConstraint(
+            "(packing_started_at IS NULL) = (packing_by_staff_id IS NULL)", name="packing_has_a_volunteer"
+        ),
         CheckConstraint(
             "(status = 'picked_up') = (picked_up_at IS NOT NULL)", name="picked_up_matches_status"
         ),

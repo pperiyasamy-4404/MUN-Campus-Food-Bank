@@ -242,6 +242,48 @@ def find_bag(db: Session, booking_id: int) -> Booking:
     return booking
 
 
+# ---------- who is packing it (what-could-go-wrong problem 7, decided 12 Nov) ----------
+
+
+@dataclass(frozen=True)
+class WhoIsPacking:
+    # True if this volunteer is packing it now. False: someone else opened it first.
+    yours: bool
+    # The one packing it, and since when.
+    by: str
+    since: datetime
+
+
+def start_packing(db: Session, booking_id: int, staff: Staff, now: datetime, anyway: bool = False) -> WhoIsPacking:
+    """A volunteer opens a bag to pack it. The queue then says "Sam is packing".
+
+    If someone else opened it first, nothing changes, and the answer says who:
+    the page warns before anyone fills a second bag. With anyway=True (they
+    checked, and Sam has gone home, say), it becomes theirs.
+
+    The booking is locked first. Two volunteers opening the bag at the same
+    moment take turns: the second waits, then sees the first one's name.
+    Without the lock, both would read "nobody", and both would start packing.
+    """
+    booking = db.scalar(
+        select(Booking).where(Booking.id == booking_id).with_for_update().execution_options(populate_existing=True)
+    )
+    if booking is None:
+        raise NotFound("There's no bag with that number.")
+    problem = why_not_this_bag(db, booking, db.get(PickupDay, booking.pickup_day_id), now)
+    if problem is not None:
+        raise problem
+    someone_else = booking.packing_by_staff_id not in (None, staff.id)
+    if someone_else and not anyway:
+        packer = db.get(Staff, booking.packing_by_staff_id)
+        return WhoIsPacking(yours=False, by=packer.username, since=booking.packing_started_at)
+    if booking.packing_by_staff_id != staff.id:
+        booking.packing_started_at = now
+        booking.packing_by_staff_id = staff.id
+        db.flush()
+    return WhoIsPacking(yours=True, by=staff.username, since=booking.packing_started_at)
+
+
 def food_in(db: Session, booking: Booking) -> list[BagFood]:
     """The booked food, A to Z, the way it's shown on the bag's page."""
     rows = db.execute(
@@ -410,6 +452,9 @@ def pack(
             line.variety.take(1)
             line.row.replaces_variety_id = replaced[line.variety.id]
     booking.status = "packed"
+    # Nobody is packing it any more: it's done.
+    booking.packing_started_at = None
+    booking.packing_by_staff_id = None
     booking.packed_at = now
     booking.packed_by_staff_id = staff.id
     db.flush()
@@ -469,6 +514,9 @@ def unpack(db: Session, booking_id: int, staff: Staff, now: datetime) -> Booking
     booking.status = "booked"
     booking.packed_at = None
     booking.packed_by_staff_id = None
+    # Back in the queue, with nobody packing it yet.
+    booking.packing_started_at = None
+    booking.packing_by_staff_id = None
     db.add(AuditLog(at=now, staff_id=staff.id, action="undid_packed", booking_id=booking.id))
     db.flush()
     return booking
@@ -541,6 +589,8 @@ class QueueBag:
     # Booked food a volunteer found none of in another bag. Only for bags still to pack (U7).
     ran_out: list[str]
     packed_by: str | None
+    # Who opened it to pack it, while it's still to pack (problem 7).
+    packing_by: str | None = None
 
 
 def queue(db: Session, day: PickupDay) -> list[QueueBag]:
@@ -568,7 +618,12 @@ def queue(db: Session, day: PickupDay) -> list[QueueBag]:
         .order_by(func.lower(Variety.name))
     ):
         ran_out[booking_id].append(name)
-    packer_ids = {booking.packed_by_staff_id for booking, _ in rows if booking.packed_by_staff_id}
+    packer_ids = {
+        staff_id
+        for booking, _ in rows
+        for staff_id in (booking.packed_by_staff_id, booking.packing_by_staff_id)
+        if staff_id
+    }
     packers = dict(db.execute(select(Staff.id, Staff.username).where(Staff.id.in_(packer_ids))).all())
 
     return [
@@ -578,6 +633,7 @@ def queue(db: Session, day: PickupDay) -> list[QueueBag]:
             things=int(things.get(booking.id, 0)),
             ran_out=ran_out[booking.id] if booking.status == "booked" else [],
             packed_by=packers.get(booking.packed_by_staff_id),
+            packing_by=packers.get(booking.packing_by_staff_id) if booking.status == "booked" else None,
         )
         for booking, starts_at in rows
     ]

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
-import { send, type Bag, type BagFood, type BagSubstitute, type PackingPlan } from '../api.ts'
+import { send, type Answer, type Bag, type BagFood, type BagSubstitute, type PackingPlan, type WhoIsPacking } from '../api.ts'
 import { Problem } from '../forms.tsx'
 import { useMe } from '../me.ts'
 import { showClock, showDate } from '../time.ts'
@@ -80,16 +80,18 @@ export function PackBag() {
       </p>
       {notice && <p className="notice">{notice}</p>}
       {bag.status === 'booked' && bag.can_pack ? (
-        <Packer
-          key={bag.id}
-          bag={bag}
-          onPacked={(packed) => {
-            setNotice(null)
-            setLoad({ state: 'ready', bag: packed })
-          }}
-          onChanged={askAgain}
-          onLoggedOut={forget}
-        />
+        <SomeoneElseFirst key={bag.id} bag={bag} onChanged={askAgain} onLoggedOut={forget}>
+          <Packer
+            key={bag.id}
+            bag={bag}
+            onPacked={(packed) => {
+              setNotice(null)
+              setLoad({ state: 'ready', bag: packed })
+            }}
+            onChanged={askAgain}
+            onLoggedOut={forget}
+          />
+        </SomeoneElseFirst>
       ) : (
         <BagAsItIs
           bag={bag}
@@ -114,6 +116,83 @@ function BackToQueue() {
     <p className="back">
       <Link to="/packing">← Packing queue</Link>
     </p>
+  )
+}
+
+// ---------- who is packing it (decided 12 Nov) ----------
+
+type Start = { state: 'asking' } | { state: 'yours' } | { state: 'someone else'; who: WhoIsPacking }
+
+/**
+ * Tells the server this volunteer is packing the bag, so the queue says
+ * "Sam is packing". If someone else opened it first, it warns before showing
+ * the packing page, so nobody fills a second bag for the same booking.
+ */
+function SomeoneElseFirst({
+  bag,
+  onChanged,
+  onLoggedOut,
+  children,
+}: {
+  bag: Bag
+  onChanged: () => void
+  onLoggedOut: () => void
+  children: ReactNode
+}) {
+  const [start, setStart] = useState<Start>({ state: 'asking' })
+  const [problem, setProblem] = useState<string | null>(null)
+
+  function answered(answer: Answer<WhoIsPacking>) {
+    if (answer.ok) {
+      return setStart(answer.data.yours ? { state: 'yours' } : { state: 'someone else', who: answer.data })
+    }
+    if (answer.status === 401) return onLoggedOut()
+    // 409: packed already, by someone else. Show the bag as it is now.
+    if (answer.status === 409) return onChanged()
+    setProblem(answer.message)
+  }
+
+  // Once, when the bag opens.
+  useEffect(() => {
+    let stillWanted = true
+    send<WhoIsPacking>(`/api/packing/bags/${bag.id}/start`, { anyway: false }).then((answer) => {
+      if (!stillWanted) return
+      // The same as answered() below, written out: an effect may only use what it lists.
+      if (answer.ok) {
+        return setStart(answer.data.yours ? { state: 'yours' } : { state: 'someone else', who: answer.data })
+      }
+      if (answer.status === 401) return onLoggedOut()
+      if (answer.status === 409) return onChanged()
+      setProblem(answer.message)
+    })
+    return () => {
+      stillWanted = false
+    }
+  }, [bag.id, onChanged, onLoggedOut])
+
+  async function packAnyway() {
+    answered(await send<WhoIsPacking>(`/api/packing/bags/${bag.id}/start`, { anyway: true }))
+  }
+
+  if (problem) return <p className="problem">{problem}</p>
+  if (start.state === 'asking') return <p className="muted">Asking the server...</p>
+  if (start.state === 'yours') return <>{children}</>
+  const { who } = start
+  return (
+    <section className="undo-box card" role="alert">
+      <h2 className="in-card">{who.by} is packing this bag</h2>
+      <p>
+        {/* No full stop after the time: it ends in "p.m." already. */}
+        {who.by} opened it at {showClock(who.since)} Check with {who.by} before you pack it, so the student doesn't
+        get two bags' worth of food.
+      </p>
+      <p className="actions">
+        <button type="button" className="danger" onClick={() => void packAnyway()}>
+          Pack it anyway
+        </button>
+        <Link to="/packing">Back to the queue</Link>
+      </p>
+    </section>
   )
 }
 

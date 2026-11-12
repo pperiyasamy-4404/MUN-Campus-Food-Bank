@@ -106,6 +106,13 @@ function BagRow({ bag, action }: { bag: QueueBag; action: string }) {
           {bag.status !== 'booked' && ` · ${STATUS_WORDS[bag.status] ?? bag.status}`}
           {bag.packed_by && bag.packed_at && ` by ${bag.packed_by} at ${showClock(bag.packed_at)}`}
         </span>
+        {/* Someone opened it to pack it, so nobody else starts on it too (decided 12 Nov). */}
+        {bag.packing_by && bag.packing_since && (
+          <span className="packing-now">
+            {bag.packing_is_you ? 'You are packing' : `${bag.packing_by} is packing`} (since{' '}
+            {showClock(bag.packing_since)})
+          </span>
+        )}
         {/* U7: another volunteer found none of this, so this bag will need a substitute. */}
         {flagged && <span className="flag">Ran out: {bag.ran_out.join(', ')}</span>}
       </span>

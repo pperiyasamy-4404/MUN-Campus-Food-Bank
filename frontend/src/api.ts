@@ -255,6 +255,17 @@ export type QueueBag = {
   ran_out: string[] // booked food another volunteer found none of on the shelf (U7)
   packed_at: string | null
   packed_by: string | null
+  // Still to pack, and a volunteer opened it: "Sam is packing" (decided 12 Nov).
+  packing_by: string | null
+  packing_since: string | null
+  packing_is_you: boolean
+}
+
+/** Who is packing a bag, from POST /api/packing/bags/{id}/start. */
+export type WhoIsPacking = {
+  yours: boolean // false: someone else opened it first
+  by: string
+  since: string
 }
 
 export type PackingQueue = {

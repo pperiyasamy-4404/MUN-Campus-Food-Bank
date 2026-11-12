@@ -47,6 +47,10 @@ class QueueBag(BaseModel):
     ran_out: list[str]
     packed_at: datetime | None
     packed_by: str | None
+    # Still to pack, and a volunteer opened it: "Sam is packing" (decided 12 Nov).
+    packing_by: str | None
+    packing_since: datetime | None
+    packing_is_you: bool
 
 
 class PackingQueue(BaseModel):
@@ -80,6 +84,9 @@ def packing_queue(staff: CurrentStaff, db: DB, now: Now) -> PackingQueue:
                 ran_out=bag.ran_out,
                 packed_at=_newfoundland(bag.booking.packed_at),
                 packed_by=bag.packed_by,
+                packing_by=bag.packing_by,
+                packing_since=_newfoundland(bag.booking.packing_started_at) if bag.packing_by else None,
+                packing_is_you=bag.packing_by is not None and bag.booking.packing_by_staff_id == staff.id,
             )
             for bag in packing.queue(db, day)
         ],
@@ -174,6 +181,28 @@ def bag_out(booking: Booking, db: DB, now: datetime) -> Bag:
 @router.get("/packing/bags/{booking_id}")
 def one_bag(booking_id: int, staff: CurrentStaff, db: DB, now: Now) -> Bag:
     return bag_out(packing.find_bag(db, booking_id), db, now)
+
+
+# ---------- who is packing it (decided 12 Nov) ----------
+
+
+class StartIn(BaseModel):
+    # True: the volunteer was warned that someone else opened it, and packs it anyway.
+    anyway: bool = False
+
+
+class WhoIsPackingOut(BaseModel):
+    yours: bool
+    by: str
+    since: datetime
+
+
+@router.post("/packing/bags/{booking_id}/start")
+def start_packing(booking_id: int, details: StartIn, staff: CurrentStaff, db: DB, now: Now) -> WhoIsPackingOut:
+    """The page opens a bag to pack. If someone else opened it first, it says who, and changes nothing."""
+    who = packing.start_packing(db, booking_id, staff, now, details.anyway)
+    db.commit()
+    return WhoIsPackingOut(yours=who.yours, by=who.by, since=_newfoundland(who.since))
 
 
 # ---------- the plan, and Packed ----------

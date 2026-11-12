@@ -14,7 +14,7 @@ import threading
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from app.models import (
@@ -726,3 +726,93 @@ def test_out_of_stock_gives_food_with_no_number_a_0(db, monday, food, sam):
 
     oil = food["sunflower oil"]
     assert (oil.stock, oil.few_left, oil.ran_out_at) == (0, False, PACKING)
+
+
+# ---------- who is packing it (what-could-go-wrong problem 7, decided 12 Nov) ----------
+
+
+def test_opening_a_bag_says_who_is_packing_it(db, monday, food, sam):
+    bag = book_a_bag(db, monday, food)
+
+    who = packing.start_packing(db, bag.id, sam, PACKING)
+
+    assert (who.yours, who.by, who.since) == (True, "Sam", PACKING)
+    assert (bag.packing_by_staff_id, bag.packing_started_at) == (sam.id, PACKING)
+    [queued] = packing.queue(db, monday)
+    assert queued.packing_by == "Sam"
+
+
+def test_someone_else_opening_it_is_told_and_changes_nothing(db, monday, food, sam):
+    bag = book_a_bag(db, monday, food)
+    packing.start_packing(db, bag.id, sam, PACKING)
+
+    who = packing.start_packing(db, bag.id, make_staff(db, "Jo"), PACKING + timedelta(minutes=2))
+
+    assert (who.yours, who.by, who.since) == (False, "Sam", PACKING)
+    assert bag.packing_by_staff_id == sam.id
+
+
+def test_opening_your_own_bag_again_keeps_the_first_time(db, monday, food, sam):
+    bag = book_a_bag(db, monday, food)
+    packing.start_packing(db, bag.id, sam, PACKING)
+
+    who = packing.start_packing(db, bag.id, sam, PACKING + timedelta(minutes=5))
+
+    assert (who.yours, who.since) == (True, PACKING)
+
+
+def test_packing_it_anyway_makes_it_yours(db, monday, food, sam):
+    """Jo checked: Sam has gone home. Jo packs it."""
+    bag = book_a_bag(db, monday, food)
+    packing.start_packing(db, bag.id, sam, PACKING)
+    jo = make_staff(db, "Jo")
+
+    who = packing.start_packing(db, bag.id, jo, PACKING + timedelta(minutes=20), anyway=True)
+
+    assert (who.yours, who.by) == (True, "Jo")
+    assert (bag.packing_by_staff_id, bag.packing_started_at) == (jo.id, PACKING + timedelta(minutes=20))
+
+
+def test_packed_and_undo_clear_who_is_packing(db, monday, food, sam):
+    bag = book_a_bag(db, monday, food)
+    packing.start_packing(db, bag.id, sam, PACKING)
+
+    packing.pack(db, bag.id, [], [], [], sam, PACKING)
+    assert (bag.packing_by_staff_id, bag.packing_started_at) == (None, None)
+    packing.unpack(db, bag.id, sam, PACKING + timedelta(minutes=5))
+    assert (bag.packing_by_staff_id, bag.packing_started_at) == (None, None)
+
+
+def test_a_packed_bag_cannot_be_started(db, monday, food, sam):
+    bag = book_a_bag(db, monday, food)
+    packing.pack(db, bag.id, [], [], [], sam, PACKING)
+
+    with pytest.raises(AlreadyPacked):
+        packing.start_packing(db, bag.id, make_staff(db, "Jo"), PACKING)
+
+
+def test_two_volunteers_open_the_same_bag_at_the_same_moment(engine, world):
+    """Both pages ask at once. The second waits for the first, then sees its name.
+    Without the lock both would read "nobody" and both would start packing."""
+    with Session(engine) as db:
+        jo = Staff(username="Race packer Jo", role="volunteer")
+        db.add(jo)
+        db.commit()
+        jo_id = jo.id
+    bag = world["bags"][0]
+    answers = {}
+
+    def first(db):
+        answers["first"] = packing.start_packing(db, bag, db.get(Staff, world["staff"]), PACKING)
+
+    def second(db):
+        answers["second"] = packing.start_packing(db, bag, db.get(Staff, jo_id), PACKING)
+
+    try:
+        at_the_same_moment(engine, first, second)
+        assert answers["first"].yours is True
+        assert (answers["second"].yours, answers["second"].by) == (False, "Race packer")
+    finally:
+        with engine.begin() as tidy:
+            tidy.execute(update(Booking).where(Booking.id == bag).values(packing_started_at=None, packing_by_staff_id=None))
+            tidy.execute(delete(Staff).where(Staff.id == jo_id))
