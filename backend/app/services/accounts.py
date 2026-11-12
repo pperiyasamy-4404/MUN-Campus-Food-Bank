@@ -10,7 +10,7 @@ it happens (see count_wrong_try).
 
 import hmac
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from math import ceil
 
 from sqlalchemy import delete, func, select
@@ -21,6 +21,7 @@ from app.problems import NameTaken, NotFound, Problem
 from app.security.keyed_hash import id_hash, username_hash
 from app.security.passwords import hash_password, needs_new_hash, password_matches
 from app.security.sessions import end_every_session, end_old_sessions
+from app.services.pickup_days import NEWFOUNDLAND
 from app.services.settings import food_bank_settings
 from app.security.setup_codes import new_setup_code, setup_code_hash
 from app.security.wrong_tries import (
@@ -76,18 +77,28 @@ class IssuedCode:
     code: str
     expires_at: datetime
     new_account: bool = False
+    # For a student's code: their account, so the counter can say when they can next pick up.
+    student: Student | None = None
 
 
 # ---------- at the counter (R1) ----------
 
 
-def give_student_setup_code(db: Session, id_number: str, volunteer: Staff, now: datetime) -> IssuedCode:
+def give_student_setup_code(
+    db: Session, id_number: str, volunteer: Staff, now: datetime, old_system_pickup_on: date | None = None
+) -> IssuedCode:
     """The volunteer has checked the student's MUN card and typed its number.
 
     A new card gets an account. A card that already has one gets a new code,
     which is how a forgotten password is reset. The old password keeps working
     until the new code is used, so a code given by mistake locks nobody out.
+
+    old_system_pickup_on: the student's last pickup in the food bank's old
+    system, from the old records (decided 12 Nov). The pickup gap counts from it
+    too. Example: food on 12 November the old way, a code on 21 November, and
+    booking waits until 12 December. Left out, an earlier one is kept.
     """
+    check_old_system_pickup(old_system_pickup_on, now)
     student = db.scalar(select(Student).where(Student.id_hash == id_hash(id_number)))
     new_account = student is None
     if student is None:
@@ -95,9 +106,28 @@ def give_student_setup_code(db: Session, id_number: str, volunteer: Staff, now: 
         db.add(student)
         db.flush()
         log(db, volunteer, "created_student", now, student=student)
+    record_old_system_pickup(db, student, old_system_pickup_on, volunteer, now)
     issued = _give_setup_code(db, student, volunteer, now)
     issued.new_account = new_account
+    issued.student = student
     return issued
+
+
+def check_old_system_pickup(on: date | None, now: datetime) -> None:
+    if on is not None and on > now.astimezone(NEWFOUNDLAND).date():
+        raise AccountProblem("The last pickup in the old system can't be in the future.")
+
+
+def record_old_system_pickup(db: Session, student: Student, on: date | None, volunteer: Staff, now: datetime) -> None:
+    """The student's last pickup in the food bank's old system, from the old records (decided 12 Nov).
+
+    None (never, or not given) keeps what's there: a later code for a forgotten
+    password doesn't wipe a date typed before.
+    """
+    check_old_system_pickup(on, now)
+    if on is not None:
+        student.old_system_pickup_on = on
+        log(db, volunteer, "recorded_old_system_pickup", now, student=student)
 
 
 # ---------- students, on their own phone ----------

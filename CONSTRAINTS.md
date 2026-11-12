@@ -29,7 +29,7 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 
 ### How often
 
-- **F1** A pickup must be at least the pickup gap after the person's last pickup. Days are counted as calendar days in Newfoundland time, from the date of the last pickup to the date of the new slot. For example, with a 30-day gap, after a pickup on Thursday 1 October at 5 pm the gap ends on Saturday 31 October, so the first slot they can book is on Monday 2 November. With pickups on Mondays and Thursdays, that makes 31 or 32 days in practice.
+- **F1** A pickup must be at least the pickup gap after the person's last pickup. Days are counted as calendar days in Newfoundland time, from the date of the last pickup to the date of the new slot. For example, with a 30-day gap, after a pickup on Thursday 1 October at 5 pm the gap ends on Saturday 31 October, so the first slot they can book is on Monday 2 November. With pickups on Mondays and Thursdays, that makes 31 or 32 days in practice. A pickup in the food bank's old system counts too: when giving a setup code or serving a walk-in, the volunteer must give its date from the old records, or tick "No pickup in the old system" (decided 12 November, for the first month after switching over). A no-show fixed to picked up cancels a later booking that is then too soon.
 - **F2** A person has at most one upcoming booking.
 - **F3** Cancellations, whether by the student or the food bank, don't count toward the pickup gap.
 

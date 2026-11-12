@@ -17,7 +17,8 @@ from app.deps import DB, CurrentStaff, Now
 from app.models import Booking, PickupDay, Slot, Staff
 from app.problems import NotFound
 from app.services import no_shows
-from app.services.pickup_days import NEWFOUNDLAND
+from app.services.pickup_days import NEWFOUNDLAND, say_day
+from app.services.settings import food_bank_settings
 
 router = APIRouter(prefix="/api")
 
@@ -32,6 +33,8 @@ class FixBag(BaseModel):
     picked_up_by: str | None
     # Why it can't be fixed, like "Bag K3P was never packed, so it can't have been handed over."
     why_not: str | None
+    # After a fix to picked up: their later booking that was cancelled, as it's now too soon.
+    cancelled: str | None = None
 
 
 class FixPage(BaseModel):
@@ -84,9 +87,16 @@ def _fixed(db: DB, booking_id: int, now: datetime) -> FixBag:
 @router.post("/fixes/{booking_id}/picked-up")
 def fix_to_picked_up(booking_id: int, staff: CurrentStaff, db: DB, now: Now) -> FixBag:
     """It was handed over, but nobody pressed Hand over: no-show -> picked up."""
-    no_shows.fix_to_picked_up(db, booking_id, staff, now)
+    fixed = no_shows.fix_to_picked_up(db, booking_id, staff, now)
     db.commit()
-    return _fixed(db, booking_id, now)
+    out = _fixed(db, booking_id, now)
+    if fixed.cancelled is not None:
+        gap = food_bank_settings(db).pickup_gap_days
+        out.cancelled = (
+            f"Their booking for {say_day(fixed.cancelled_on)} (bag {fixed.cancelled.code}) was cancelled: "
+            f"it's less than {gap} days after this pickup. They'll see it when they next open the app."
+        )
+    return out
 
 
 @router.post("/fixes/{booking_id}/no-show")

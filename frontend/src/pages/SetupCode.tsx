@@ -1,18 +1,28 @@
 import { useState, type FormEvent } from 'react'
 import { send, type IssuedCode } from '../api.ts'
-import { Field, Problem, SetupCodeBox } from '../forms.tsx'
+import {
+  Field,
+  OldSystemPickup,
+  Problem,
+  SetupCodeBox,
+} from '../forms.tsx'
+import { NO_OLD_SYSTEM_ANSWER, oldSystemAnswer, oldSystemProblem, type OldSystem } from '../oldSystem.ts'
 import { useValues } from '../useValues.ts'
 import { useMe } from '../me.ts'
 import { CounterNav } from './CounterParts.tsx'
 import { PageHeading } from '../PageHeading.tsx'
+import { showDate, todayInNewfoundland } from '../time.ts'
 
 // At the counter: the volunteer checks a student's MUN card and gives them a
 // setup code (R1). A new card gets an account. A card that has one gets a new
 // code, which is how a forgotten password is reset.
+// While the food bank switches over, the volunteer also types the student's
+// last pickup from the old records, so the 30 days count from it (decided 12 Nov).
 
 export function SetupCode() {
   const { forget } = useMe()
   const { values, set, clear } = useValues({ id_number: '', again: '' })
+  const [oldSystem, setOldSystem] = useState<OldSystem>(NO_OLD_SYSTEM_ANSWER)
   const [problem, setProblem] = useState<string | null>(null)
   const [fields, setFields] = useState<Record<string, string>>({})
   const [sending, setSending] = useState(false)
@@ -29,8 +39,17 @@ export function SetupCode() {
       setFields({ again: "The two numbers aren't the same. Check the card again." })
       return
     }
+    const notAnswered = oldSystemProblem(oldSystem)
+    if (notAnswered) {
+      setProblem('Please fix the boxes marked in red.')
+      setFields({ old_system_pickup_on: notAnswered })
+      return
+    }
     setSending(true)
-    const answer = await send<IssuedCode>('/api/student-setup-codes', { id_number: values.id_number })
+    const answer = await send<IssuedCode>('/api/student-setup-codes', {
+      id_number: values.id_number,
+      ...oldSystemAnswer(oldSystem),
+    })
     setSending(false)
     if (!answer.ok) {
       if (answer.status === 401) forget() // the 12 hours are over: back to the login page
@@ -40,6 +59,7 @@ export function SetupCode() {
     }
     // The number isn't needed any more, so it leaves the screen straight away.
     clear()
+    setOldSystem(NO_OLD_SYSTEM_ANSWER)
     setIssued(answer.data)
   }
 
@@ -55,6 +75,12 @@ export function SetupCode() {
         >
           {!issued.new_account && (
             <p>Their old password keeps working until they use this code.</p>
+          )}
+          {issued.next_pickup_on && (
+            <p className="notice">
+              From their last pickup, they can't get food again until {showDate(issued.next_pickup_on)}. Tell them
+              booking will wait until then.
+            </p>
           )}
           <div className="tell">
             <p>
@@ -91,6 +117,12 @@ export function SetupCode() {
               onChange={set('again')}
               error={fields.again}
               required
+            />
+            <OldSystemPickup
+              answer={oldSystem}
+              onChange={setOldSystem}
+              error={fields.old_system_pickup_on}
+              today={todayInNewfoundland()}
             />
             <button type="submit" disabled={sending}>
               {sending ? 'Giving a code...' : 'Give a setup code'}

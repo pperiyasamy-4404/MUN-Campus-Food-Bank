@@ -375,6 +375,30 @@ def test_a_walk_in_within_30_days_is_refused(db, monday, food, sam):
     assert problem.message == checked.why_not
 
 
+def test_a_first_walk_in_soon_after_the_old_system_is_refused(db, monday, food, sam):
+    """Food the old way 10 days ago, no account here yet: still too soon (decided 12 Nov)."""
+    old = MONDAY - timedelta(days=10)
+
+    checked = counter.check_walk_in(db, ID_NUMBER, COUNTER, old)
+    problem = refused(
+        db, Problem, lambda: counter.record_walk_in(db, ID_NUMBER, [Choice(food["rice"].id)], [], False, sam, COUNTER, old)
+    )
+
+    assert (checked.can_serve, checked.new_account) == (False, True)
+    assert checked.why_not == "Not yet. Their next pickup can be on Sunday, November 29 or later."
+    assert problem.message == checked.why_not
+
+
+def test_a_walk_in_long_after_the_old_system_is_served_and_the_date_kept(db, monday, food, sam):
+    old = MONDAY - timedelta(days=40)
+
+    assert counter.check_walk_in(db, ID_NUMBER, COUNTER, old).can_serve
+    counter.record_walk_in(db, ID_NUMBER, [Choice(food["rice"].id)], [], False, sam, COUNTER, old)
+
+    student = db.scalar(select(Student).where(Student.id_hash == id_hash(ID_NUMBER)))
+    assert (student.old_system_pickup_on, student.last_pickup_on) == (old, MONDAY)
+
+
 def test_a_second_walk_in_the_same_day_is_refused(db, monday, food, sam):
     counter.record_walk_in(db, ID_NUMBER, [Choice(food["rice"].id)], [], False, sam, COUNTER)
 

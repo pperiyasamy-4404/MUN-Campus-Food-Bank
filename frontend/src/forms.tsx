@@ -1,4 +1,5 @@
 import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react'
+import type { OldSystem } from './oldSystem.ts'
 import { showDayAndClock } from './time.ts'
 
 // Pieces every form uses: a labelled box with its own error, and the message
@@ -36,6 +37,55 @@ export function Field({ label, hint, error, value, onChange, ...input }: FieldPr
         </p>
       )}
     </div>
+  )
+}
+
+/** The student's last pickup in the old system: a date, or the "none" tick box (decided 12 Nov). */
+export function OldSystemPickup({
+  answer,
+  onChange,
+  error,
+  today,
+}: {
+  answer: OldSystem
+  onChange: (answer: OldSystem) => void
+  error?: string
+  today: string
+}) {
+  const id = useId()
+  return (
+    <fieldset className={error ? 'old-system field-wrong' : 'old-system'} aria-describedby={`${id}-hint`}>
+      <legend>Last pickup in the old system</legend>
+      <p className="hint" id={`${id}-hint`}>
+        Look them up in the old records. Choose the date, or tick the box if they've never had food from the food bank.
+      </p>
+      <label htmlFor={`${id}-date`} className="old-system-date">
+        Date
+      </label>
+      <input
+        id={`${id}-date`}
+        type="date"
+        max={today}
+        value={answer.on}
+        disabled={answer.never}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${id}-error` : undefined}
+        onChange={(event) => onChange({ on: event.target.value, never: false })}
+      />
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={answer.never}
+          onChange={(event) => onChange({ on: '', never: event.target.checked })}
+        />
+        No pickup in the old system
+      </label>
+      {error && (
+        <p className="field-error" id={`${id}-error`}>
+          {error}
+        </p>
+      )}
+    </fieldset>
   )
 }
 

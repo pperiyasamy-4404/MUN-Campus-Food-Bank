@@ -72,7 +72,8 @@ class Booking(Base):
             name="status_is_known",
         ),
         CheckConstraint(
-            "cancel_reason IN ('student', 'day_closed', 'walk_in')", name="cancel_reason_is_known"
+            # pickup_fixed: a no-show fixed to picked up made this later booking too soon (decided 12 Nov).
+            "cancel_reason IN ('student', 'day_closed', 'walk_in', 'pickup_fixed')", name="cancel_reason_is_known"
         ),
         # Among bookings still to come, each student appears once (F2). This also
         # makes a double click on Book harmless: the second booking is refused (B4).

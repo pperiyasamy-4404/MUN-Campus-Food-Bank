@@ -91,6 +91,8 @@ export type IssuedCode = {
   setup_code: string // like "K7QM-4TXP"
   expires_at: string
   new_account: boolean
+  // For a student: the first day the pickup gap allows, if that's still to come (old-system pickups, decided 12 Nov).
+  next_pickup_on?: string | null
 }
 
 /** One staff account on the Staff page: a volunteer or a coordinator (several since 11 Nov). */
@@ -397,6 +399,7 @@ export type FixBag = {
   picked_up_at: string | null
   picked_up_by: string | null
   why_not: string | null // like "Bag K3P was never packed, so it can't have been handed over."
+  cancelled?: string | null // after a fix to picked up: their later booking, cancelled as now too soon (decided 12 Nov)
 }
 
 export type FixPage = {

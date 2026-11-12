@@ -38,6 +38,12 @@ export function showDayAndClock(moment: string): string {
 }
 
 /** "Monday, November 9" */
+/** Today's date in Newfoundland, like "2026-11-12", for the top of a date box. */
+export function todayInNewfoundland(): string {
+  // en-CA writes dates as 2026-11-12.
+  return new Intl.DateTimeFormat('en-CA', { timeZone: NEWFOUNDLAND }).format(new Date())
+}
+
 export function showDate(date: string): string {
   return dateOnly.format(new Date(`${date}T00:00:00Z`))
 }

@@ -72,7 +72,9 @@ def next_pickup_allowed_on(db: Session, student: Student, settings: Settings) ->
         .where(Booking.student_id == student.id, Booking.status.in_(counted))
     )
     # last_pickup_on also covers walk-ins, and outlives booking details (P7).
-    last = max((d for d in [student.last_pickup_on, last_booked] if d is not None), default=None)
+    # old_system_pickup_on is a pickup from before this system (decided 12 Nov).
+    dates = [student.last_pickup_on, last_booked, student.old_system_pickup_on]
+    last = max((d for d in dates if d is not None), default=None)
     return None if last is None else last + timedelta(days=settings.pickup_gap_days)
 
 

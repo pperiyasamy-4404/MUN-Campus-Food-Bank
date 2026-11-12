@@ -4,17 +4,20 @@ A setup code is shown once, in the answer to the request that made it. It is
 never saved, so nobody can look it up again later, not even a coordinator.
 """
 
-from datetime import datetime
+from datetime import date, datetime
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic_core import PydanticCustomError
 from sqlalchemy import func, select
 
 from app.deps import DB, CurrentCoordinator, CurrentStaff, Now
 from app.models import SetupCode, Staff
 from app.security.inputs import IdNumber, NewUsername
 from app.services import accounts
+from app.services import booking as booking_rules
 from app.services.pickup_days import NEWFOUNDLAND
+from app.services.settings import food_bank_settings
 
 router = APIRouter(prefix="/api")
 
@@ -22,7 +25,32 @@ router = APIRouter(prefix="/api")
 # ---------- what comes in ----------
 
 
-class StudentCard(BaseModel):
+class OldSystemAnswer(BaseModel):
+    """Their last pickup in the food bank's old system, from the old records (decided 12 Nov).
+
+    The volunteer must answer, so it can't be forgotten: a date, or "No pickup
+    in the old system". Without it, a student fed the old way on 12 November
+    could get a second bag here a week later.
+    """
+
+    # Ticked: they've never had food the old way, or not that the records show.
+    never_in_old_system: bool = False
+    old_system_pickup_on: date | None = Field(default=None, validate_default=True)
+
+    @field_validator("old_system_pickup_on")
+    @classmethod
+    def _answered(cls, on: date | None, info: ValidationInfo) -> date | None:
+        never = info.data.get("never_in_old_system", False)
+        if on is None and not never:
+            raise PydanticCustomError(
+                "old_system", 'Choose their last pickup in the old system, or tick "No pickup in the old system".'
+            )
+        if on is not None and never:
+            raise PydanticCustomError("old_system", "Choose a date or tick the box, not both.")
+        return on
+
+
+class StudentCard(OldSystemAnswer):
     """The number on the MUN card the volunteer has just checked."""
 
     id_number: IdNumber
@@ -42,6 +70,8 @@ class SetupCodeOut(BaseModel):
     expires_at: datetime
     # True when this made the account, so the screen can say "New account".
     new_account: bool
+    # For a student: the first day the pickup gap allows, or None if they can book now.
+    next_pickup_on: date | None = None
 
 
 class VolunteerOut(BaseModel):
@@ -93,9 +123,15 @@ def give_student_setup_code(card: StudentCard, staff: CurrentStaff, db: DB, now:
 
     The answer never includes the ID number or its hash (P4).
     """
-    issued = accounts.give_student_setup_code(db, card.id_number.get_secret_value(), staff, now)
+    issued = accounts.give_student_setup_code(
+        db, card.id_number.get_secret_value(), staff, now, old_system_pickup_on=card.old_system_pickup_on
+    )
+    next_pickup_on = booking_rules.next_pickup_allowed_on(db, issued.student, food_bank_settings(db))
     db.commit()
-    return setup_code_out(issued)
+    out = setup_code_out(issued)
+    today = now.astimezone(NEWFOUNDLAND).date()
+    out.next_pickup_on = next_pickup_on if next_pickup_on is not None and next_pickup_on > today else None
+    return out
 
 
 # ---------- the coordinators' Staff page ----------

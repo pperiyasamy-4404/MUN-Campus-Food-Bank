@@ -5,7 +5,7 @@ the audit log (R4). The web side is in test_login_api.py.
 """
 
 import threading
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from sqlalchemy import delete, select
@@ -19,6 +19,7 @@ from app.security.sessions import start_session
 from app.security.setup_codes import ALPHABET, setup_code_hash
 from app.security.wrong_tries import device_cookie_for
 from app.services import accounts
+from app.services import booking as booking_rules
 from app.services.accounts import (
     WRONG_STAFF_PASSWORD,
     WRONG_STUDENT_CODE,
@@ -91,6 +92,35 @@ def test_a_new_card_gets_an_account_and_a_setup_code(db_with_settings):
         ("created_student", volunteer.id, student.id, None),
         ("issued_setup_code", volunteer.id, student.id, None),
     ]
+
+
+def test_a_pickup_in_the_old_system_starts_the_gap(db_with_settings):
+    """Food on Sunday 1 November the old way, a code on Sunday 8 November: booking waits 30 days from the 1st."""
+    db = db_with_settings
+    issued = accounts.give_student_setup_code(db, ID_NUMBER, make_staff(db, "Sam"), NOW, date(2026, 11, 1))
+
+    student = db.scalar(select(Student))
+    assert (student.old_system_pickup_on, student.last_pickup_on) == (date(2026, 11, 1), None)
+    assert booking_rules.next_pickup_allowed_on(db, student, db.get(Settings, 1)) == date(2026, 12, 1)
+    assert issued.student is student
+    assert log_actions(db)[1][0] == "recorded_old_system_pickup"
+
+
+def test_a_later_code_without_the_date_keeps_it(db_with_settings):
+    db = db_with_settings
+    sam = make_staff(db, "Sam")
+    accounts.give_student_setup_code(db, ID_NUMBER, sam, NOW, date(2026, 11, 1))
+
+    accounts.give_student_setup_code(db, ID_NUMBER, sam, NOW + timedelta(days=1))
+
+    assert db.scalar(select(Student)).old_system_pickup_on == date(2026, 11, 1)
+
+
+def test_the_old_system_pickup_cannot_be_in_the_future(db_with_settings):
+    db = db_with_settings
+
+    with pytest.raises(AccountProblem, match="can't be in the future"):
+        accounts.give_student_setup_code(db, ID_NUMBER, make_staff(db, "Sam"), NOW, date(2026, 11, 9))
 
 
 def test_the_student_chooses_a_password_with_their_code(db_with_settings):

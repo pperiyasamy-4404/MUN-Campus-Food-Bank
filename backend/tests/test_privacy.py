@@ -65,8 +65,8 @@ def test_the_id_number_is_never_in_an_answer_a_log_or_the_database(every_log_lin
         return response
 
     send("/api/staff/login", {"username": "Sam", "password": PASSWORD})
-    code = send("/api/student-setup-codes", {"id_number": ID_NUMBER}).json()["setup_code"]
-    send("/api/student-setup-codes", {"id_number": TYPO})
+    code = send("/api/student-setup-codes", {"never_in_old_system": True, "id_number": ID_NUMBER}).json()["setup_code"]
+    send("/api/student-setup-codes", {"never_in_old_system": True, "id_number": TYPO})
     send("/api/logout", {})
     send("/api/student/setup", {"id_number": TYPO, "setup_code": code, "new_password": PASSWORD})
     send("/api/student/setup", {"id_number": ID_NUMBER, "setup_code": "AAAA-AAAA", "new_password": PASSWORD})
@@ -142,11 +142,11 @@ def test_the_id_number_never_leaks_at_the_counter(every_log_line, client, db_wit
         answers.append(response)
         return response
 
-    send("/api/walk-ins/check", {"id_number": TYPO})
-    send("/api/walk-ins/check", {"id_number": ID_NUMBER})
-    send("/api/walk-ins", {"id_number": ID_NUMBER, "food": [{"variety_id": rice.id}]})
-    send("/api/walk-ins", {"id_number": ID_NUMBER, "food": [{"variety_id": rice.id}]})
-    send("/api/walk-ins", {"id_number": TYPO, "food": [{"variety_id": rice.id}]})
+    send("/api/walk-ins/check", {"never_in_old_system": True, "id_number": TYPO})
+    send("/api/walk-ins/check", {"never_in_old_system": True, "id_number": ID_NUMBER})
+    send("/api/walk-ins", {"never_in_old_system": True, "id_number": ID_NUMBER, "food": [{"variety_id": rice.id}]})
+    send("/api/walk-ins", {"never_in_old_system": True, "id_number": ID_NUMBER, "food": [{"variety_id": rice.id}]})
+    send("/api/walk-ins", {"never_in_old_system": True, "id_number": TYPO, "food": [{"variety_id": rice.id}]})
     send("/api/counter/find-by-card", {"id_number": TYPO})
     send("/api/counter/find-by-card", {"id_number": ID_NUMBER})
     send("/api/counter/pickups", {"code": bag.code, "id_number": ID_NUMBER})

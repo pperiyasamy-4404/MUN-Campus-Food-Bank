@@ -25,7 +25,9 @@ export function FixPickup() {
   const { page } = load
 
   function fixed(bag: FixBag) {
-    setSaid(`Bag ${bag.code} is now ${bag.status === 'picked_up' ? 'picked up' : 'a no-show'}.`)
+    const now = `Bag ${bag.code} is now ${bag.status === 'picked_up' ? 'picked up' : 'a no-show'}.`
+    // A later booking, now too soon after this pickup, was cancelled (decided 12 Nov).
+    setSaid(bag.cancelled ? `${now} ${bag.cancelled}` : now)
     setVersion((old) => old + 1)
   }
 

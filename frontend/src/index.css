@@ -478,6 +478,27 @@ input[type='radio'] {
   font-weight: 700;
 }
 
+/* Last pickup in the old system: a date, or the "none" tick box (decided 12 Nov). */
+.old-system {
+  border: 0;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.old-system legend {
+  padding: 0;
+  font-weight: 600;
+}
+
+.old-system-date {
+  display: block;
+  margin-top: 0.4rem;
+}
+
+.old-system .check {
+  margin: 0.3rem 0 0;
+}
+
 /* A tick box and its words: the whole line can be tapped, and it's 44px tall. */
 .check {
   display: flex;

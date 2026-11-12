@@ -62,16 +62,46 @@ def cookie_lines(response) -> dict[str, str]:
 # ---------- a student, from the counter to logged in ----------
 
 
+@pytest.mark.parametrize(
+    "answer, message",
+    [
+        ({}, 'Choose their last pickup in the old system, or tick "No pickup in the old system".'),
+        ({"never_in_old_system": True, "old_system_pickup_on": "2026-11-01"}, "Choose a date or tick the box, not both."),
+    ],
+)
+def test_a_setup_code_needs_an_answer_about_the_old_system(client, db, answer, message):
+    """Required, so it can't be forgotten (decided 12 Nov)."""
+    volunteer_with_password(db, NOW, "Sam")
+    log_in_staff(client, "Sam")
+
+    response = client.post("/api/student-setup-codes", json={"id_number": ID_NUMBER} | answer)
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == [{"loc": ["body", "old_system_pickup_on"], "msg": message, "type": "old_system"}]
+
+
+def test_the_counter_hears_when_a_student_from_the_old_system_can_book(client, db):
+    """Food on 1 November the old way: the code comes with "not before 1 December" (decided 12 Nov)."""
+    volunteer_with_password(db, NOW, "Sam")
+    log_in_staff(client, "Sam")
+
+    given = client.post("/api/student-setup-codes", json={"id_number": ID_NUMBER, "old_system_pickup_on": "2026-11-01"})
+
+    assert given.status_code == 201
+    assert given.json()["next_pickup_on"] == "2026-12-01"
+
+
 def test_a_student_sets_up_their_account_and_stays_logged_in(client, db):
     counter = another_browser()
     assert log_in_staff(counter, "Sam").status_code == 401  # no account yet
     volunteer_with_password(db, NOW, "Sam")
     assert log_in_staff(counter, "Sam").status_code == 200
 
-    given = counter.post("/api/student-setup-codes", json={"id_number": ID_NUMBER})
+    given = counter.post("/api/student-setup-codes", json={"never_in_old_system": True, "id_number": ID_NUMBER})
     assert given.status_code == 201
     assert given.json()["new_account"] is True
     assert given.json()["expires_at"] == "2026-11-15T17:30:00-03:30"  # 7 days, in Newfoundland time
+    assert given.json()["next_pickup_on"] is None  # no pickups yet, so they can book now
 
     # Later, on the student's own phone. Small letters and a space are fine.
     typed_code = given.json()["setup_code"].lower().replace("-", " ")
@@ -197,7 +227,7 @@ def test_only_staff_can_give_a_student_a_setup_code(client, db):
     student_with_password(db, NOW, id_number="202300001")
 
     def give(browser):
-        return browser.post("/api/student-setup-codes", json={"id_number": ID_NUMBER})
+        return browser.post("/api/student-setup-codes", json={"never_in_old_system": True, "id_number": ID_NUMBER})
 
     assert give(client).status_code == 401
     log_in_student(client, "202300001")

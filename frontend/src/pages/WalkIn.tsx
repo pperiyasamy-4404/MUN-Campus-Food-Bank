@@ -1,15 +1,21 @@
 import { useState, type FormEvent } from 'react'
 import { send, type CounterPage, type WalkInCheck, type WalkInDone } from '../api.ts'
-import { Field, Problem } from '../forms.tsx'
+import {
+  Field,
+  OldSystemPickup,
+  Problem,
+} from '../forms.tsx'
+import { NO_OLD_SYSTEM_ANSWER, oldSystemAnswer, oldSystemProblem, type OldSystem } from '../oldSystem.ts'
 import { useMe } from '../me.ts'
-import { showDate } from '../time.ts'
+import { showDate, todayInNewfoundland } from '../time.ts'
 import { useValues } from '../useValues.ts'
 import { CounterNav, ExtrasPicker, ShelfPicker } from './CounterParts.tsx'
 import { asChoices, total, useCounterPage, type Chosen } from './counterTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
 
 // A walk-in (W1, W3, W4): a student served without a booking, in their own line.
-// 1. Check their MUN card: the pickup gap, with no exception.
+// 1. Check their MUN card: the pickup gap, with no exception. A pickup in the
+//    old system counts too: the volunteer gives its date, or says none (decided 12 Nov).
 // 2. Choose what they take from the shelf, and any extras.
 // 3. Record it. Their next pickup is 30 days from today, online or in person.
 
@@ -18,6 +24,7 @@ export function WalkIn() {
   const [version, setVersion] = useState(0)
   const load = useCounterPage(version, forget)
   const { values, set, clear } = useValues({ id_number: '', again: '' })
+  const [oldSystem, setOldSystem] = useState<OldSystem>(NO_OLD_SYSTEM_ANSWER)
   const [checked, setChecked] = useState<WalkInCheck | null>(null)
   const [done, setDone] = useState<WalkInDone | null>(null)
   const [problem, setProblem] = useState<string | null>(null)
@@ -35,8 +42,17 @@ export function WalkIn() {
       setFields({ again: "The two numbers aren't the same. Check the card again." })
       return
     }
+    const notAnswered = oldSystemProblem(oldSystem)
+    if (notAnswered) {
+      setProblem('Please fix the boxes marked in red.')
+      setFields({ old_system_pickup_on: notAnswered })
+      return
+    }
     setSending(true)
-    const answer = await send<WalkInCheck>('/api/walk-ins/check', { id_number: values.id_number })
+    const answer = await send<WalkInCheck>('/api/walk-ins/check', {
+      id_number: values.id_number,
+      ...oldSystemAnswer(oldSystem),
+    })
     setSending(false)
     if (answer.ok) return setChecked(answer.data)
     if (answer.status === 401) return forget()
@@ -47,6 +63,7 @@ export function WalkIn() {
   function nextStudent() {
     // The number leaves the screen, and the shelf is asked for again.
     clear()
+    setOldSystem(NO_OLD_SYSTEM_ANSWER)
     setChecked(null)
     setDone(null)
     setProblem(null)
@@ -95,6 +112,12 @@ export function WalkIn() {
             error={fields.id_number}
           />
           <Field label="Re-enter ID number" inputMode="numeric" value={values.again} onChange={set('again')} error={fields.again} />
+          <OldSystemPickup
+            answer={oldSystem}
+            onChange={setOldSystem}
+            error={fields.old_system_pickup_on}
+            today={todayInNewfoundland()}
+          />
           <button type="submit" disabled={sending || !page.walk_ins_open}>
             {sending ? 'Checking...' : 'Check the card'}
           </button>
@@ -110,6 +133,7 @@ export function WalkIn() {
       ) : (
         <TakeFood
           idNumber={values.id_number}
+          oldSystem={oldSystem}
           checked={checked}
           page={page}
           onDone={setDone}
@@ -123,6 +147,7 @@ export function WalkIn() {
 
 function TakeFood({
   idNumber,
+  oldSystem,
   checked,
   page,
   onDone,
@@ -130,6 +155,7 @@ function TakeFood({
   onLoggedOut,
 }: {
   idNumber: string
+  oldSystem: OldSystem
   checked: WalkInCheck
   page: CounterPage
   onDone: (done: WalkInDone) => void
@@ -148,6 +174,7 @@ function TakeFood({
     setSending(true)
     const answer = await send<WalkInDone>('/api/walk-ins', {
       id_number: idNumber,
+      ...oldSystemAnswer(oldSystem),
       food: asChoices(food),
       extras: Object.values(extras),
       cancel_booking: cancelBooking,

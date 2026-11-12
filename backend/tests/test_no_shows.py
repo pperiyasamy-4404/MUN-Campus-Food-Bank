@@ -211,10 +211,48 @@ def test_a_no_show_that_was_handed_over_is_fixed_to_picked_up(db, monday, food, 
     assert (bag.status, bag.no_show_at, bag.picked_up_at, bag.picked_up_by_staff_id) == ("picked_up", None, AFTER, sam.id)
     # The food left with the student, so it comes off the shelf again.
     assert (food["quick oats"].stock, food["rice"].stock) == (4, 4)
-    # F1: the 28 days count from Monday.
+    # F1: the 30 days count from Monday.
     assert student.last_pickup_on == MONDAY
     logged = db.scalar(select(AuditLog).where(AuditLog.action == "fixed_no_show_to_picked_up"))
     assert (logged.staff_id, logged.booking_id, logged.student_id) == (sam.id, bag.id, student.id)
+
+
+def book_later(db, student, food, on, *names) -> Booking:
+    """After Monday's no-show, the student books a later day, which a no-show allows."""
+    day = make_pickup_day(db, on)
+    day.booking_opens_at = OPEN
+    first = db.scalars(select(Slot).where(Slot.pickup_day_id == day.id).order_by(Slot.starts_at)).first()
+    booking_rules.hold_slot(db, student, first.id, AFTER)
+    return booking_rules.book(db, student, [Choice(food[n].id) for n in names], [], AFTER)
+
+
+def test_fixing_to_picked_up_cancels_a_booking_now_too_soon(db, monday, food, student, sam):
+    """Monday's bag was handed over but marked a no-show, so they booked Thursday.
+    Fixing Monday cancels Thursday, or they'd get two bags in 3 days (decided 12 Nov)."""
+    bag = packed(db, monday, student, food, "quick oats")
+    no_shows.mark_no_show(db, bag.id, NO_SHOW)
+    thursday = book_later(db, student, food, MONDAY + timedelta(days=3), "rice")
+    assert food["rice"].stock == 4
+
+    fixed = no_shows.fix_to_picked_up(db, bag.id, sam, AFTER + timedelta(hours=1))
+
+    assert (fixed.cancelled, fixed.cancelled_on) == (thursday, MONDAY + timedelta(days=3))
+    assert (thursday.status, thursday.cancel_reason) == ("cancelled", "pickup_fixed")
+    assert food["rice"].stock == 5
+    assert db.get(Slot, thursday.slot_id).booked_count == 0
+    logged = db.scalar(select(AuditLog).where(AuditLog.action == "cancelled_too_soon"))
+    assert (logged.staff_id, logged.booking_id) == (sam.id, thursday.id)
+
+
+def test_fixing_to_picked_up_keeps_a_booking_far_enough_away(db, monday, food, student, sam):
+    bag = packed(db, monday, student, food, "quick oats")
+    no_shows.mark_no_show(db, bag.id, NO_SHOW)
+    later = book_later(db, student, food, MONDAY + timedelta(days=31), "rice")
+
+    fixed = no_shows.fix_to_picked_up(db, bag.id, sam, AFTER + timedelta(hours=1))
+
+    assert fixed.cancelled is None
+    assert later.status == "booked"
 
 
 def test_a_fix_takes_no_more_than_the_shelf_has(db, monday, food, student, sam):

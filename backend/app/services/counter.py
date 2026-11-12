@@ -18,7 +18,7 @@ for the same student, at the same moment, can't both get past the pickup gap.
 import hmac
 from collections import Counter
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
@@ -367,13 +367,17 @@ class WalkInCheck:
 
 
 def _why_not_walk_in(
-    db: Session, student: Student, day: PickupDay, settings: Settings
+    db: Session, student: Student, day: PickupDay, settings: Settings, old_system_pickup_on: date | None = None
 ) -> tuple[str | None, Booking | None]:
     """Why this student can't be served as a walk-in today, and any booking it would cancel.
 
     The pickup gap has no exception (decided 7 Nov): one pickup every 30 days, however they come.
+    A pickup in the old system, typed by the volunteer, counts too (decided 12 Nov).
     """
-    allowed_on = booking_rules.next_pickup_allowed_on(db, student, settings)
+    allowed_on = _latest(
+        booking_rules.next_pickup_allowed_on(db, student, settings),
+        _after_old_system(old_system_pickup_on, settings),
+    )
     if allowed_on is not None and day.pickup_date < allowed_on:
         return f"Not yet. Their next pickup can be on {say_day(allowed_on)} or later.", None
     upcoming = booking_rules.upcoming_booking(db, student)
@@ -387,14 +391,35 @@ def _why_not_walk_in(
     return None, upcoming
 
 
-def check_walk_in(db: Session, id_number: str, now: datetime) -> WalkInCheck:
-    """Can this card be served as a walk-in now? Saves nothing."""
+def _after_old_system(old_system_pickup_on: date | None, settings: Settings) -> date | None:
+    """The first day a pickup in the old system allows, if one was typed."""
+    if old_system_pickup_on is None:
+        return None
+    return old_system_pickup_on + timedelta(days=settings.pickup_gap_days)
+
+
+def _latest(*dates: date | None) -> date | None:
+    return max((d for d in dates if d is not None), default=None)
+
+
+def check_walk_in(db: Session, id_number: str, now: datetime, old_system_pickup_on: date | None = None) -> WalkInCheck:
+    """Can this card be served as a walk-in now? Saves nothing.
+
+    old_system_pickup_on: their last pickup in the food bank's old system, from
+    the old records (decided 12 Nov). Example: food the old way on 12 November,
+    a walk-in on 19 November is refused, even with no account here yet.
+    """
     settings = food_bank_settings(db)
     day = _open_for_walk_ins(db, now)
+    accounts.check_old_system_pickup(old_system_pickup_on, now)
     student = db.scalar(select(Student).where(Student.id_hash == id_hash(id_number)))
     if student is None:
+        allowed_on = _after_old_system(old_system_pickup_on, settings)
+        if allowed_on is not None and day.pickup_date < allowed_on:
+            why_not = f"Not yet. Their next pickup can be on {say_day(allowed_on)} or later."
+            return WalkInCheck(can_serve=False, why_not=why_not, new_account=True)
         return WalkInCheck(can_serve=True, why_not=None, new_account=True)
-    reason, upcoming = _why_not_walk_in(db, student, day, settings)
+    reason, upcoming = _why_not_walk_in(db, student, day, settings, old_system_pickup_on)
     if reason is not None:
         return WalkInCheck(can_serve=False, why_not=reason, new_account=False)
     cancels_on = db.get(PickupDay, upcoming.pickup_day_id).pickup_date if upcoming else None
@@ -417,6 +442,7 @@ def record_walk_in(
     cancel_booking: bool,
     staff: Staff,
     now: datetime,
+    old_system_pickup_on: date | None = None,
 ) -> RecordedWalkIn:
     """A walk-in took this food from the shelf, in one transaction (W1, W4).
 
@@ -444,6 +470,8 @@ def record_walk_in(
         db.add(student)
         db.flush()
         accounts.log(db, staff, "created_student", now, student=student)
+    # A pickup in the old system counts toward the gap (decided 12 Nov).
+    accounts.record_old_system_pickup(db, student, old_system_pickup_on, staff, now)
 
     # 2.
     reason, upcoming = _why_not_walk_in(db, student, day, settings)

@@ -16,7 +16,8 @@ then the food from the lowest id up. So a volunteer pressing Hand over at the
 last second and the no-show job take turns, and the bag is one or the other.
 """
 
-from datetime import date, datetime
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
@@ -27,6 +28,7 @@ from app.services import packing
 from app.services.booking import UPCOMING
 from app.services.counter import count_pickup
 from app.services.pickup_days import say_clock, say_day
+from app.services.settings import food_bank_settings
 
 
 # A fix moves a bag between these two, one way or the other (B2, B6).
@@ -102,23 +104,58 @@ def why_not_fix(booking: Booking, day: PickupDay, now: datetime) -> str | None:
     return None
 
 
-def fix_to_picked_up(db: Session, booking_id: int, staff: Staff, now: datetime) -> Booking:
+@dataclass
+class FixedToPickedUp:
+    booking: Booking
+    # Their later booking, cancelled because it's now too soon after this pickup.
+    cancelled: Booking | None
+    cancelled_on: date | None
+
+
+def fix_to_picked_up(db: Session, booking_id: int, staff: Staff, now: datetime) -> FixedToPickedUp:
     """A no-show that was really handed over: the volunteer forgot to press Hand over (B6).
 
     1. Lock the student, then the booking. It must still be a no-show.
-    2. The food in the bag left with the student, so it comes off stock again.
+    2. A later booking now less than the pickup gap after this pickup is
+       cancelled (decided 12 Nov). Example: Monday's bag was handed over but
+       marked a no-show, so the student booked Thursday. Fixing Monday to picked
+       up cancels Thursday, or they'd get two bags in 3 days. Locked like a
+       cancel: the slot, then that booking.
+    3. The food in the bag left with the student, so it comes off stock again.
        If the count is already lower, it stops at 0: the shelf can't have less than none.
-       Food with no number keeps no number.
-    3. Picked up, recorded as by this volunteer, now. The pickup gap counts from that day (F1).
-    4. Logged with who fixed it.
+       Food with no number keeps no number. The cancelled booking's food goes back.
+    4. Picked up, recorded as by this volunteer, now. The pickup gap counts from that day (F1).
+    5. Logged with who fixed it, and the cancel too.
     """
     booking, day = _start_fix(db, booking_id, "no_show", now)
     student = db.get(Student, booking.student_id)
 
+    # 2.
+    gap_ends = day.pickup_date + timedelta(days=food_bank_settings(db).pickup_gap_days)
+    too_soon, too_soon_on, slot = None, None, None
+    later = db.scalar(select(Booking).where(Booking.student_id == student.id, Booking.status.in_(UPCOMING)))
+    if later is not None:
+        later_on = db.get(PickupDay, later.pickup_day_id).pickup_date
+        if later_on < gap_ends:
+            slot = db.scalar(select(Slot).where(Slot.id == later.slot_id).with_for_update())
+            locked = _lock_booking(db, later.id)
+            if locked.status in UPCOMING:
+                too_soon, too_soon_on = locked, later_on
+
+    # 3.
     contents = _contents(db, booking)
-    _lock_food(db, {thing.variety.id for thing in contents})
+    returned = _contents(db, too_soon) if too_soon is not None else []
+    _lock_food(db, {thing.variety.id for thing in contents} | {thing.variety.id for thing in returned})
     for thing in contents:
         thing.variety.take(min(thing.quantity, thing.variety.stock or 0))
+    if too_soon is not None:
+        for thing in returned:
+            thing.variety.put_back(thing.quantity)
+        slot.booked_count -= 1
+        too_soon.status = "cancelled"
+        too_soon.cancelled_at = now
+        too_soon.cancel_reason = "pickup_fixed"
+        db.add(AuditLog(at=now, staff_id=staff.id, action="cancelled_too_soon", student_id=student.id, booking_id=too_soon.id))
 
     booking.status = "picked_up"
     booking.no_show_at = None
@@ -129,7 +166,7 @@ def fix_to_picked_up(db: Session, booking_id: int, staff: Staff, now: datetime) 
         AuditLog(at=now, staff_id=staff.id, action="fixed_no_show_to_picked_up", student_id=student.id, booking_id=booking.id)
     )
     db.flush()
-    return booking
+    return FixedToPickedUp(booking=booking, cancelled=too_soon, cancelled_on=too_soon_on)
 
 
 def fix_to_no_show(db: Session, booking_id: int, staff: Staff, now: datetime) -> Booking:

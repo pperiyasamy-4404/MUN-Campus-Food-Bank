@@ -50,6 +50,11 @@ class Student(Base):
     # The Newfoundland date of the last pickup. Booking details are deleted after
     # the retention period, but the year rule still needs this date (F1, P13).
     last_pickup_on: Mapped[date | None]
+    # Their last pickup in the food bank's OLD system, before this one, typed by a
+    # volunteer from the old records when giving a setup code (decided 12 Nov).
+    # Kept apart from last_pickup_on, which is worked out again from this system's
+    # records when a pickup is fixed. Only matters in the first month after switching.
+    old_system_pickup_on: Mapped[date | None]
 
     __table_args__ = (
         # An HMAC is 64 characters of 0-9 and a-f, so a raw 9-digit ID number

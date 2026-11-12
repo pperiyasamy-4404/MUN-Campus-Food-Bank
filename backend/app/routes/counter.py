@@ -12,6 +12,7 @@ from sqlalchemy import select
 
 from app.deps import DB, CurrentStaff, Now
 from app.models import Booking, CounterItem, Item, PickupDay, Slot, Staff, Student, Variety
+from app.routes.accounts import OldSystemAnswer
 from app.security.inputs import IdNumber
 from app.services import booking as booking_rules
 from app.services import counter, packing
@@ -228,7 +229,8 @@ def hand_over(details: HandOver, staff: CurrentStaff, db: DB, now: Now) -> Hande
 # ---------- walk-ins ----------
 
 
-class Card(BaseModel):
+class Card(OldSystemAnswer):
+    # With their last pickup in the old system, or "none" (decided 12 Nov).
     id_number: IdNumber
 
 
@@ -249,7 +251,7 @@ class WalkInCheckOut(BaseModel):
 @router.post("/walk-ins/check")
 def check_a_walk_in(details: Card, staff: CurrentStaff, db: DB, now: Now) -> WalkInCheckOut:
     """Can this card be served now? Saves nothing."""
-    checked = counter.check_walk_in(db, details.id_number.get_secret_value(), now)
+    checked = counter.check_walk_in(db, details.id_number.get_secret_value(), now, details.old_system_pickup_on)
     return WalkInCheckOut(
         can_serve=checked.can_serve,
         why_not=checked.why_not,
@@ -258,7 +260,7 @@ def check_a_walk_in(details: Card, staff: CurrentStaff, db: DB, now: Now) -> Wal
     )
 
 
-class WalkInIn(BaseModel):
+class WalkInIn(OldSystemAnswer):
     id_number: IdNumber
     food: list[ChoiceIn] = Field(default=[], max_length=100)
     extras: list[int] = Field(default=[], max_length=100)
@@ -285,6 +287,7 @@ def record_a_walk_in(details: WalkInIn, staff: CurrentStaff, db: DB, now: Now) -
         details.cancel_booking,
         staff,
         now,
+        old_system_pickup_on=details.old_system_pickup_on,
     )
     db.commit()
     cancelled = None

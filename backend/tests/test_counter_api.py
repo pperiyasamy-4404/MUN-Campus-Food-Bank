@@ -125,7 +125,7 @@ def test_a_card_that_does_not_match_is_refused(client, setup):
 
 
 def test_a_mistyped_card_number_answers_422(client, setup):
-    response = client.post("/api/walk-ins/check", json={"id_number": "12345"})
+    response = client.post("/api/walk-ins/check", json={"never_in_old_system": True, "id_number": "12345"})
 
     assert response.status_code == 422
     assert response.json()["detail"] == [
@@ -134,13 +134,14 @@ def test_a_mistyped_card_number_answers_422(client, setup):
 
 
 def test_a_walk_in_from_start_to_end(client, setup):
-    checked = client.post("/api/walk-ins/check", json={"id_number": OTHER_ID_NUMBER}).json()
+    checked = client.post("/api/walk-ins/check", json={"never_in_old_system": True, "id_number": OTHER_ID_NUMBER}).json()
     assert checked == {"can_serve": True, "why_not": None, "new_account": True, "cancels": None}
 
     response = client.post(
         "/api/walk-ins",
         json={
             "id_number": OTHER_ID_NUMBER,
+            "never_in_old_system": True,
             "food": [{"variety_id": setup["food"]["quick oats"].id}],
             "extras": [setup["food"]["white bread"].id],
         },
@@ -150,12 +151,12 @@ def test_a_walk_in_from_start_to_end(client, setup):
     done = response.json()
     assert (done["things"], done["extras"], done["new_account"], done["cancelled"]) == (1, 1, True, None)
     assert done["next_pickup_on"] == "2026-12-09"
-    again = client.post("/api/walk-ins/check", json={"id_number": OTHER_ID_NUMBER}).json()
+    again = client.post("/api/walk-ins/check", json={"never_in_old_system": True, "id_number": OTHER_ID_NUMBER}).json()
     assert (again["can_serve"], again["why_not"]) == (False, "Not yet. Their next pickup can be on Wednesday, December 9 or later.")
 
 
 def test_a_student_with_a_bag_today_is_sent_to_their_bag(client, setup):
-    checked = client.post("/api/walk-ins/check", json={"id_number": ID_NUMBER}).json()
+    checked = client.post("/api/walk-ins/check", json={"never_in_old_system": True, "id_number": ID_NUMBER}).json()
 
     assert checked["can_serve"] is False
     assert checked["why_not"] == f"They booked for today: bag {setup['bag'].code}, at 3:30 p.m. Hand over that bag instead."
@@ -166,7 +167,7 @@ def test_counter_answers_show_nothing_about_the_student(client, setup):
     answers = [
         client.get("/api/counter").text,
         client.post("/api/counter/find", json={"code": setup["bag"].code}).text,
-        client.post("/api/walk-ins/check", json={"id_number": ID_NUMBER}).text,
+        client.post("/api/walk-ins/check", json={"never_in_old_system": True, "id_number": ID_NUMBER}).text,
         client.post("/api/counter/pickups", json={"code": setup["bag"].code, "id_number": ID_NUMBER}).text,
     ]
 
