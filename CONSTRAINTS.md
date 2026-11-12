@@ -69,7 +69,7 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 - **U4** When packing, missing varieties are refilled from the substitute list in rank order. A substitute is skipped if it's out of stock or would give the student a second of the same item. Refilling stops when the order is back to its original size.
 - **U5** Volunteers never give anything the student didn't choose. This keeps allergens out: a student who picked gluten-free pasta never gets regular pasta.
 - **U6** If the substitutes run out too, the volunteer asks the student at the counter to choose from what's on the shelf, within the same limits, and records what was given.
-- **U7** When a volunteer marks a variety as out of stock, every other booking that reserved it is flagged in the packing queue.
+- **U7** When a volunteer marks a variety as out of stock, every other booking that reserved it is flagged in the packing queue. Each of those bags opens with it marked out of stock, but the volunteer still has to look once and tap "Still out of stock" or "Found it" before Packed, so one wrong tap doesn't spread to every bag (decided 12 November).
 - **U8** Every swap is written on a sticky note on the bag, for example "Sunflower oil → rice".
 
 ### Packing
