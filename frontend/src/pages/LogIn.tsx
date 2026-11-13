@@ -6,6 +6,7 @@ import { useValues } from '../useValues.ts'
 import { useMe } from '../me.ts'
 import { AlreadyLoggedIn } from './AlreadyLoggedIn.tsx'
 import { PageHeading } from '../PageHeading.tsx'
+import logoFull from '../assets/logo-full.png'
 
 // Logging in, for students (ID number) and for staff (username).
 
@@ -51,6 +52,7 @@ function LogIn({ who }: { who: 'student' | 'staff' }) {
 
   return (
     <div className="narrow">
+      <img className="logo-full form-logo" src={logoFull} alt="MUN Campus Food Bank" width="640" height="409" />
       <PageHeading>Log in</PageHeading>
       {/* Two tabs, Student and Staff (decided 12 Nov): staff find their way in from
           the same page, without a link in the top bar or at the bottom. They're

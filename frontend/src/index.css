@@ -297,11 +297,35 @@ h4 {
 
 .top .brand {
   order: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
   color: var(--header-text);
   font-weight: 700;
   font-size: 1.15rem;
   white-space: nowrap;
   text-decoration: none;
+}
+
+/* The food bank's MUN shape, in white (assets/logo-mark-white.png). */
+.brand-mark {
+  display: block;
+  height: 2.2rem;
+  width: auto;
+}
+
+/* The full logo, on light backgrounds: the home page and the log in pages. */
+.logo-full {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Above the Log in and Set up forms. */
+.form-logo {
+  max-width: 11rem;
+  margin: 0.5rem 0 1rem;
 }
 
 /* The tabs. The one you're on is bold, with a 4px white line under it. The line
@@ -1564,6 +1588,33 @@ button.chosen-button:hover:not(:disabled) {
 .hero h1 {
   margin: 0 0 0.3rem;
   font-size: 2rem;
+}
+
+/* The logo is the heading: on the left on a wide screen, above the words on a phone. */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.hero h1:has(.hero-logo) {
+  margin: 0;
+}
+
+.hero-logo {
+  max-width: 13rem;
+}
+
+@media (min-width: 48rem) {
+  .hero {
+    grid-template-columns: 14rem 1fr;
+    align-items: center;
+    column-gap: 2rem;
+  }
+
+  .hero-logo {
+    max-width: 14rem;
+  }
 }
 
 .hero p {

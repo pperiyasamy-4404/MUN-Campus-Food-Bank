@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, Navigate, NavLink, Outlet, useNavigate } from 'react-router'
 import { useMe } from './me.ts'
+import logoMark from './assets/logo-mark-white.png'
 
 /** The bar at the top of every page, and the page under it. */
 export function Layout() {
@@ -19,8 +20,11 @@ export function Layout() {
           my.mun.ca portal, and the account links on the right, in one row. */}
       <header className="top">
         <div className="top-inner">
-          {/* TODO: Food bank logo goes here. Not MUN's logo or crest: the brand rules keep those for the university. */}
+          {/* The food bank's logo, in white so it shows on the claret bar (13 Nov). Only the
+              MUN shape: its small "Campus Food Bank" lettering can't be read this size, so
+              the name stays as text. alt="" because the words next to it say it already. */}
           <Link to="/" className="brand">
+            <img className="brand-mark" src={logoMark} alt="" width="80" height="45" />
             Campus Food Bank
           </Link>
           <nav aria-label="Account" className="account-links">

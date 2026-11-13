@@ -4,6 +4,7 @@ import { PickupDayList } from '../PickupDayList.tsx'
 import { useAccount } from '../me.ts'
 import { showDay } from '../time.ts'
 import { PageHeading } from '../PageHeading.tsx'
+import logoFull from '../assets/logo-full.png'
 
 export function Home() {
   const account = useAccount()
@@ -18,7 +19,13 @@ export function Home() {
         </p>
       )}
       <section className="hero">
-        <PageHeading>Campus Food Bank</PageHeading>
+        {/* The logo is the heading (13 Nov): no "Campus Food Bank" in letters next to it.
+            The hidden words give the heading its name for screen readers and the tab title. */}
+        <PageHeading>
+          <img className="logo-full hero-logo" src={logoFull} alt="" width="640" height="409" />
+          <span className="visually-hidden">Campus Food Bank</span>
+        </PageHeading>
+        <div className="hero-text">
         <p>
           Free food for MUN students. Book a pickup time, choose your food, and collect your bag at the counter. All
           times are Newfoundland time.
@@ -45,6 +52,7 @@ export function Home() {
             </Link>
           )}
         </p>
+        </div>
       </section>
       <PickupDayList />
       <FoodList />
