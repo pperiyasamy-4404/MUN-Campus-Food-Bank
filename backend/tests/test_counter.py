@@ -33,7 +33,6 @@ from app.models import (
     WalkIn,
 )
 from app.problems import NotFound, Problem
-from app.sample_data import SAMPLE_SETTINGS
 from app.security.keyed_hash import id_hash
 from app.services import booking as booking_rules
 from app.services import counter, packing
@@ -42,6 +41,7 @@ from app.services.counter import AlreadyPickedUp, BookingToCancel, NotPackedYet
 from app.services.packing import Missing
 from app.services.pickup_days import make_pickup_day
 from tests.helpers import (
+    TEST_SETTINGS,
     ID_NUMBER,
     MONDAY,
     OTHER_ID_NUMBER,
@@ -494,7 +494,7 @@ def world(engine):
     """Committed rows for the race tests. Today is a pickup day with the counter open,
     and a later day is open for booking. Two students with cards, one tin left, and plenty of another food."""
     with Session(engine) as db:
-        db.add(Settings(**SAMPLE_SETTINGS))
+        db.add(Settings(**TEST_SETTINGS))
         staff = Staff(username="Race counter", role="volunteer")
         category = Category(name="Race shelf")
         today = PickupDay(

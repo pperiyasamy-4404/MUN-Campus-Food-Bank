@@ -15,6 +15,12 @@ from app.models import Booking, Category, Item, PickupDay, Settings, Slot, Staff
 from app.sample_data import SAMPLE_SETTINGS
 from app.services import accounts
 
+# The tests' own pickup afternoon: 3:30 to 5:30 pm, no-shows at 6 pm. Fixed here, so the
+# tests check the rules on the same afternoon whatever the food bank's real hours are
+# (those are in app/sample_data.py and the coordinator's settings: 3:30 to 7:30 since 13 Nov).
+TEST_SETTINGS = SAMPLE_SETTINGS | {"no_show_time": time(18, 0)}
+TEST_PICKUP_HOURS = [(1, time(15, 30), time(17, 30)), (4, time(15, 30), time(17, 30))]
+
 MONDAY = date(2026, 11, 9)
 THURSDAY = date(2026, 11, 12)
 
@@ -51,7 +57,7 @@ def add(db, row):
 
 
 def make_settings(db, **changes) -> Settings:
-    return add(db, Settings(**(SAMPLE_SETTINGS | changes)))
+    return add(db, Settings(**(TEST_SETTINGS | changes)))
 
 
 def make_staff(db, username: str | None = None, role: str = "volunteer") -> Staff:

@@ -1,3 +1,5 @@
+<img src="docs/logo.png" alt="MUN Campus Food Bank" width="220">
+
 # Campus Food Bank Booking System
 
 A booking system for a university campus food bank. Students book a pickup time online and choose their food. Volunteers pack the bags and hand them over at the counter. A coordinator runs the pickup days and sees weekly totals. The system never stores a student's name, email or ID number.
@@ -47,7 +49,7 @@ It was built for the Campus Food Bank at Memorial University of Newfoundland (MU
 - Manage staff accounts. There can be several coordinators.
 - See weekly totals only: bags picked up, walk-ins, no-shows and food given out.
 
-**A jobs script** (`python -m app.jobs`, every 15 minutes) makes pickup days a week ahead. It marks bags not collected by 6 pm as no-shows and puts their food back. It also saves weekly totals and then deletes old booking details, and deletes accounts with no pickup for a year.
+**A jobs script** (`python -m app.jobs`, every 15 minutes) makes pickup days a week ahead. It marks bags not collected by 8 pm as no-shows and puts their food back. It also saves weekly totals and then deletes old booking details, and deletes accounts with no pickup for a year.
 
 ## Screenshots
 
@@ -68,7 +70,7 @@ The full list is in [CONSTRAINTS.md](CONSTRAINTS.md), with a number for each rul
 - **Up to 13 things per bag, and one of each kind of food.** For example, one canned chicken, even if there are three kinds.
 - **Students get only what they chose.** A substitute is used only if the student listed it, so a student who chose gluten-free pasta never gets regular pasta.
 - **A bag is handed over only after a volunteer checks the MUN card** against the booking. No card, no food.
-- **Booking opens at 5 pm the day before and closes at 12 pm on the pickup day.** Then packing starts, pickup is 3:30 to 5:30 pm, and bags not collected by 6 pm become no-shows. These times are settings, so the coordinator can change them.
+- **Booking opens at 5 pm the day before and closes at 12 pm on the pickup day.** Then packing starts, pickup is 3:30 to 7:30 pm, and bags not collected by 8 pm become no-shows. These times are settings, so the coordinator can change them.
 - **A booking can only move forward:** booked → packed → picked up, or cancelled or no-show. Undoing Packed and fixing a no-show are the only ways back, and both are logged.
 
 Most of these rules are checked twice: once in the code, and again by the database itself, with CHECK constraints, unique indexes and foreign keys. The tests check that the database refuses a bad row even when the code is skipped, and that it names the rule that refused it.
@@ -214,7 +216,7 @@ cd backend
 
 - **every rule** in CONSTRAINTS.md, through the service functions and through the HTTP API
 - **database rules:** a bad row is refused by the database itself, and the test checks the name of the constraint that refused it
-- **races:** two real database connections at once, for example the last place in a time, the last tin, a hand-over at 5:59 pm while the 6 pm job runs, and a coordinator closing a day while a student presses Book
+- **races:** two real database connections at once, for example the last place in a time, the last tin, a hand-over a minute before the no-show job runs, and a coordinator closing a day while a student presses Book
 - **time:** Newfoundland's half-hour time zone, summer time, and the day the clocks go back
 - **privacy:** the ID number is searched for in every response, log and table
 - **migrations:** they match the table classes, and can be undone and run again

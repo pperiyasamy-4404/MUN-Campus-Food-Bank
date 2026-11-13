@@ -780,3 +780,15 @@ Checked: 553 tests (4 new); in a browser, the box and the message, with axe at f
 - **Fixing a no-show to picked up.** Example: Monday's bag was handed over but nobody pressed Hand over, so at 6 pm it became a no-show, and the student booked Thursday. Fixing Monday on Friday now cancels Thursday's booking (reason `pickup_fixed`, logged as `cancelled_too_soon`), puts its food back and frees the slot. The Fix page says "Their booking for Thursday, November 12 (bag K3P) was cancelled: it's less than 30 days after this pickup." A booking 30 or more days later stays.
 - **Bookings in the old system for days after the switch:** not a problem. The old system has no online booking.
 Checked: 559 tests (6 new); in a browser, both pages with axe at full width and 320 px, the "required" message, and the tick box clearing the date.
+
+## 2026-11-13
+
+**The food bank's real hours: Monday and Thursday, 3:30 to 7:30 pm. No-shows at 8 pm.**
+Prakash gave the food bank's hours of operation: Mondays and Thursdays 3:30–7:30 pm (the samples had 3:30–5:30). So a pickup day now has 24 ten-minute times, not 12, and walk-ins are served until 7:30 (W3).
+- **No-shows at 8 pm** (Claude's choice, flagged): the no-show time can't be before pickup ends (a database rule and a settings check), and 8 pm keeps the same half hour after closing that 6 pm gave 5:30.
+- The sample settings (`app/sample_data.py`), and so the demo and any new install, use the real hours. The working database was changed through the Settings code, logged as Admin.
+- **Days already made** (16, 19 and 23 November in the working database) were extended to 7:30 with 12 more times each, by a one-off script, since days normally keep the hours they were made with (S5). Bookings already made stayed.
+- **The tests keep their own afternoon**, 3:30 to 5:30 with no-shows at 6 pm (`TEST_SETTINGS`, `TEST_PICKUP_HOURS` in `tests/helpers.py`). Why: 42 tests are written around that afternoon ("a packed bag becomes a no-show at 6 pm") and check the rules, not the food bank's hours. Rewriting them would change nothing they prove. One new test checks the real hours fit the other sample settings. 563 tests.
+- The explainer pages written before today keep their 5:30 and 6 pm examples: they say "with the sample settings".
+
+**The food bank's logo on the website.** The full logo on the home page and the Log in and Set up pages; the MUN shape alone, in white, in the claret header (its small lettering can't be read at that size, so the name stays as text); white MUN letters on a claret square for the browser tab and phone home screens (Vite's icon was still there). The logo's claret was set to MUN Claret (#862633) exactly; it was a little off (#822031), likely from compression. Checked with axe on 17 pages, at full width and 320 px.

@@ -9,8 +9,7 @@ from app.config import BACKEND_DIR, config
 from app.deps import get_db
 from app.main import app
 from app.models import PickupHours
-from app.sample_data import SAMPLE_PICKUP_HOURS
-from tests.helpers import add, make_settings
+from tests.helpers import TEST_PICKUP_HOURS, add, make_settings
 
 
 @pytest.fixture(scope="session")
@@ -55,9 +54,9 @@ def db_with_settings(db):
 
 @pytest.fixture
 def db_with_sample_week(db):
-    """The sample settings, with pickups on Monday and Thursday, 3:30 to 5:30 pm."""
+    """The tests' own settings, with pickups on Monday and Thursday, 3:30 to 5:30 pm (TEST_PICKUP_HOURS)."""
     make_settings(db)
-    for weekday, starts_at, ends_at in SAMPLE_PICKUP_HOURS:
+    for weekday, starts_at, ends_at in TEST_PICKUP_HOURS:
         add(db, PickupHours(weekday=weekday, starts_at=starts_at, ends_at=ends_at))
     return db
 

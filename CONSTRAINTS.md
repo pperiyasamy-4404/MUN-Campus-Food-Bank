@@ -80,7 +80,7 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 ### Walk-ins
 
 - **W1** Walk-ins are recorded in the same system. The volunteer checks the student's card and enters the ID number, the system checks the pickup gap, the volunteer selects the items given on the Walk-in screen, and the pickup is done. A walk-in who hasn't reached the pickup gap is refused. There's no override. This keeps the pickup gap fair (nobody can walk in one week and book online the next) and keeps any stock number right without recounting.
-- **W3** Walk-ins are served in their own line, by their own volunteers, side by side with online pickups. They don't use slots. They are served only during pickup hours (3:30 to 5:30 pm with the sample hours). A student with a booking can still collect their bag until the no-show time.
+- **W3** Walk-ins are served in their own line, by their own volunteers, side by side with online pickups. They don't use slots. They are served only during pickup hours (3:30 to 7:30 pm, the food bank's hours). A student with a booking can still collect their bag until the no-show time.
 - **W4** If a walk-in already has an upcoming booking, the volunteer cancels the booking and serves them now.
 
 ### Booking life
@@ -107,7 +107,7 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 | Setting | Sample value |
 |---|---|
 | Pickup gap | 30 days |
-| Pickup days and hours | Monday and Thursday, 3:30–5:30 pm |
+| Pickup days and hours | Monday and Thursday, 3:30–7:30 pm (the food bank's real hours, 13 November) |
 | Booking opens | 5 pm the day before the pickup day |
 | Booking closes (and cancelling) | 12 pm on the pickup day |
 | Slot length | 10 minutes |
@@ -117,7 +117,7 @@ Rules marked **(under review)** are waiting on a decision. See questions-and-iss
 | Max of each item | 1 |
 | Substitute limit | 5 per booking |
 | Extras per student | 1 of each extra item |
-| No-show time | 6 pm on the pickup day |
+| No-show time | 8 pm on the pickup day (half an hour after pickup ends) |
 | No-shows count toward the pickup gap | No |
 | Retention period | 90 days |
 | Category limits inside the item limit | None |
@@ -137,7 +137,7 @@ Problems we know about and accept for now.
 - **Internet down at the counter.** Volunteers can't check cards or the pickup gap. We'll plan for this later.
 - **First visit in person.** A new student can't book online until they've been to the counter for an account. They can take food as a walk-in on that visit.
 - **A stranger guessing can delay a reset on a new phone.** If someone keeps guessing a student's password, the student's usual phone still gets in. A phone that has never logged in to the account shares the stranger's wrong-try count, so it may wait up to 15 minutes to use a new setup code. It needs someone who knows the ID number and keeps guessing.
-- **Food with a number can still be counted twice.** If a volunteer counts it after 6 pm, before the jobs mark a bag as a no-show, the no-show adds the bag's food back on top of the count. Only food with a number, which is now a few foods at a time, and only in the minutes before the jobs run (they run every 15 minutes). Food with no number can't be counted twice (decided 12 November).
+- **Food with a number can still be counted twice.** If a volunteer counts it after the no-show time (8 pm), before the jobs mark a bag as a no-show, the no-show adds the bag's food back on top of the count. Only food with a number, which is now a few foods at a time, and only in the minutes before the jobs run (they run every 15 minutes). Food with no number can't be counted twice (decided 12 November).
 - **Still logged in on a shared computer.** A student login lasts 30 days. On a shared computer, the next person could see their booking if they don't press Log out. Left as it is: university computers log everyone out at the end of a session anyway (decided 12 November).
 - **No "Delete my account" button.** A student account is deleted after a year with no pickup (P13), and not sooner. Left as it is: few students would ask (decided 12 November).
 - **A fix to no-show can shorten the year rule.** Fixing a bag to no-show sets the pickup gap from the last pickup still on record. If the only earlier pickup is older than the retention period, its record is gone, and the year rule (P13) counts from when the account was made. Rare: the student would get a new account at the counter.

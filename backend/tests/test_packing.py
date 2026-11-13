@@ -32,7 +32,6 @@ from app.models import (
     Variety,
 )
 from app.problems import NotFound, Problem
-from app.sample_data import SAMPLE_SETTINGS
 from app.services import booking as booking_rules
 from app.services import packing, stock
 from app.services.booking import Choice
@@ -47,7 +46,7 @@ from app.services.packing import (
     sticky_note,
 )
 from app.services.pickup_days import make_pickup_day
-from tests.helpers import MONDAY, THURSDAY, add, make_staff, make_student, wait_until_someone_is_waiting_for_a_lock
+from tests.helpers import MONDAY, THURSDAY, add, make_staff, make_student, wait_until_someone_is_waiting_for_a_lock, TEST_SETTINGS
 
 OPEN = datetime(2026, 11, 8, 21, 0, tzinfo=UTC)  # Sunday 5:30 pm: booking is open
 BEFORE_PACKING = datetime(2026, 11, 9, 15, 29, tzinfo=UTC)  # Monday 11:59 am
@@ -658,7 +657,7 @@ def world(engine):
     """Committed rows for the race tests: two bags that each booked sunflower oil,
     which ran out, with rice as their first substitute. Only one rice is left."""
     with Session(engine) as db:
-        db.add(Settings(**SAMPLE_SETTINGS))
+        db.add(Settings(**TEST_SETTINGS))
         staff = Staff(username="Race packer", role="volunteer")
         category = Category(name="Race pantry")
         day = PickupDay(

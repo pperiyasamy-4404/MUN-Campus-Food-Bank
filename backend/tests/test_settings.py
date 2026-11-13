@@ -11,18 +11,17 @@ from sqlalchemy import select
 
 from app.models import AuditLog, PickupDay, PickupHours, Settings, Slot
 from app.problems import Problem
-from app.sample_data import SAMPLE_SETTINGS
 from app.services import settings as rules
 from app.services.pickup_days import make_pickup_day
 from app.services.settings import WeeklyHours
-from tests.helpers import MONDAY, THURSDAY, coordinator, log_in, make_staff, stop_the_clock_at
+from tests.helpers import MONDAY, THURSDAY, coordinator, log_in, make_staff, stop_the_clock_at, TEST_SETTINGS
 
 NOW = datetime(2026, 11, 8, 19, 30, tzinfo=UTC)  # Sunday 4 pm
 SAMPLE_HOURS = [WeeklyHours(1, time(15, 30), time(17, 30)), WeeklyHours(4, time(15, 30), time(17, 30))]
 
 
 def why_not(hours=SAMPLE_HOURS, **changes) -> str | None:
-    return rules.why_not_fit(SAMPLE_SETTINGS | changes, hours)
+    return rules.why_not_fit(TEST_SETTINGS | changes, hours)
 
 
 # ---------- the rules between settings ----------
@@ -82,7 +81,7 @@ def test_saving_changes_the_settings_and_the_weekly_hours_and_logs_it(db_with_sa
     alex = coordinator(db)
     friday = WeeklyHours(5, time(13, 0), time(15, 0))
 
-    rules.change_settings(db, SAMPLE_SETTINGS | {"slot_capacity": 2}, [SAMPLE_HOURS[0], friday], alex, NOW)
+    rules.change_settings(db, TEST_SETTINGS | {"slot_capacity": 2}, [SAMPLE_HOURS[0], friday], alex, NOW)
 
     assert rules.food_bank_settings(db).slot_capacity == 2
     assert rules.weekly_hours(db) == [SAMPLE_HOURS[0], friday]
@@ -94,7 +93,7 @@ def test_settings_that_dont_fit_are_not_saved(db_with_sample_week):
     db = db_with_sample_week
 
     with pytest.raises(Problem):
-        rules.change_settings(db, SAMPLE_SETTINGS | {"max_per_item": 20}, SAMPLE_HOURS, coordinator(db), NOW)
+        rules.change_settings(db, TEST_SETTINGS | {"max_per_item": 20}, SAMPLE_HOURS, coordinator(db), NOW)
 
     assert rules.food_bank_settings(db).max_per_item == 1
 
@@ -105,7 +104,7 @@ def test_days_already_made_keep_their_times_and_new_days_use_the_new_ones(db_wit
     later_hours = [WeeklyHours(1, time(16, 0), time(18, 0))]
 
     rules.change_settings(
-        db, SAMPLE_SETTINGS | {"no_show_time": time(18, 30), "slot_minutes": 15}, later_hours, coordinator(db), NOW
+        db, TEST_SETTINGS | {"no_show_time": time(18, 30), "slot_minutes": 15}, later_hours, coordinator(db), NOW
     )
 
     assert monday.pickup_starts_at == datetime(2026, 11, 9, 19, 0, tzinfo=UTC)  # still 3:30 pm
@@ -128,7 +127,7 @@ def test_students_per_slot_reaches_days_whose_booking_hasnt_opened(db_with_sampl
     monday.booking_opens_at = datetime(2026, 11, 8, 18, 30, tzinfo=UTC)
     db.flush()
 
-    changed = rules.change_settings(db, SAMPLE_SETTINGS | {"slot_capacity": 2}, SAMPLE_HOURS, coordinator(db), NOW)
+    changed = rules.change_settings(db, TEST_SETTINGS | {"slot_capacity": 2}, SAMPLE_HOURS, coordinator(db), NOW)
 
     assert changed == [THURSDAY]
     assert capacities(db, thursday) == {2}
@@ -145,7 +144,7 @@ def test_a_slot_never_gets_fewer_places_than_are_booked(db_with_sample_week):
     first.booked_count = 2
     db.flush()
 
-    rules.change_settings(db, SAMPLE_SETTINGS | {"slot_capacity": 1}, SAMPLE_HOURS, coordinator(db), NOW)
+    rules.change_settings(db, TEST_SETTINGS | {"slot_capacity": 1}, SAMPLE_HOURS, coordinator(db), NOW)
 
     assert db.scalar(select(Slot.capacity).where(Slot.id == first.id).execution_options(populate_existing=True)) == 2
     assert capacities(db, monday) == {1, 2}
@@ -155,7 +154,7 @@ def test_other_settings_never_change_days_already_made(db_with_sample_week):
     db = db_with_sample_week
     monday = make_pickup_day(db, MONDAY)
 
-    changed = rules.change_settings(db, SAMPLE_SETTINGS | {"item_limit": 10}, SAMPLE_HOURS, coordinator(db), NOW)
+    changed = rules.change_settings(db, TEST_SETTINGS | {"item_limit": 10}, SAMPLE_HOURS, coordinator(db), NOW)
 
     assert changed == []
     assert capacities(db, monday) == {1}
@@ -166,7 +165,7 @@ def test_other_settings_never_change_days_already_made(db_with_sample_week):
 
 def as_sent(**changes) -> dict:
     """The sample settings the way the page sends them: times as "17:00"."""
-    sent = {name: f"{value:%H:%M}" if isinstance(value, time) else value for name, value in SAMPLE_SETTINGS.items()}
+    sent = {name: f"{value:%H:%M}" if isinstance(value, time) else value for name, value in TEST_SETTINGS.items()}
     sent["pickup_hours"] = [
         {"weekday": 1, "starts_at": "15:30", "ends_at": "17:30"},
         {"weekday": 4, "starts_at": "15:30", "ends_at": "17:30"},
@@ -245,3 +244,12 @@ def test_settings_that_dont_fit_get_a_sentence(client, db_with_sample_week, alex
     }
     assert len(db_with_sample_week.scalars(select(PickupHours)).all()) == 2
     assert db_with_sample_week.scalar(select(PickupDay)) is None
+
+
+def test_the_food_banks_real_hours_fit_the_other_sample_settings():
+    # Monday and Thursday 3:30 to 7:30 pm (13 Nov), so no-shows can't be before 7:30.
+    from app.sample_data import SAMPLE_PICKUP_HOURS, SAMPLE_SETTINGS
+
+    hours = [WeeklyHours(weekday, starts, ends) for weekday, starts, ends in SAMPLE_PICKUP_HOURS]
+    assert rules.why_not_fit(SAMPLE_SETTINGS, hours) is None
+    assert [(h.starts_at, h.ends_at) for h in hours] == [(time(15, 30), time(19, 30))] * 2

@@ -28,11 +28,10 @@ from app.models import (
     Variety,
 )
 from app.problems import NotFound, Problem
-from app.sample_data import SAMPLE_SETTINGS
 from app.services import booking as rules
 from app.services.booking import AlreadyBooked, Choice, TimeTaken
 from app.services.pickup_days import make_pickup_day
-from tests.helpers import MONDAY, add, make_student, wait_until_someone_is_waiting_for_a_lock
+from tests.helpers import MONDAY, add, make_student, wait_until_someone_is_waiting_for_a_lock, TEST_SETTINGS
 
 BEFORE_OPEN = datetime(2026, 11, 8, 20, 29, tzinfo=UTC)  # Sunday 4:59 pm
 OPEN = datetime(2026, 11, 8, 21, 0, tzinfo=UTC)  # Sunday 5:30 pm
@@ -374,7 +373,7 @@ def world(engine):
     """Committed rows for the race tests: the settings, Monday with two 1-place slots,
     two students, and one tin of chicken. Everything is deleted afterwards."""
     with Session(engine) as db:
-        db.add(Settings(**SAMPLE_SETTINGS))
+        db.add(Settings(**TEST_SETTINGS))
         staff = Staff(username="Race staff", role="volunteer")
         db.add(staff)
         db.flush()

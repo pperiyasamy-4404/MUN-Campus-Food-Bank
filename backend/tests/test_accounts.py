@@ -12,7 +12,6 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.models import AuditLog, LoginFailure, LoginSession, Settings, SetupCode, Staff, Student
-from app.sample_data import SAMPLE_SETTINGS
 from app.security.keyed_hash import id_hash, username_hash
 from app.security.passwords import password_matches
 from app.security.sessions import start_session
@@ -31,6 +30,7 @@ from app.services.accounts import (
     WrongDetails,
 )
 from tests.helpers import (
+    TEST_SETTINGS,
     ID_NUMBER,
     OTHER_ID_NUMBER,
     PASSWORD,
@@ -666,7 +666,7 @@ def test_ten_wrong_tries_at_the_same_moment_still_get_only_5_checks(engine):
     the test tidies up after itself.
     """
     with Session(engine) as db:
-        db.add(Settings(**SAMPLE_SETTINGS))
+        db.add(Settings(**TEST_SETTINGS))
         db.commit()
     start_together = threading.Barrier(10)
     answers = []

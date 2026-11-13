@@ -26,7 +26,7 @@ SAMPLE_SETTINGS = dict(
     booking_opens_days_before=1,
     booking_opens_time=time(17, 0),
     booking_closes_time=time(12, 0),
-    no_show_time=time(18, 0),
+    no_show_time=time(20, 0),
     no_shows_count=False,
     retention_days=90,
     setup_code_days=7,
@@ -34,8 +34,8 @@ SAMPLE_SETTINGS = dict(
     login_window_minutes=15,
 )
 
-# Monday and Thursday, 3:30 to 5:30 pm.
-SAMPLE_PICKUP_HOURS = [(1, time(15, 30), time(17, 30)), (4, time(15, 30), time(17, 30))]
+# Monday and Thursday, 3:30 to 7:30 pm: the food bank's real hours (13 Nov).
+SAMPLE_PICKUP_HOURS = [(1, time(15, 30), time(19, 30)), (4, time(15, 30), time(19, 30))]
 
 TAGS = ["Vegetarian", "Halal", "Gluten-free", "Contains nuts"]
 

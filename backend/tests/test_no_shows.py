@@ -28,7 +28,6 @@ from app.models import (
     WalkIn,
 )
 from app.problems import Problem
-from app.sample_data import SAMPLE_SETTINGS
 from app.security.keyed_hash import id_hash
 from app.services import booking as booking_rules
 from app.services import counter, no_shows, packing
@@ -36,7 +35,7 @@ from app.services.booking import Choice
 from app.services.no_shows import CantFix
 from app.services.packing import Missing
 from app.services.pickup_days import make_pickup_day
-from tests.helpers import ID_NUMBER, MONDAY, add, make_day, make_staff, wait_until_someone_is_waiting_for_a_lock
+from tests.helpers import ID_NUMBER, MONDAY, add, make_day, make_staff, wait_until_someone_is_waiting_for_a_lock, TEST_SETTINGS
 
 OPEN = datetime(2026, 11, 8, 21, 0, tzinfo=UTC)  # Sunday 5:30 pm: booking for Monday is open
 PACKING = datetime(2026, 11, 9, 16, 0, tzinfo=UTC)  # Monday 12:30 pm
@@ -345,7 +344,7 @@ FAR_NO_SHOW = datetime.combine(FAR_DAY, datetime.min.time(), tzinfo=UTC) + timed
 def world(engine):
     """Committed rows for the race test: a packed bag of oats on a far-off Monday. Deleted afterwards."""
     with Session(engine) as db:
-        db.add(Settings(**SAMPLE_SETTINGS))
+        db.add(Settings(**TEST_SETTINGS))
         staff = Staff(username="Race no-show", role="volunteer")
         category = Category(name="Race no-show shelf")
         day = PickupDay(

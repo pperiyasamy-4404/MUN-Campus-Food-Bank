@@ -36,9 +36,9 @@ from app.models import (
     WeeklyItemTotal,
     WeeklyTotal,
 )
-from app.sample_data import SAMPLE_SETTINGS
 from app.security.passwords import hash_password
 from tests.helpers import (
+    TEST_SETTINGS,
     MONDAY,
     add,
     make_booking,
@@ -66,7 +66,7 @@ def test_sample_settings_are_allowed(db):
 def test_settings_has_only_one_row(db):
     make_settings(db)
     with refused_by(db, "ck_settings_only_one_row"):
-        db.add(Settings(id=2, **SAMPLE_SETTINGS))
+        db.add(Settings(id=2, **TEST_SETTINGS))
 
 
 @pytest.mark.parametrize(
@@ -97,7 +97,7 @@ def test_settings_has_only_one_row(db):
 )
 def test_settings_numbers_must_make_sense(db, changes, rule):
     with refused_by(db, rule):
-        db.add(Settings(**(SAMPLE_SETTINGS | changes)))
+        db.add(Settings(**(TEST_SETTINGS | changes)))
 
 
 def test_booking_can_open_on_the_pickup_day_itself(db):

@@ -25,9 +25,8 @@ from app.models import (
     WeeklyItemTotal,
     WeeklyTotal,
 )
-from app.sample_data import SAMPLE_SETTINGS
 from app.services.pickup_days import make_days_ahead, make_pickup_day
-from tests.helpers import MONDAY, THURSDAY
+from tests.helpers import MONDAY, THURSDAY, TEST_SETTINGS
 
 MONDAY_MORNING = datetime(2026, 11, 9, 13, 0, tzinfo=UTC)  # Monday 9 November 2026, 9:30 am in St. John's
 
@@ -90,7 +89,7 @@ def world(engine):
     - A student whose last pickup was 400 days ago, with nothing on record.
     """
     with Session(engine) as db:
-        db.add(Settings(**SAMPLE_SETTINGS))
+        db.add(Settings(**TEST_SETTINGS))
         staff = Staff(username="Jobs volunteer", role="volunteer")
         category = Category(name="Jobs shelf")
         db.add_all([staff, category])
