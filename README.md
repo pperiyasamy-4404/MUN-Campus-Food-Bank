@@ -287,7 +287,7 @@ The rules were agreed before any code was written, and every choice is written d
 
 ## What's not done yet
 
-**Before real students use it:**
+**Before real students use it:** (the free hosting steps, one by one, are in [deploy-to-the-cloud.html](deploy-to-the-cloud.html))
 - Hosting on a cloud server with at least 2 CPU cores, and the cloud's own database backups
 - `SECRET_KEY` kept in the cloud's secrets setting, apart from the database
 - The scheduler set up to run the jobs script every 15 minutes
