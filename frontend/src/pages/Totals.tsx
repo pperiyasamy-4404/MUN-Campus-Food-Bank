@@ -4,6 +4,8 @@ import { showDate } from '../time.ts'
 import { CoordinatorNav } from './CoordinatorParts.tsx'
 import { useStaffData } from './coordinatorTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
+import { Loading } from '../ui/Loading.tsx'
+import { Empty } from '../ui/Empty.tsx'
 
 // Weekly totals for the coordinator (P12): only numbers, by week. Any number
 // from 1 to 4 arrives from the server as "fewer than 5", so the page never has
@@ -13,7 +15,7 @@ export function Totals() {
   const { forget } = useMe()
   const load = useStaffData<TotalsPage>('/api/totals', 0, forget)
 
-  if (load.state === 'loading') return <p className="muted">Asking the server...</p>
+  if (load.state === 'loading') return <Loading shape="rows" />
   if (load.state === 'failed') return <p className="problem">Could not get the totals. Is the server running?</p>
   const { weeks } = load.data
 
@@ -27,7 +29,9 @@ export function Totals() {
         listed.
       </p>
       {weeks.length === 0 ? (
-        <p className="muted">No totals yet: they start once the first pickup day is over.</p>
+        <Empty icon="chart" title="No totals yet">
+          They start once the first pickup day is over.
+        </Empty>
       ) : (
         <div className="table-scroll">
           <table className="people totals">

@@ -6,6 +6,7 @@ import { showDate, showDayAndClock } from '../time.ts'
 import { CoordinatorNav } from './CoordinatorParts.tsx'
 import { useStaffData, WEEKDAYS } from './coordinatorTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
+import { Loading } from '../ui/Loading.tsx'
 
 // The food bank's numbers and weekly pickup hours (R3). Some are used straight
 // away. The ones that make pickup days are copied onto each day when it's
@@ -15,7 +16,7 @@ export function Settings() {
   const { forget } = useMe()
   const load = useStaffData<SettingsPage>('/api/settings', 0, forget)
 
-  if (load.state === 'loading') return <p className="muted">Asking the server...</p>
+  if (load.state === 'loading') return <Loading shape="page" />
   if (load.state === 'failed') return <p className="problem">Could not get the settings. Is the server running?</p>
 
   return (
@@ -224,7 +225,7 @@ function SettingsForm({ page: first, onLoggedOut }: { page: SettingsPage; onLogg
       </Group>
 
       <Problem message={problem} />
-      <button type="submit" disabled={sending}>
+      <button type="submit" disabled={sending} aria-busy={sending}>
         {sending ? 'Saving...' : 'Save the settings'}
       </button>
     </form>

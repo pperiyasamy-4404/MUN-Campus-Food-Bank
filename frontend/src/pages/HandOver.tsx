@@ -7,6 +7,7 @@ import { showClock, showDate } from '../time.ts'
 import { CounterNav, ExtrasPicker, ShelfPicker } from './CounterParts.tsx'
 import { asChoices, total, useCounterPage, type Chosen } from './counterTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
+import { Loading } from '../ui/Loading.tsx'
 
 // Handing over a booked bag (P5, B3, U6, E3). The student says their code, the
 // volunteer finds the bag, adds any extras they ask for, types the number on
@@ -62,7 +63,7 @@ export function HandOver() {
     setVersion((old) => old + 1)
   }
 
-  if (load.state === 'loading') return <p className="muted">Asking the server...</p>
+  if (load.state === 'loading') return <Loading shape="page" />
   if (load.state === 'failed') return <p className="problem">Could not get the counter. Is the server running?</p>
   const { page } = load
 
@@ -277,7 +278,7 @@ function TheBag({
             onChange={setCard}
             error={fields.id_number}
           />
-          <button type="submit" disabled={sending || card.trim() === ''}>
+          <button type="submit" disabled={sending || card.trim() === ''} aria-busy={sending}>
             {sending
               ? 'Saving...'
               : `Hand over bag ${bag.code}${total(choices) + Object.keys(chosenExtras).length > 0 ? ' with the extra food' : ''}`}

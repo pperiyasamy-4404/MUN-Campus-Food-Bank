@@ -1,0 +1,883 @@
+/*
+ * Motion and the finishing touches (13 Nov): loading shapes, spinners, pop-up
+ * food cards, toasts, the welcome screen, the booking steps, and more.
+ *
+ * Colours come from theme.css only. Movement is short (under half a second) and
+ * eases out. Everyone whose phone asks for less movement gets none of it: the
+ * rule at the top of index.css turns every animation and transition off.
+ */
+
+/* ---------- pages fade in ---------- */
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* No fill mode on purpose: once it ends, the page has no transform at all. A
+   finished transform would make full-screen layers (like the welcome screen)
+   size themselves to this box instead of the window. */
+.page-enter {
+  animation: page-in var(--duration-normal) var(--ease-out);
+}
+
+/* ---------- loading shapes ---------- */
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.skeleton {
+  display: block;
+  background: var(--skeleton-bg);
+  border: 1px solid var(--skeleton-edge);
+  border-radius: var(--radius);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 0.9rem;
+  margin: 0.45rem 0;
+}
+
+.skeleton-title {
+  height: 1.9rem;
+  width: 45%;
+  margin: 0.2rem 0 1rem;
+}
+
+.skeleton-cardbox {
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-top: 4px solid var(--accent-line);
+  border-radius: var(--radius);
+  background: var(--bg-page);
+  box-shadow: var(--shadow-soft);
+}
+
+.skeleton-photo {
+  display: block;
+  aspect-ratio: 4 / 3;
+  background: var(--skeleton-edge);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-cardbox .skeleton-lines {
+  padding: 0.8rem 0.9rem 1rem;
+}
+
+.skeleton-strong {
+  background: var(--skeleton-edge);
+  border-color: var(--skeleton-edge);
+}
+
+.skeleton-row {
+  height: 3.2rem;
+  margin: 0.5rem 0;
+}
+
+.skeleton-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.skeleton-slot {
+  height: 3.6rem;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* ---------- a spinner inside a button that's working ---------- */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+button[aria-busy='true'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
+button[aria-busy='true']::before {
+  content: '';
+  width: 1em;
+  height: 1em;
+  flex: none;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.spinner {
+  display: inline-block;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 3px solid var(--border-subtle);
+  border-top-color: var(--action-primary-bg);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ---------- buttons and cards respond to the hand ---------- */
+
+button,
+a.button {
+  transition:
+    background-color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    transform var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease;
+}
+
+button:active:not(:disabled),
+a.button:active {
+  transform: scale(0.97);
+}
+
+.card,
+.food-card,
+.slot-button {
+  transition:
+    transform var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out),
+    border-color var(--duration-fast) ease;
+}
+
+@media (hover: hover) {
+  .food-card:hover,
+  .slot-button:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-raised);
+  }
+}
+
+.card {
+  box-shadow: var(--shadow-soft);
+}
+
+.food-card {
+  box-shadow: var(--shadow-soft);
+}
+
+/* The photo opens the card (for a mouse or a finger), and so does the name,
+   which is a real button inside the heading (for the keyboard). */
+.card-photo {
+  cursor: zoom-in;
+  overflow: hidden;
+}
+
+.card-photo .food-photo {
+  transition:
+    opacity var(--duration-slow) ease,
+    transform var(--duration-slow) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .food-card:hover .card-photo .food-photo {
+    transform: scale(1.05);
+  }
+}
+
+button.card-open-title {
+  display: inline;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: zoom-in;
+}
+
+button.card-open-title:hover:not(:disabled),
+button.card-open-title:active:not(:disabled) {
+  background: none;
+  border: none;
+  color: var(--text-link);
+  text-decoration: underline;
+  transform: none;
+}
+
+button.card-open-title:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.card-open-hint {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  box-shadow: var(--shadow-soft);
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity var(--duration-fast) ease,
+    transform var(--duration-fast) ease;
+  pointer-events: none;
+}
+
+.food-card:hover .card-open-hint,
+.food-card:focus-within .card-open-hint {
+  opacity: 1;
+  transform: none;
+}
+
+/* Photos fade in when they arrive, instead of popping in. */
+.food-photo.fades {
+  opacity: 0;
+  transition:
+    opacity var(--duration-slow) ease,
+    transform var(--duration-slow) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .food-photo.fades {
+    opacity: 1;
+  }
+}
+
+.food-photo.fades.loaded {
+  opacity: 1;
+}
+
+/* ---------- the pop-up food card ---------- */
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+dialog.food-dialog {
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 0;
+  border: none;
+  border-top: 4px solid var(--accent-line);
+  border-radius: calc(var(--radius) * 2);
+  color: var(--text-primary);
+  background: var(--bg-page);
+  box-shadow: var(--shadow-dialog);
+  overflow: auto;
+}
+
+dialog.food-dialog[open] {
+  animation: pop-in var(--duration-normal) var(--ease-spring) both;
+}
+
+dialog.food-dialog::backdrop {
+  background: var(--overlay-bg);
+  backdrop-filter: blur(3px);
+  animation: fade-in var(--duration-normal) ease both;
+}
+
+.food-dialog-photo {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: var(--bg-surface);
+}
+
+.food-dialog-photo .food-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.food-dialog-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-soft);
+}
+
+.food-dialog-close:hover:not(:disabled) {
+  color: var(--text-on-claret);
+  background: var(--action-primary-bg);
+  border-color: var(--action-primary-bg);
+}
+
+.food-dialog-body {
+  padding: 1rem 1.2rem 1.2rem;
+}
+
+.food-dialog-body h2 {
+  margin-top: 0;
+}
+
+.food-dialog-done {
+  width: 100%;
+  margin-top: 0.8rem;
+}
+
+/* ---------- toasts ---------- */
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.toasts {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(26rem, calc(100vw - 2rem));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.6rem 0.7rem 0.9rem;
+  border-radius: calc(var(--radius) * 1.5);
+  color: var(--toast-text);
+  background: var(--toast-bg);
+  box-shadow: var(--shadow-raised);
+  pointer-events: auto;
+  animation: toast-in var(--duration-normal) var(--ease-spring) both;
+}
+
+.toast-icon {
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.toast-success .toast-icon {
+  color: var(--status-available-edge);
+}
+
+.toast-info .toast-icon {
+  color: var(--status-limited-edge);
+}
+
+.toast-text {
+  flex: 1;
+}
+
+.toast button {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  padding: 0 0.5rem;
+  color: var(--toast-text);
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.toast button:hover:not(:disabled) {
+  background: none;
+  border: none;
+  color: var(--toast-text);
+}
+
+.toast button:focus-visible {
+  outline: 2px solid var(--focus-ring-on-dark);
+}
+
+/* ---------- the welcome screen after logging in ---------- */
+
+@keyframes splash-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes splash-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes mark-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) translateY(10px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes line-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes words-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  color: var(--header-text);
+  background: var(--header-bg);
+  animation: splash-in var(--duration-fast) ease both;
+}
+
+.splash.leaving {
+  animation: splash-out var(--duration-normal) ease both;
+}
+
+.splash-mark {
+  width: min(17rem, 66vw);
+  height: auto;
+  animation: mark-in 650ms var(--ease-spring) both;
+}
+
+.splash-line {
+  width: min(17rem, 66vw);
+  height: 3px;
+  background: var(--header-text);
+  transform-origin: left;
+  animation: line-grow 600ms var(--ease-out) 250ms both;
+}
+
+.splash-words {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  animation: words-in var(--duration-slow) var(--ease-out) 380ms both;
+}
+
+.splash-sub {
+  margin: -0.6rem 0 0;
+  font-size: 1rem;
+  opacity: 0.9;
+  animation: words-in var(--duration-slow) var(--ease-out) 480ms both;
+}
+
+/* ---------- the booking steps: 1 Pick a time, 2 Choose food, 3 Done ---------- */
+
+.steps-bar {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0 0 1.2rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.steps-bar li {
+  flex: 1;
+  margin: 0;
+  padding-top: 0.55rem;
+  border-top: 4px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 700;
+  counter-increment: step;
+  transition: border-color var(--duration-slow) var(--ease-out);
+}
+
+.steps-bar li::before {
+  content: counter(step) '. ';
+}
+
+.steps-bar li.done {
+  border-top-color: var(--action-primary-bg);
+}
+
+.steps-bar li[aria-current='step'] {
+  border-top-color: var(--action-primary-bg);
+  color: var(--text-primary);
+}
+
+/* ---------- the 10-minute hold, as a bar ---------- */
+
+.hold-meter {
+  height: 6px;
+  margin: 0.45rem 0 0.2rem;
+  border-radius: 999px;
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+
+.hold-meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--alert-success-accent);
+  transition:
+    width 1s linear,
+    background-color var(--duration-slow) ease;
+}
+
+.hold-meter-fill.soon {
+  background: var(--alert-warning-accent);
+}
+
+.hold-meter-fill.now {
+  background: var(--alert-error-accent);
+}
+
+.hold-bar.soon {
+  border-left-color: var(--alert-warning-accent);
+}
+
+.hold-bar.now {
+  border-left-color: var(--alert-error-accent);
+}
+
+/* ---------- "You're booked" ---------- */
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
+}
+
+.booked-hero {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.4rem 0 1rem;
+}
+
+.booked-tick {
+  flex: none;
+  width: 3.5rem;
+  height: 3.5rem;
+  animation: pop 500ms var(--ease-spring) both;
+}
+
+.booked-tick circle {
+  fill: var(--status-available-bg);
+  stroke: var(--status-available-edge);
+  stroke-width: 3;
+}
+
+.booked-tick path {
+  fill: none;
+  stroke: var(--text-primary);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: draw 450ms var(--ease-out) 300ms forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booked-tick path {
+    stroke-dashoffset: 0;
+  }
+}
+
+.booked-hero h1 {
+  margin: 0;
+}
+
+.code-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+}
+
+.code-copy .code {
+  margin: 0;
+}
+
+/* ---------- live countdowns ---------- */
+
+.countdown {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- food filters ---------- */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.4rem 0 0.6rem;
+}
+
+.filters-label {
+  font-weight: 700;
+  margin-right: 0.2rem;
+}
+
+button.chip {
+  min-height: 2.75rem;
+  padding: 0.35rem 0.95rem;
+  border-radius: 999px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  border: 1px solid var(--border-input);
+}
+
+button.chip:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border-color: var(--border-input);
+}
+
+button.chip[aria-pressed='true'],
+button.chip[aria-pressed='true']:hover:not(:disabled) {
+  color: var(--text-on-claret);
+  background: var(--action-primary-bg);
+  border-color: var(--action-primary-bg);
+}
+
+button.chip[aria-pressed='true']::before {
+  content: '✓ ';
+}
+
+.filters-count {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* ---------- empty pages ---------- */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 1rem 0;
+  padding: 2rem 1rem;
+  text-align: center;
+  border: 1px dashed var(--border-input);
+  border-radius: calc(var(--radius) * 2);
+  background: var(--bg-surface);
+  animation: page-in var(--duration-slow) var(--ease-out) both;
+}
+
+.empty-icon {
+  width: 3rem;
+  height: 3rem;
+  color: var(--text-secondary);
+}
+
+.empty-title {
+  margin: 0.3rem 0 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.empty p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* ---------- offline ---------- */
+
+@keyframes drop-in {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.offline-banner {
+  margin: 0;
+  padding: 0.6rem 1rem;
+  text-align: center;
+  font-weight: 700;
+  color: var(--status-on-color-text);
+  background: var(--status-limited-bg);
+  border-bottom: 3px solid var(--status-limited-edge);
+  animation: drop-in var(--duration-normal) var(--ease-out) both;
+}
+
+/* ---------- a progress bar, like "8 of 13 in the bag" ---------- */
+
+.progress {
+  margin: 0.6rem 0;
+}
+
+.progress-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--alert-success-accent);
+  transition: width var(--duration-slow) var(--ease-out);
+}
+
+.progress-words {
+  margin: 0.3rem 0 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* ---------- page not found ---------- */
+
+.not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.6rem;
+  padding: 2rem 0;
+}
+
+.not-found-number {
+  margin: 0;
+  font-size: 5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--page-title);
+  animation: pop 600ms var(--ease-spring) both;
+}
+
+/* ---------- small extras ---------- */
+
+/* An icon inside a button, like Copy code. */
+.button-icon {
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: -0.18em;
+  margin-right: 0.35rem;
+}
+
+/* A time slot being held: a small spinner in its corner, so the time stays readable. */
+.slot-button {
+  position: relative;
+}
+
+button.slot-button[aria-busy='true'] {
+  display: block;
+}
+
+button.slot-button[aria-busy='true']::before {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+/* The pop-up card's rows breathe a little more than on the small card. */
+.food-dialog .food-row {
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+}
+
+.not-found {
+  margin: 0 auto;
+}

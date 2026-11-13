@@ -6,6 +6,7 @@ import { useValues } from '../useValues.ts'
 import { useMe } from '../me.ts'
 import { AlreadyLoggedIn } from './AlreadyLoggedIn.tsx'
 import { PageHeading } from '../PageHeading.tsx'
+import { WelcomeSplash } from '../ui/WelcomeSplash.tsx'
 import logoFull from '../assets/logo-full.png'
 
 // Choosing a password with a setup code from the counter (R1) or a coordinator (R3).
@@ -26,8 +27,13 @@ function SetUp({ who }: { who: 'student' | 'staff' }) {
   const [problem, setProblem] = useState<string | null>(null)
   const [fields, setFields] = useState<Record<string, string>>({})
   const [sending, setSending] = useState(false)
+  // After the password is chosen: a welcome, then their page (13 Nov).
+  const [welcome, setWelcome] = useState<{ words: string; sub: string; to: string } | null>(null)
   const student = who === 'student'
 
+  if (welcome !== null) {
+    return <WelcomeSplash words={welcome.words} sub={welcome.sub} onDone={() => navigate(welcome.to)} />
+  }
   if (me.state === 'ready' && me.me !== null) {
     return <AlreadyLoggedIn me={me.me} />
   }
@@ -52,8 +58,13 @@ function SetUp({ who }: { who: 'student' | 'staff' }) {
       setFields(answer.fields)
       return
     }
-    loggedIn(answer.data)
-    navigate(student ? '/book' : '/counter')
+    const account = answer.data
+    setWelcome(
+      account.kind === 'staff'
+        ? { words: `You're all set, ${account.username}`, sub: 'Welcome to the team', to: '/counter' }
+        : { words: 'Welcome to the Campus Food Bank', sub: "You're all set. Let's book your first pickup", to: '/book' },
+    )
+    loggedIn(account)
   }
 
   return (
@@ -110,7 +121,7 @@ function SetUp({ who }: { who: 'student' | 'staff' }) {
           error={fields.new_password}
           againError={fields.again}
         />
-        <button type="submit" disabled={sending}>
+        <button type="submit" disabled={sending} aria-busy={sending}>
           {sending ? 'Saving...' : 'Save my password and log in'}
         </button>
       </form>

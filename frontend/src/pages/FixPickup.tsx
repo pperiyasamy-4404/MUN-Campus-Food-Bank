@@ -6,6 +6,7 @@ import { showClock, showDate, showDayAndClock } from '../time.ts'
 import { CounterNav } from './CounterParts.tsx'
 import { useFixPage } from './counterTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
+import { Loading } from '../ui/Loading.tsx'
 
 // Fixing a pickup marked wrong, once the day is over (B6). A bag handed over
 // without pressing Hand over is a no-show at 6 pm: mark it picked up. A bag
@@ -20,7 +21,7 @@ export function FixPickup() {
   // What to tell the volunteer after a fix, like "Bag K3P is now picked up."
   const [said, setSaid] = useState<string | null>(null)
 
-  if (load.state === 'loading') return <p className="muted">Asking the server...</p>
+  if (load.state === 'loading') return <Loading shape="rows" />
   if (load.state === 'failed') return <p className="problem">Could not get the pickups. Is the server running?</p>
   const { page } = load
 
@@ -148,7 +149,7 @@ function FixRow({
           )}
           <Problem message={problem} />
           <p className="actions">
-            <button type="button" className="danger" onClick={fix} disabled={sending}>
+            <button type="button" className="danger" onClick={fix} disabled={sending} aria-busy={sending}>
               {sending ? 'Saving...' : toPickedUp ? 'Yes, they took it' : "Yes, they didn't take it"}
             </button>
             <button type="button" className="link-button" onClick={() => setAsking(false)}>

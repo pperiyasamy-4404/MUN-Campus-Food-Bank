@@ -4,6 +4,7 @@ import { FoodPhoto } from '../FoodCards.tsx'
 import { Field, Problem } from '../forms.tsx'
 import { useValues } from '../useValues.ts'
 import { change, shrinkPhoto, uploadPhoto, type StockTools } from './stockTools.ts'
+import { useToast } from '../ui/toast.ts'
 
 // The forms on the stock page. Each one sends one change, then asks for the
 // page again, so what's on screen is always what's in the database.
@@ -338,6 +339,7 @@ export function ItemPhotoEditor({ tools, item, children }: { tools: StockTools; 
   const [sending, setSending] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
   const box = useId()
+  const toast = useToast()
 
   async function choose(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -348,7 +350,10 @@ export function ItemPhotoEditor({ tools, item, children }: { tools: StockTools; 
     try {
       const why = await uploadPhoto(tools, item.id, await shrinkPhoto(file))
       if (why) setProblem(why)
-      else tools.reload()
+      else {
+        tools.reload()
+        toast(`New photo for ${item.name}`)
+      }
     } catch {
       setProblem('That file is not a photo this browser can read. Try a JPEG or PNG.')
     }
@@ -360,6 +365,7 @@ export function ItemPhotoEditor({ tools, item, children }: { tools: StockTools; 
     const answer = await change(tools, `/api/items/${item.id}/photo`, {}, 'DELETE')
     if (!answer.ok) return setProblem(answer.message)
     tools.reload()
+    toast(`Photo removed from ${item.name}`, 'info')
   }
 
   return (

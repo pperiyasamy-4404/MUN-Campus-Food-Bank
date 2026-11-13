@@ -12,6 +12,7 @@ import { useValues } from '../useValues.ts'
 import { CounterNav, ExtrasPicker, ShelfPicker } from './CounterParts.tsx'
 import { asChoices, total, useCounterPage, type Chosen } from './counterTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
+import { Loading } from '../ui/Loading.tsx'
 
 // A walk-in (W1, W3, W4): a student served without a booking, in their own line.
 // 1. Check their MUN card: the pickup gap, with no exception. A pickup in the
@@ -71,7 +72,7 @@ export function WalkIn() {
     setVersion((old) => old + 1)
   }
 
-  if (load.state === 'loading') return <p className="muted">Asking the server...</p>
+  if (load.state === 'loading') return <Loading shape="page" />
   if (load.state === 'failed') return <p className="problem">Could not get the counter. Is the server running?</p>
   const { page } = load
 
@@ -118,7 +119,7 @@ export function WalkIn() {
             error={fields.old_system_pickup_on}
             today={todayInNewfoundland()}
           />
-          <button type="submit" disabled={sending || !page.walk_ins_open}>
+          <button type="submit" disabled={sending || !page.walk_ins_open} aria-busy={sending}>
             {sending ? 'Checking...' : 'Check the card'}
           </button>
         </form>
@@ -226,7 +227,7 @@ function TakeFood({
           <button
             type="button"
             onClick={record}
-            disabled={sending || nothing || (checked.cancels !== null && !cancelBooking)}
+            disabled={sending || nothing || (checked.cancels !== null && !cancelBooking)} aria-busy={sending}
           >
             {sending ? 'Saving...' : 'Record the walk-in'}
           </button>

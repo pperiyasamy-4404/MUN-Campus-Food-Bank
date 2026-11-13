@@ -5,6 +5,7 @@ import { showDate, showDayAndClock } from '../time.ts'
 import { AddFood, AddVariety, CategoriesAndTags, ItemPhotoEditor, Rename, VarietyEditor } from './StockForms.tsx'
 import { change, needsCounting, withVariety, type StockTools } from './stockTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
+import { Loading } from '../ui/Loading.tsx'
 
 // The staff stock page (I8, R2): check the shelf before booking opens, and add
 // new food when donations come in. Every staff member can do everything here,
@@ -36,7 +37,7 @@ export function Stock() {
     }
   }, [version, forget])
 
-  if (load.state === 'loading') return <p className="muted">Asking the server...</p>
+  if (load.state === 'loading') return <Loading shape="rows" />
   if (load.state === 'failed') return <p className="problem">Could not get the stock. Is the server running?</p>
 
   const { page } = load

@@ -103,6 +103,18 @@ export function stillToTick(bag: Bag, findings: Findings, plan: PackingPlan, pic
   return food + substitutes
 }
 
+/**
+ * All the lines that need a tap on this bag, for the progress bar (13 Nov): every
+ * booked food line, and every substitute that goes in or was Picked. Done is
+ * this minus stillToTick.
+ */
+export function linesToTick(bag: Bag, plan: PackingPlan, picked: Picked): number {
+  const substitutes = plan.substitutes.filter(
+    (line) => line.outcome === 'use' || picked.has(substituteKey(line.variety_id)),
+  ).length
+  return bag.food.length + substitutes
+}
+
 /** The findings with one substitute marked, or unmarked, as out of stock. */
 export function withNotOnShelf(findings: Findings, varietyId: number, none: boolean): Findings {
   const others = findings.not_on_shelf.filter((id) => id !== varietyId)

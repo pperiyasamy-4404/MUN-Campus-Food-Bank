@@ -6,6 +6,7 @@ import { showClock, showDate, showDayAndClock } from '../time.ts'
 import { CoordinatorNav } from './CoordinatorParts.tsx'
 import { count, forTimeBox, sayWeekdays, todayInStJohns, useStaffData } from './coordinatorTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
+import { Loading } from '../ui/Loading.tsx'
 
 // The coordinator's pickup days: close a day for a holiday, bad weather or the
 // Christmas break (S7), open it again, or move when booking opens and closes
@@ -25,7 +26,7 @@ export function ManageDays() {
   // What to tell the coordinator after a change, like "Monday, November 23 is closed. 3 bookings were cancelled."
   const [said, setSaid] = useState<string | null>(null)
 
-  if (load.state === 'loading') return <p className="muted">Asking the server...</p>
+  if (load.state === 'loading') return <Loading shape="days" />
   if (load.state === 'failed') return <p className="problem">Could not get the pickup days. Is the server running?</p>
   const page = load.data
 
@@ -136,7 +137,7 @@ function DayCard({
             </button>
           )}
           {closed && !day.why_not_reopen && (
-            <button type="button" className="secondary" onClick={reopen} disabled={sending}>
+            <button type="button" className="secondary" onClick={reopen} disabled={sending} aria-busy={sending}>
               {sending ? 'Opening...' : 'Open it again'}
             </button>
           )}
@@ -198,7 +199,7 @@ function CloseForm({
       )}
       <Problem message={problem} />
       <p className="actions">
-        <button type="submit" className="danger" disabled={sending}>
+        <button type="submit" className="danger" disabled={sending} aria-busy={sending}>
           {sending ? 'Closing...' : `Close ${showDate(day.pickup_date)}`}
         </button>
         <button type="button" className="link-button" onClick={onCancel}>
@@ -296,7 +297,7 @@ function MoveForm({
       </div>
       <Problem message={problem} />
       <p className="actions">
-        <button type="submit" disabled={sending}>
+        <button type="submit" disabled={sending} aria-busy={sending}>
           {sending ? 'Saving...' : 'Save the new times'}
         </button>
         <button type="button" className="link-button" onClick={onCancel}>
@@ -398,7 +399,7 @@ function CloseLater({
           </p>
         )}
         <Problem message={problem} />
-        <button type="submit" className="danger" disabled={sending || first === ''}>
+        <button type="submit" className="danger" disabled={sending || first === ''} aria-busy={sending}>
           {sending ? 'Closing...' : last && last !== first ? 'Close those dates' : 'Close that date'}
         </button>
       </form>

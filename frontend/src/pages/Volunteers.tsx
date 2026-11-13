@@ -6,6 +6,7 @@ import { useMe } from '../me.ts'
 import { showDay, showDayAndClock } from '../time.ts'
 import { CoordinatorNav } from './CoordinatorParts.tsx'
 import { PageHeading } from '../PageHeading.tsx'
+import { Loading } from '../ui/Loading.tsx'
 
 // The Staff page (R3): every volunteer and coordinator. A coordinator adds a
 // volunteer, gives a new setup code, makes someone a coordinator or a volunteer
@@ -138,7 +139,7 @@ export function Volunteers() {
 
       <h2>Everyone</h2>
       <Problem message={problem} />
-      {list.state === 'loading' && <p className="muted">Asking the server...</p>}
+      {list.state === 'loading' && <Loading shape="rows" />}
       {list.state === 'failed' && <p className="problem">Could not get the staff list. Is the server running?</p>}
       {list.state === 'ready' && (
         <table className="people">
@@ -251,7 +252,7 @@ function AddVolunteer({
         error={fields.username}
         required
       />
-      <button type="submit" disabled={sending}>
+      <button type="submit" disabled={sending} aria-busy={sending}>
         {sending ? 'Adding...' : 'Add and give a setup code'}
       </button>
     </form>

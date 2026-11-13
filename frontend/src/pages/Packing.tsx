@@ -5,6 +5,8 @@ import { useMe } from '../me.ts'
 import { showClock, showDate } from '../time.ts'
 import { STATUS_WORDS } from './packingTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
+import { Loading } from '../ui/Loading.tsx'
+import { Empty } from '../ui/Empty.tsx'
 
 // The packing queue (K1, U7): every bag for the pickup day being packed, by
 // pickup time, so the earliest ones are packed first. It asks the server again
@@ -44,7 +46,7 @@ export function Packing() {
     }
   }, [forget])
 
-  if (load.state === 'loading') return <p className="muted">Asking the server...</p>
+  if (load.state === 'loading') return <Loading shape="rows" />
   if (load.state === 'failed') return <p className="problem">Could not get the packing queue. Is the server running?</p>
 
   const { day, bags } = load.queue
@@ -71,7 +73,15 @@ export function Packing() {
 
       <h2>To pack ({toPack.length})</h2>
       {toPack.length === 0 ? (
-        <p className="muted">{bags.length === 0 ? 'Nobody has booked this day yet.' : 'Every bag is packed.'}</p>
+        bags.length === 0 ? (
+          <Empty icon="box" title="Nobody has booked this day yet">
+            Bags appear here as students book.
+          </Empty>
+        ) : (
+          <Empty icon="check" title="Every bag is packed">
+            Nice work. They're ready for the counter.
+          </Empty>
+        )
       ) : (
         <ul className="bag-list">
           {toPack.map((bag) => (

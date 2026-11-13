@@ -18,6 +18,7 @@ import { Volunteers } from './pages/Volunteers.tsx'
 import { WalkIn } from './pages/WalkIn.tsx'
 import { PageHeading } from './PageHeading.tsx'
 import { StyleGuide } from './pages/StyleGuide.tsx'
+import { ToastProvider } from './ui/Toasts.tsx'
 
 // Every page and its web address. The addresses never hold anything private:
 // no ID numbers, no codes (P10).
@@ -25,6 +26,7 @@ import { StyleGuide } from './pages/StyleGuide.tsx'
 function App() {
   return (
     <BrowserRouter>
+      <ToastProvider>
       <MeProvider>
         <Routes>
           <Route element={<Layout />}>
@@ -136,17 +138,22 @@ function App() {
           </Route>
         </Routes>
       </MeProvider>
+      </ToastProvider>
     </BrowserRouter>
   )
 }
 
 function NotFound() {
   return (
-    <div className="narrow">
-      <PageHeading>There's no page here</PageHeading>
-      <p>
-        <Link to="/">Go to the pickup days</Link>
+    <div className="narrow not-found">
+      <p className="not-found-number" aria-hidden="true">
+        404
       </p>
+      <PageHeading>There's no page here</PageHeading>
+      <p className="muted">The address may be mistyped, or the page has moved.</p>
+      <Link className="button" to="/">
+        Go to the pickup days
+      </Link>
     </div>
   )
 }

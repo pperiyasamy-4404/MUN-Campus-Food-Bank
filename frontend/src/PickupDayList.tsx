@@ -1,5 +1,10 @@
+import { useState } from 'react'
 import { useServerData, type BookingStatus, type PickupDay, type Slot } from './api.ts'
 import { showClock, showDate, showDayAndClock } from './time.ts'
+import { Empty } from './ui/Empty.tsx'
+import { useNow } from './ui/hooks.ts'
+import { Loading } from './ui/Loading.tsx'
+import { untilText } from './ui/timing.ts'
 
 const STATUS_TEXT: Record<BookingStatus, string> = {
   not_open_yet: 'Booking not open yet',
@@ -14,12 +19,14 @@ export function PickupDayList() {
   return (
     <section>
       <h2>Pickup days</h2>
-      {days.state === 'loading' && <p className="muted">Asking the server...</p>}
+      {days.state === 'loading' && <Loading shape="days" label="Getting the pickup days" />}
       {days.state === 'failed' && (
         <p className="problem">Could not get the pickup days. Is the server running?</p>
       )}
       {days.state === 'ready' && days.data.length === 0 && (
-        <p className="muted">No pickup days coming up.</p>
+        <Empty icon="calendar" title="No pickup days coming up">
+          New days appear a week ahead. Check back soon.
+        </Empty>
       )}
       {days.state === 'ready' &&
         days.data.map((day) => <PickupDayCard key={day.pickup_date} day={day} />)}
@@ -44,6 +51,9 @@ function PickupDayCard({ day }: { day: PickupDay }) {
           <p className="muted">
             Booking opens {showDayAndClock(day.booking_opens_at)} and closes{' '}
             {showDayAndClock(day.booking_closes_at)}
+            {day.booking_status === 'not_open_yet' && (
+              <OpensIn key={day.seconds_until_booking_opens} seconds={day.seconds_until_booking_opens} />
+            )}
           </p>
           <ul className="slots">
             {day.slots.map((slot) => (
@@ -68,5 +78,22 @@ function SlotChip({ slot, bookable }: { slot: Slot; bookable: boolean }) {
         {full ? 'Full' : `${slot.places_left} ${slot.places_left === 1 ? 'place' : 'places'}`}
       </span>
     </li>
+  )
+}
+
+/**
+ * " (opens in 2 h 14 min)", counting down while the page is open (13 Nov). It
+ * starts from the server's count, not the phone's clock, which may be wrong.
+ */
+function OpensIn({ seconds }: { seconds: number }) {
+  const [loadedAt] = useState(() => Date.now())
+  const now = useNow(1000)
+  const left = seconds * 1000 - (now - loadedAt)
+  if (left <= 0) return <span className="countdown"> (open now: refresh to book)</span>
+  return (
+    <>
+      {' '}
+      (opens <span className="countdown">{untilText(left)}</span>)
+    </>
   )
 }

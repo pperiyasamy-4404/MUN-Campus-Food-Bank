@@ -6,6 +6,7 @@ import { useValues } from '../useValues.ts'
 import { useMe } from '../me.ts'
 import { AlreadyLoggedIn } from './AlreadyLoggedIn.tsx'
 import { PageHeading } from '../PageHeading.tsx'
+import { WelcomeSplash } from '../ui/WelcomeSplash.tsx'
 import logoFull from '../assets/logo-full.png'
 
 // Logging in, for students (ID number) and for staff (username).
@@ -25,8 +26,14 @@ function LogIn({ who }: { who: 'student' | 'staff' }) {
   const [problem, setProblem] = useState<string | null>(null)
   const [fields, setFields] = useState<Record<string, string>>({})
   const [sending, setSending] = useState(false)
+  // After a good password: the welcome screen, then the person's page (13 Nov).
+  const [welcome, setWelcome] = useState<{ words: string; sub: string; to: string } | null>(null)
   const student = who === 'student'
 
+  // Before the "already logged in" check: by now they are logged in, and the welcome comes first.
+  if (welcome !== null) {
+    return <WelcomeSplash words={welcome.words} sub={welcome.sub} onDone={() => navigate(welcome.to)} />
+  }
   if (me.state === 'ready' && me.me !== null) {
     return <AlreadyLoggedIn me={me.me} />
   }
@@ -46,8 +53,17 @@ function LogIn({ who }: { who: 'student' | 'staff' }) {
       setFields(answer.fields)
       return
     }
-    loggedIn(answer.data)
-    navigate(student ? '/book' : '/counter')
+    const account = answer.data
+    setWelcome(
+      account.kind === 'staff'
+        ? {
+            words: `Welcome back, ${account.username}`,
+            sub: account.role === 'coordinator' ? 'Opening the counter. The Coordinator tab is up top.' : 'Opening the counter',
+            to: '/counter',
+          }
+        : { words: 'Welcome back', sub: "Let's get your pickup booked", to: '/book' },
+    )
+    loggedIn(account)
   }
 
   return (
@@ -98,7 +114,7 @@ function LogIn({ who }: { who: 'student' | 'staff' }) {
           error={fields.password}
           required
         />
-        <button type="submit" disabled={sending}>
+        <button type="submit" disabled={sending} aria-busy={sending}>
           {sending ? 'Checking...' : 'Log in'}
         </button>
       </form>

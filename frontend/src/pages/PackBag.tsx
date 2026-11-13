@@ -15,6 +15,7 @@ import {
   startingProgress,
   STATUS_WORDS,
   stillToTick,
+  linesToTick,
   substituteKey,
   withMissing,
   withNotOnShelf,
@@ -23,6 +24,9 @@ import {
   type Picked,
 } from './packingTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
+import { Loading } from '../ui/Loading.tsx'
+import { Progress } from '../ui/Progress.tsx'
+import { useToast } from '../ui/toast.ts'
 
 // Packing one bag (U4-U8). The volunteer taps "Picked" as each thing goes in the
 // bag, and "Out of stock" for anything that isn't there. After each Out of stock
@@ -43,6 +47,7 @@ export function PackBag() {
   const [version, setVersion] = useState(0)
   // Something to tell the volunteer after the bag changes, like "Packed is undone."
   const [notice, setNotice] = useState<string | null>(null)
+  const toast = useToast()
   const askAgain = useCallback(() => setVersion((old) => old + 1), [])
 
   useEffect(() => {
@@ -63,7 +68,7 @@ export function PackBag() {
     }
   }, [bookingId, version, forget])
 
-  if (load.state === 'loading') return <p className="muted">Asking the server...</p>
+  if (load.state === 'loading') return <Loading shape="rows" />
   if (load.state === 'failed') {
     return (
       <div>
@@ -92,6 +97,7 @@ export function PackBag() {
             onPacked={(packed) => {
               setNotice(null)
               setLoad({ state: 'ready', bag: packed })
+              toast(`Bag ${packed.code} packed`)
             }}
             onChanged={askAgain}
             onLoggedOut={forget}
@@ -180,7 +186,7 @@ function SomeoneElseFirst({
   }
 
   if (problem) return <p className="problem">{problem}</p>
-  if (start.state === 'asking') return <p className="muted">Asking the server...</p>
+  if (start.state === 'asking') return <Loading shape="rows" />
   if (start.state === 'yours') return <>{children}</>
   const { who } = start
   return (
@@ -345,6 +351,13 @@ function Packer({
 
       <div className="book-bar">
         <Problem message={problem} />
+        {current && toTick !== null && (
+          <Progress
+            done={linesToTick(bag, current, picked) - toTick}
+            total={linesToTick(bag, current, picked)}
+            words={`${linesToTick(bag, current, picked) - toTick} of ${linesToTick(bag, current, picked)} lines ticked`}
+          />
+        )}
         {current && (
           <p className="muted">
             {current.in_bag} of {current.booked} things in the bag.
@@ -358,7 +371,7 @@ function Packer({
             )}
           </p>
         )}
-        <button type="button" onClick={packed} disabled={current === null || toTick !== 0 || sending}>
+        <button type="button" onClick={packed} disabled={current === null || toTick !== 0 || sending} aria-busy={sending}>
           {sending ? 'Saving...' : 'Packed'}
         </button>
       </div>
@@ -695,7 +708,7 @@ function UndoPacked({
       </p>
       <Problem message={problem} />
       <p className="actions">
-        <button type="button" className="danger" onClick={undo} disabled={sending}>
+        <button type="button" className="danger" onClick={undo} disabled={sending} aria-busy={sending}>
           {sending ? 'Undoing...' : 'Yes, undo Packed'}
         </button>
         <button type="button" className="link-button" onClick={() => setAsking(false)}>

@@ -4,6 +4,11 @@ import { FoodCard, FoodRow, StockNote } from '../FoodCards.tsx'
 import { Problem } from '../forms.tsx'
 import { showDayAndClock } from '../time.ts'
 import { PageHeading } from '../PageHeading.tsx'
+import { countVarieties, filterFood, type Diet } from '../foodFilter.ts'
+import { BookingSteps } from '../ui/BookingSteps.tsx'
+import { DietFilters } from '../ui/DietFilters.tsx'
+import { Empty } from '../ui/Empty.tsx'
+import { holdLevel, holdShare } from '../ui/timing.ts'
 
 // Stage 2 of booking: the time is held, a countdown runs, and the student
 // chooses food and substitutes, then presses Book (S8, I3, U2).
@@ -39,6 +44,9 @@ export function ChooseFood({
   const [substitutes, setSubstitutes] = useState<number[]>([])
   const [problem, setProblem] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
+  // The diet filters (13 Nov). They only change what's shown: chosen food stays chosen.
+  const [diets, setDiets] = useState<Diet[]>([])
+  const shown = filterFood(food.bookable, diets)
 
   // Every bookable variety, with its item, in the order the server sent them (A to Z).
   const lines: Line[] = food.bookable.flatMap((category) =>
@@ -105,10 +113,11 @@ export function ChooseFood({
 
   return (
     <div>
+      <BookingSteps current={2} />
       <PageHeading>Choose your food</PageHeading>
       {/* Not a live region: it changes every second, and a screen reader would read
           every change. The hidden line below speaks only at a few moments. */}
-      <div className="hold-bar">
+      <div className={`hold-bar ${holdLevel(secondsLeft)}`}>
         <p className="visually-hidden" role="status">
           {timeLeftToSay(secondsLeft, limits.hold_minutes)}
         </p>
@@ -116,6 +125,12 @@ export function ChooseFood({
           <strong>{showDayAndClock(hold.starts_at)}</strong> is kept for you for{' '}
           <strong className={secondsLeft < 60 ? 'time-short' : undefined}>{asMinutes(secondsLeft)}</strong> more.
         </p>
+        <div className="hold-meter" aria-hidden="true">
+          <div
+            className={`hold-meter-fill ${holdLevel(secondsLeft)}`}
+            style={{ width: `${holdShare(secondsLeft, limits.hold_minutes) * 100}%` }}
+          />
+        </div>
         <p>
           {total} of {limits.item_limit} chosen · {substitutes.length} of {limits.substitute_limit} substitutes
         </p>
@@ -129,7 +144,19 @@ export function ChooseFood({
         each kind of food, counting all its varieties together.
       </p>
 
-      {food.bookable.map((category) => (
+      <DietFilters
+        chosen={diets}
+        onChange={setDiets}
+        showing={countVarieties(shown)}
+        of={countVarieties(food.bookable)}
+      />
+      {shown.length === 0 && (
+        <Empty icon="search" title="Nothing fits all of those">
+          Try fewer filters. What you've already added stays on your list.
+        </Empty>
+      )}
+
+      {shown.map((category) => (
         <section key={category.name} className="food-section">
           <h2 className="food-section-title">{category.name}</h2>
           <div className="food-grid">
@@ -205,7 +232,7 @@ export function ChooseFood({
 
       <div className="book-bar">
         <Problem message={problem} />
-        <button type="button" disabled={total === 0 || sending} onClick={book}>
+        <button type="button" disabled={total === 0 || sending} aria-busy={sending} onClick={book}>
           {sending ? 'Booking...' : total === 0 ? 'Choose something first' : `Book ${total} ${total === 1 ? 'thing' : 'things'}`}
         </button>
       </div>

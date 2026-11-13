@@ -1,17 +1,24 @@
 import type { ReactNode } from 'react'
-import { Link, Navigate, NavLink, Outlet, useNavigate } from 'react-router'
+import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { useMe } from './me.ts'
 import logoMark from './assets/logo-mark-white.png'
+import { useOnline } from './ui/hooks.ts'
+import { Loading } from './ui/Loading.tsx'
+import { useToast } from './ui/toast.ts'
 
 /** The bar at the top of every page, and the page under it. */
 export function Layout() {
   const { me, logOut } = useMe()
   const navigate = useNavigate()
+  const location = useLocation()
+  const online = useOnline()
+  const toast = useToast()
   const account = me.state === 'ready' ? me.me : null
 
   async function logOutAndLeave() {
     await logOut()
     navigate('/')
+    toast("You're logged out. See you soon.")
   }
 
   return (
@@ -81,11 +88,19 @@ export function Layout() {
           </nav>
         </div>
       </header>
-      {me.state === 'failed' && (
+      {!online && (
+        <p className="offline-banner" role="status">
+          You're offline. Nothing can be saved until your connection is back.
+        </p>
+      )}
+      {me.state === 'failed' && online && (
         <p className="problem banner">Could not reach the server. Is it running?</p>
       )}
       <main>
-        <Outlet />
+        {/* A new page fades in. The key starts the animation again on each address. */}
+        <div key={location.pathname} className="page-enter">
+          <Outlet />
+        </div>
       </main>
     </>
   )
@@ -145,7 +160,7 @@ function TabIcon({ shape }: { shape: 'calendar' | 'bag' | 'card' | 'box' | 'list
 /** Only a logged-in student sees what's inside. Anyone else is sent to the student login page. */
 export function StudentOnly({ children }: { children: ReactNode }) {
   const { me } = useMe()
-  if (me.state === 'loading') return <p className="muted">Checking who's logged in...</p>
+  if (me.state === 'loading') return <Loading label="Checking who's logged in" />
   if (me.state === 'failed') return null
   if (me.me?.kind !== 'student') return <Navigate to="/login" replace />
   return children
@@ -159,7 +174,7 @@ export function StudentOnly({ children }: { children: ReactNode }) {
  */
 export function StaffOnly({ coordinator = false, children }: { coordinator?: boolean; children: ReactNode }) {
   const { me } = useMe()
-  if (me.state === 'loading') return <p className="muted">Checking who's logged in...</p>
+  if (me.state === 'loading') return <Loading label="Checking who's logged in" />
   if (me.state === 'failed') return null
   if (me.me?.kind !== 'staff') return <Navigate to="/staff/login" replace />
   if (coordinator && me.me.role !== 'coordinator') {

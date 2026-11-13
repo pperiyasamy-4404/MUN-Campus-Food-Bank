@@ -124,7 +124,7 @@ export function SetupCode() {
               error={fields.old_system_pickup_on}
               today={todayInNewfoundland()}
             />
-            <button type="submit" disabled={sending}>
+            <button type="submit" disabled={sending} aria-busy={sending}>
               {sending ? 'Giving a code...' : 'Give a setup code'}
             </button>
           </form>

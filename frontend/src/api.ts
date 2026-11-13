@@ -15,6 +15,7 @@ export type PickupDay = {
   booking_opens_at: string
   booking_closes_at: string
   booking_status: BookingStatus
+  seconds_until_booking_opens: number // by the server's clock: the countdown starts here (13 Nov)
   closed_reason: string | null
   slots: Slot[]
 }
@@ -245,6 +246,8 @@ export type MyBooking = {
   next_pickup_allowed_on: string | null
   // The food bank closed the day they had booked, so the booking was cancelled (S7). Until that day is over.
   closed_day: { pickup_date: string; reason: string } | null
+  // Days they had a booking for, now cancelled: those can't be booked again (S6, 13 Nov).
+  cancelled_days: { pickup_date: string; you_cancelled: boolean }[]
 }
 
 // ---------- packing, for staff (backend/app/routes/packing.py) ----------

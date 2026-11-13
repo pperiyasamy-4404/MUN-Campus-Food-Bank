@@ -1,11 +1,28 @@
-import type { ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { Icon } from './ui/Icon.tsx'
 
 // Food shown as cards: the item's photo on top, its name, then its varieties.
 // Used by the students' pages and the counter, so food looks the same everywhere.
+//
+// Since 13 Nov a card opens into a bigger pop-up card: tap the photo or the name.
+// The pop-up shows a large photo and the same rows, with the same buttons, so a
+// student can add food from there too.
 
-/** The item's photo, or a simple drawing of a bowl if it has none yet. */
-export function FoodPhoto({ url, name }: { url: string | null; name: string }) {
-  if (url) return <img className="food-photo" src={url} alt={name} loading="lazy" />
+/** The item's photo, fading in once it has arrived, or a simple drawing of a bowl if it has none yet. */
+export function FoodPhoto({ url, name, eager = false }: { url: string | null; name: string; eager?: boolean }) {
+  const [loaded, setLoaded] = useState(false)
+  if (url) {
+    return (
+      <img
+        className={loaded ? 'food-photo fades loaded' : 'food-photo fades'}
+        src={url}
+        alt={name}
+        loading={eager ? 'eager' : 'lazy'}
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+      />
+    )
+  }
   return (
     <div className="food-photo food-photo-none" aria-hidden="true">
       <svg viewBox="0 0 64 48" width="72" height="54">
@@ -34,18 +51,92 @@ export function FoodCard({
   highlighted?: boolean
   children: ReactNode
 }) {
+  const [open, setOpen] = useState(false)
+
   return (
     <article className={highlighted ? 'food-card food-card-chosen' : 'food-card'}>
-      <div className="food-photo-frame">
+      {/* The photo opens the card too, for a mouse or a finger. The name below is the
+          same thing as a real button, for the keyboard and screen readers. */}
+      <div className="food-photo-frame card-photo" onClick={() => setOpen(true)}>
         <FoodPhoto url={photoUrl} name={name} />
         {badge && <span className="food-badge">{badge}</span>}
+        <span className="card-open-hint" aria-hidden="true">
+          View
+        </span>
       </div>
       <div className="food-body">
         {category && <p className="food-category">{category}</p>}
-        <h3 className="food-name">{name}</h3>
+        <h3 className="food-name">
+          <button type="button" className="card-open card-open-title" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+            {name}
+            <span className="visually-hidden">: see more</span>
+          </button>
+        </h3>
         <ul className="food-varieties">{children}</ul>
       </div>
+      {open && (
+        <FoodDetails name={name} category={category} photoUrl={photoUrl} badge={badge} onClose={() => setOpen(false)}>
+          {children}
+        </FoodDetails>
+      )}
     </article>
+  )
+}
+
+/**
+ * The pop-up card: the browser's own <dialog>, so the keyboard stays inside it,
+ * Escape closes it, and the focus goes back to the card afterwards.
+ */
+function FoodDetails({
+  name,
+  category,
+  photoUrl,
+  badge,
+  onClose,
+  children,
+}: {
+  name: string
+  category?: string
+  photoUrl: string | null
+  badge?: string
+  onClose: () => void
+  children: ReactNode
+}) {
+  const dialog = useRef<HTMLDialogElement>(null)
+  const title = useId()
+
+  useEffect(() => {
+    const box = dialog.current
+    if (box && !box.open) box.showModal()
+  }, [])
+
+  return (
+    <dialog
+      ref={dialog}
+      className="food-dialog"
+      aria-labelledby={title}
+      onClose={onClose}
+      // A click on the dark area around the card closes it.
+      onClick={(event) => {
+        if (event.target === dialog.current) dialog.current?.close()
+      }}
+    >
+      <div className="food-dialog-photo">
+        <FoodPhoto url={photoUrl} name={name} eager />
+        {badge && <span className="food-badge">{badge}</span>}
+        <button type="button" className="food-dialog-close" onClick={() => dialog.current?.close()} aria-label="Close">
+          <Icon name="close" className="toast-icon" />
+        </button>
+      </div>
+      <div className="food-dialog-body">
+        {category && <p className="food-category">{category}</p>}
+        <h2 id={title}>{name}</h2>
+        <ul className="food-varieties">{children}</ul>
+        <button type="button" className="secondary food-dialog-done" onClick={() => dialog.current?.close()}>
+          Done
+        </button>
+      </div>
+    </dialog>
   )
 }
 
