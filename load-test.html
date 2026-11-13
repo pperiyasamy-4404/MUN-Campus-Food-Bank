@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The load test</title>
+<style>
+  :root {
+    color-scheme: light;
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc; --card: #ffffff;
+    --blue: #1d4ed8; --blue-bg: #dbeafe;
+    --green: #065f46; --green-bg: #d1fae5;
+    --amber: #92400e; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --ink: #e2e8f0; --muted: #a7b3c4; --line: #334155; --bg: #0f172a; --card: #1e293b;
+      --blue: #93c5fd; --blue-bg: #1e3a5f;
+      --green: #6ee7b7; --green-bg: #064e3b;
+      --amber: #fcd34d; --amber-bg: #451a03;
+      --red: #fca5a5; --red-bg: #450a0a;
+      --slate-bg: #273449;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 960px; margin: 0 auto; padding: 36px 16px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.15rem; margin: 24px 0 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  code { font: .92em ui-monospace, Consolas, monospace; background: var(--slate-bg); padding: 1px 5px; border-radius: 5px; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; background: var(--card); font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+  td.bad { color: var(--red); font-weight: 700; }
+  td.good { color: var(--green); font-weight: 700; }
+  .card { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--blue); border-radius: 14px; padding: 16px 20px; margin: 18px 0; }
+  .card.red { border-left-color: var(--red); }
+  .card.green { border-left-color: var(--green); }
+  .card.amber { border-left-color: var(--amber); }
+  .label { display: block; font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 12px 0 2px; }
+  .example { background: var(--slate-bg); border-radius: 10px; padding: 10px 14px; margin: 8px 0; }
+  .example p { margin: 4px 0; }
+  .terms dt { font-weight: 700; margin-top: 8px; }
+  .terms dd { margin: 0 0 4px 0; }
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; margin: 14px 0; overflow-x: auto; }
+  .diagram svg { display: block; width: 100%; min-width: 620px; height: auto; }
+  .note { border-left: 4px solid var(--amber); background: var(--amber-bg); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .note p { margin: 4px 0; }
+  pre { background: var(--slate-bg); padding: 12px 14px; border-radius: 10px; overflow-x: auto; font: .88rem/1.5 ui-monospace, Consolas, monospace; }
+</style>
+</head>
+<body>
+<main>
+
+<p class="eyebrow">Campus Food Bank · 12 November 2026</p>
+<h1>The load test</h1>
+<p class="lead">We played a whole pickup week against the real server, with 360 students, 6 volunteers and the coordinator all using it at the same moment. It found one serious problem: at 5 pm, the app froze and nobody could log in or book. That's fixed now, and the same test passes with no errors and no broken rules.</p>
+
+<h2>Words on this page</h2>
+<dl class="terms">
+  <dt>Request</dt>
+  <dd>One question the page asks the server, like "show me the pickup times" or "book this". One click can send several.</dd>
+  <dt>Load test</dt>
+  <dd>Sending lots of requests at once, like real busy moments, to see if the server stays fast and correct. The 559 tests we had check one thing at a time. A load test checks what happens when everything happens together.</dd>
+  <dt>Thread</dt>
+  <dd>A worker inside the server that runs one request's Python code. FastAPI has 40 of them.</dd>
+  <dt>Database connection</dt>
+  <dd>An open line from the server to PostgreSQL. A request needs one to read or save anything. The app keeps 15 open and lends them out. That's called the <b>pool</b>.</dd>
+  <dt>Deadlock</dt>
+  <dd>Two groups each waiting for something the other group holds, so nobody can ever move.</dd>
+  <dt>argon2</dt>
+  <dd>How we check passwords (P8). It's slow on purpose and needs 64 MB of memory for each check, so guessing millions of passwords takes far too long.</dd>
+</dl>
+
+<h2>How the test works</h2>
+<p>The test is in <code>backend/loadtest/</code>. It does four things:</p>
+<ol>
+  <li><b>Fills the test database</b> with the sample food, the coordinator Alex, 6 volunteers, and 360 made-up students who already have passwords. It never touches the working database.</li>
+  <li><b>Starts the real server</b>, with the same code, the same locks and the same database pool as in real use. Only the clock is moved, like the demo does, so the server thinks it's Sunday at 4:59 pm, or Monday at noon.</li>
+  <li><b>Plays each person</b> with their own login, sending the same requests their browser would. Everyone waits at a starting line, then goes at the same moment.</li>
+  <li><b>Checks the database</b> after each phase for broken rules. It also checks that the database agrees with what each person was told. If a student saw "Booked! Your code is K3P", that booking must really be there.</li>
+</ol>
+<p>Anything that goes wrong is listed at the end: a server error (a "500"), a request with no answer, or a broken rule.</p>
+
+<h2>The six phases</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>#</th><th>The server's clock</th><th>What happens</th><th>What must be true after</th></tr>
+  <tr><td>1</td><td>Sunday 4:59 pm</td><td><b>Log-in rush.</b> All 360 students log in at the same moment. 10 of them also log in on a second phone.</td><td>Every login works.</td></tr>
+  <tr><td>2</td><td>Sunday 5:00 pm</td><td><b>Booking rush.</b> Everyone keeps refreshing, then books the second booking opens. Some make trouble on purpose:
+    <ul>
+      <li>30 press every button twice.</li>
+      <li>10 book on two phones at once, choosing different times.</li>
+      <li>20 book, then tap Cancel twice.</li>
+      <li>60 others book Thursday, and the coordinator closes Thursday ("Snow storm") while they're halfway through.</li>
+    </ul></td>
+    <td>No time gets more bookings than places. No student has two bookings. Food with a number adds up exactly. Thursday has no live bookings. Everyone told "booked" is booked, and nobody else.</td></tr>
+  <tr><td>3</td><td>Monday 12:05 pm</td><td><b>Packing.</b> 6 volunteers pack every bag at once. For 5 bags, two volunteers were both warned "Sam is packing" and both pressed <i>Pack it anyway</i>.</td><td>Each of those 5 bags is packed once: one volunteer gets "Packed", the other is told it's done already. Every bag ends up packed.</td></tr>
+  <tr><td>4</td><td>Monday 3:31 pm</td><td><b>Counter.</b> 85% of the booked students arrive at once, with 3 volunteers at the counter.
+    <ul>
+      <li>5 codes are typed at two counters at the same moment.</li>
+      <li>5 bags are first tried with someone else's card.</li>
+      <li>30 students with no booking come as walk-ins, 5 of them at two counters at once.</li>
+    </ul></td>
+    <td>No bag is handed over twice, or with the wrong card. No walk-in is served twice. Food still adds up.</td></tr>
+  <tr><td>5</td><td>Monday 6:05 pm</td><td><b>Jobs.</b> The jobs script runs twice at the same moment, while volunteers use their pages.</td><td>Each uncollected bag becomes a no-show once, and its food goes back on the shelf once.</td></tr>
+  <tr><td>6</td><td>Monday evening</td><td><b>A normal hour.</b> 300 students and 6 volunteers click around the pages every 1 to 4 seconds.</td><td>Everyday speed.</td></tr>
+</table>
+</div>
+
+<div class="example">
+  <p><b>Example of "food adds up".</b> Gluten-free pasta started at 5. After the booking rush, 2 are left, 3 are in bookings that weren't cancelled, and walk-ins took 0. 2 + 3 + 0 = 5, so nothing was lost or counted twice. The test does this sum for every food with a number, after every phase.</p>
+</div>
+
+<h2>What it found: the 5 pm freeze</h2>
+
+<div class="card red">
+  <span class="label">Before the fix</span>
+  <p>0 of 370 students could log in. The pickup times page timed out 2,520 times. Nobody booked anything, and the coordinator couldn't close Thursday. Even a normal hour of browsing froze, with answers taking about 60 seconds. The server log shows 1,378 times a request gave up waiting for a database connection.</p>
+  <p>The data was never wrong. Every rule held. The app just stopped answering.</p>
+</div>
+
+<h3>Why it froze</h3>
+<p>Our routes are written as plain <code>def</code>, so FastAPI runs each one on one of its 40 threads. A request borrows a database connection with its first query, and gives it back only when its session is closed. Here's the catch: before the session is closed, FastAPI checks the answer (for example, that the booking has a code), and that check needs a free thread too.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif" font-size="14">
+  <rect x="20" y="20" width="320" height="260" rx="14" fill="#fee2e2" stroke="#b91c1c"/>
+  <text x="180" y="46" text-anchor="middle" font-weight="700" fill="#7f1d1d">All 40 threads</text>
+  <text x="180" y="68" text-anchor="middle" fill="#7f1d1d">new requests, each waiting</text>
+  <text x="180" y="86" text-anchor="middle" fill="#7f1d1d">for a database connection</text>
+  <g fill="#fff" stroke="#b91c1c">
+    <rect x="45" y="105" width="60" height="34" rx="6"/><rect x="115" y="105" width="60" height="34" rx="6"/><rect x="185" y="105" width="60" height="34" rx="6"/><rect x="255" y="105" width="60" height="34" rx="6"/>
+    <rect x="45" y="150" width="60" height="34" rx="6"/><rect x="115" y="150" width="60" height="34" rx="6"/><rect x="185" y="150" width="60" height="34" rx="6"/><rect x="255" y="150" width="60" height="34" rx="6"/>
+  </g>
+  <text x="180" y="215" text-anchor="middle" fill="#7f1d1d">… 40 in all</text>
+  <text x="180" y="250" text-anchor="middle" font-weight="700" fill="#7f1d1d">"I need a connection"</text>
+
+  <rect x="420" y="20" width="320" height="260" rx="14" fill="#fef3c7" stroke="#92400e"/>
+  <text x="580" y="46" text-anchor="middle" font-weight="700" fill="#78350f">All 15 connections</text>
+  <text x="580" y="68" text-anchor="middle" fill="#78350f">held by requests that are done,</text>
+  <text x="580" y="86" text-anchor="middle" fill="#78350f">waiting for a thread to check the answer</text>
+  <g fill="#fff" stroke="#92400e">
+    <rect x="445" y="105" width="60" height="34" rx="6"/><rect x="515" y="105" width="60" height="34" rx="6"/><rect x="585" y="105" width="60" height="34" rx="6"/><rect x="655" y="105" width="60" height="34" rx="6"/>
+    <rect x="445" y="150" width="60" height="34" rx="6"/><rect x="515" y="150" width="60" height="34" rx="6"/><rect x="585" y="150" width="60" height="34" rx="6"/>
+  </g>
+  <text x="580" y="215" text-anchor="middle" fill="#78350f">… 15 in all</text>
+  <text x="580" y="250" text-anchor="middle" font-weight="700" fill="#78350f">"I need a thread"</text>
+
+  <path d="M342 120 C 380 100, 380 100, 418 120" fill="none" stroke="#0f172a" stroke-width="2" marker-end="url(#a)"/>
+  <path d="M418 180 C 380 200, 380 200, 342 180" fill="none" stroke="#0f172a" stroke-width="2" marker-end="url(#a)"/>
+  <text x="380" y="160" text-anchor="middle" font-weight="700" fill="#0f172a">waits for</text>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#0f172a"/></marker></defs>
+</svg>
+</div>
+
+<div class="example">
+  <p><b>A small story.</b> At 5:00 pm, 360 students press Log in.</p>
+  <p>The first 15 get connections, check their passwords and finish. Each now needs a thread to check its answer.</p>
+  <p>But the other 345 are queued for threads, and the first 40 of them already have one. Each of those 40 sits on its thread, waiting for a connection.</p>
+  <p>The 15 connections are held by requests waiting for threads. The 40 threads are held by requests waiting for connections. After 30 seconds, the waiting requests give up with an error, and the next 40 do exactly the same.</p>
+</div>
+
+<p>It needed a real crowd to show up. With one person at a time, which is all the normal tests do, it can never happen.</p>
+
+<h2>The fix</h2>
+
+<h3>1. A queue at the door</h3>
+<p><code>app/door.py</code> lets only 15 requests into the app at once, the same number as there are connections. The others wait in a line before they take a thread. Every request inside can always get a connection, finish, and leave, so the next one in line comes in. Waiting in the line costs no thread and no connection, and usually only a few milliseconds.</p>
+<div class="example">
+  <p><b>Like a shop with 15 baskets.</b> The doorman lets in one shopper for each free basket. Without him, 40 people crowd the aisles waiting for a basket, and the people holding baskets can't get to the till.</p>
+</div>
+<p>The number is a setting, <code>DB_CONNECTIONS</code> (15 unless <code>backend/.env</code> says otherwise). The database pool uses that same number, with no extras, and a test checks they match. If they ever didn't, the freeze could come back.</p>
+
+<h3>2. At most 4 password checks at once</h3>
+<p>Each argon2 check needs 64 MB. With 15 at once, the server peaked at 1.1 GB, enough to crash a small cloud server with 1 GB. Now <code>app/security/passwords.py</code> runs at most 4 checks at a time, which needs at most 256 MB. Logging in isn't slower: argon2 is limited by how fast the memory is, so 15 checks at once each take about 4 times longer anyway.</p>
+
+<h3>What else we could have done, and why not</h3>
+<div class="table-wrap">
+<table>
+  <tr><th>Other way</th><th>Why not</th></tr>
+  <tr><td>More database connections, like 40 or 100</td><td>It only moves the line. A crowd of 101 freezes it again. Cloud databases also limit connections; small plans often allow only about 25.</td></tr>
+  <tr><td>Fewer threads, the same number as connections</td><td>A request keeps its connection even after it lets go of its thread, while it waits for its answer to be checked. So it can still happen, just less often.</td></tr>
+  <tr><td>Rewrite every route as <code>async def</code></td><td>The answer check would then run without a thread. But every database call would have to change too: hundreds of lines, and new ways to make mistakes, for the same result.</td></tr>
+  <tr><td>Give the connection back before the answer is checked</td><td>Every route would need extra code to remember this. One forgotten route brings the freeze back. The door fixes all routes in one place.</td></tr>
+</table>
+</div>
+
+<h2>After the fix</h2>
+<div class="table-wrap">
+<table>
+  <tr><th></th><th>Before</th><th>After</th></tr>
+  <tr><td>Logins that worked</td><td class="bad">0 of 370</td><td class="good">370 of 370 (slowest 13 s)</td></tr>
+  <tr><td>Booking rush</td><td class="bad">stuck for 15 minutes, 0 bookings</td><td class="good">all places filled in 27 s</td></tr>
+  <tr><td>Server errors</td><td class="bad">1,378</td><td class="good">0</td></tr>
+  <tr><td>Server memory</td><td class="bad">1.1 GB</td><td class="good">0.4 GB</td></tr>
+  <tr><td>A normal hour</td><td class="bad">answers took about 60 s, many failed</td><td class="good">99 requests a second, most in about 50 ms</td></tr>
+  <tr><td>Broken rules</td><td>none</td><td class="good">none</td></tr>
+</table>
+</div>
+
+<h3>Two harder runs</h3>
+<div class="card green">
+  <span class="label">20 places per time instead of 1</span>
+  <p>The food bank's setting of 1 place per time gives only 12 places a day, so only 12 bookings were made. With 20 places there were 240, so lots of students fought over the same times and the same food at once.</p>
+  <ul>
+    <li>238 booked: everyone told "booked" has exactly one booking, and nobody else does.</li>
+    <li>No time over its places, and no food counted wrong, after 625 presses of Book. Of the 30 students who pressed Book twice, none got two bookings.</li>
+    <li>202 bags handed over, each once. A code typed at two counters gave one "handed over" and one refusal.</li>
+    <li>36 no-shows, each marked once, even with two jobs runs at the same moment. The second run said "Another jobs run is still going" and did nothing, as it should.</li>
+  </ul>
+</div>
+<div class="card amber">
+  <span class="label">One CPU core, like a cheap cloud server</span>
+  <p>No errors, and every rule held. One slow spot: 370 logins at once took up to 87 seconds, because each password check is slow on purpose and one core does them one after another. That only happens on a night when everyone logs in at once. Students stay logged in for 30 days, so most won't. Even so, a host with 2 CPU cores is the safer choice.</p>
+</div>
+
+<h2>What this test doesn't show</h2>
+<ul>
+  <li>Everything ran on this PC, with the database on the same computer. On a cloud, each database query also travels over the network, so answers are a little slower.</li>
+  <li>It ran one server process. A host can run several, with <code>--workers</code>, which the test can try too. Each one uses <code>DB_CONNECTIONS</code> connections, so the database must allow that many for every process, plus a few for the jobs script.</li>
+  <li>Logins and bookings happened one after the other, not at the very same moment.</li>
+  <li>The 5 pm rush is real: with 1 place per time, 288 of 300 students saw "no times left" within seconds. The system handled that correctly. It's the known issue in CONSTRAINTS.md, now with numbers.</li>
+</ul>
+
+<h2>Running it yourself</h2>
+<p>From <code>backend/</code>. It empties the test database, like the tests and the demo do.</p>
+<pre>.venv\Scripts\python -m loadtest.run                  the run on this page
+.venv\Scripts\python -m loadtest.run --capacity 20    20 places per time
+.venv\Scripts\python -m loadtest.run --one-core       a small cloud server
+.venv\Scripts\python -m loadtest.run --workers 4      four server processes</pre>
+<p>It takes about 3 minutes. The last line says "No problems" or lists each one. The saved runs are in <code>backend/loadtest/results/</code>, and the server's own log of each run goes to <code>backend/loadtest/server.log</code>.</p>
+
+</main>
+</body>
+</html>
