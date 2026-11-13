@@ -2,11 +2,13 @@
 
 # Campus Food Bank Booking System
 
+[![Tests](https://github.com/pperiyasamy-4404/MUN-Campus-Food-Bank/actions/workflows/tests.yml/badge.svg)](https://github.com/pperiyasamy-4404/MUN-Campus-Food-Bank/actions/workflows/tests.yml)
+
 A booking system for a university campus food bank. Students book a pickup time online and choose their food. Volunteers pack the bags and hand them over at the counter. A coordinator runs the pickup days and sees weekly totals. The system never stores a student's name, email or ID number.
 
 It was built for the Campus Food Bank at Memorial University of Newfoundland (MUN) in St. John's. **It is a working prototype with made-up data.** It's an independent project, not an official MUN or Campus Food Bank system, and real students don't use it yet.
 
-**Stack:** Python 3.14 · FastAPI · SQLAlchemy 2 · PostgreSQL 18 · Alembic · React 19 · TypeScript · Vite · pytest (562 tests)
+**Stack:** Python 3.14 · FastAPI · SQLAlchemy 2 · PostgreSQL 18 · Alembic · React 19 · TypeScript · Vite · pytest (574 tests) · Vitest (22 page tests) · GitHub Actions
 
 <p>
   <img src="docs/screenshots/2-choose-food.png" alt="A student choosing food: cards with photos, dietary tags and stock badges, a 10-minute hold countdown, and a Book button" width="68%">
@@ -84,6 +86,9 @@ Most of these rules are checked twice: once in the code, and again by the databa
 - **The ID number never appears in a web address, a log or an error message.** A test checks this: it searches every response, every log line (including SQL) and every database row.
 - **Passwords** are hashed with argon2. Wrong passwords are slowed down per ID number instead of locking the account, so nobody can lock a student out on purpose.
 - **Login** uses a session cookie that is HttpOnly, Secure and SameSite=Strict, with no tokens in the browser's storage.
+- **Safety headers on every answer:** a Content Security Policy (scripts, styles and photos from this site only), no framing by other sites, no guessing file types, and HTTPS remembered for a year.
+- **Server errors are logged without what was sent.** A crash writes the address and the error to `errors.log` (1 MB files, the last 5 kept), never the request's body, so never an ID number or a password. The person sees "Something went wrong on our side", not the error. A test sends an ID number to a failing address and searches the log for it.
+- **The API docs page is off** unless `API_DOCS=true` is set, so the live site doesn't list every address.
 - **Booking details are deleted after 90 days.** Each day's totals are saved first. On the weekly totals page, any number from 1 to 4 shows as "fewer than 5", so nobody can be picked out. The server hides the real number, so it never reaches the browser.
 
 ## Many people at once: locks and a load test
@@ -114,6 +119,13 @@ After each phase it checks every database rule, and that the database matches wh
 | Database rules after every phase | held | held |
 
 With 20 places per time, 238 students booked in the rush. Every student who was told "booked" has a booking, and nobody else does. On a single CPU core everything stayed correct, but logins took up to 87 seconds, so the live server needs at least 2 cores. The full results are in [backend/loadtest/results](backend/loadtest/results), and [load-test.html](load-test.html) explains them.
+
+**Running it with 4 server processes found two more bugs**, both races that 1 process had been lucky to miss, and both now fixed with a test each:
+
+- **A deadlock between bookings with substitutes.** Saving a substitute makes PostgreSQL lock that food lightly, and those locks were taken after the booked food, out of order. Ana (oats, with peanut butter as a substitute) and Ben (peanut butter, with oats as a substitute) each held one and waited for the other. Book now locks every food, booked or substitute, lowest id first. Before the fix, 57 requests failed with a 500. After it, none did.
+- **One student holding two times from two phones at once** saved two holds, and the second broke "one hold per student". Holding a time now locks the student first, like booking does.
+
+The new error log is what traced both. With 4 processes, the full week then ran with no server errors and every rule kept. One thing is left to check on the real host: on this Windows laptop, in some 4-process runs a quarter of the logins got no answer for 2 minutes, which never happens with 1 process. It looks like how processes share connections on Windows, and a live server would run on Linux.
 
 ## Try the demo
 
@@ -214,7 +226,7 @@ cd backend
 .venv\Scripts\python -m pytest
 ```
 
-562 tests, all against a real PostgreSQL test database. It's rebuilt from the migrations on every run, and each test's changes are rolled back afterwards. They take about a minute. The tests cover:
+574 tests, all against a real PostgreSQL test database. It's rebuilt from the migrations on every run, and each test's changes are rolled back afterwards. They take about a minute. The tests cover:
 
 - **every rule** in CONSTRAINTS.md, through the service functions and through the HTTP API
 - **database rules:** a bad row is refused by the database itself, and the test checks the name of the constraint that refused it
@@ -222,6 +234,16 @@ cd backend
 - **time:** Newfoundland's half-hour time zone, summer time, and the day the clocks go back
 - **privacy:** the ID number is searched for in every response, log and table
 - **migrations:** they match the table classes, and can be undone and run again
+- **the live server:** safety headers, the API docs page off by default, and server errors logged without what was sent
+
+The pages have 22 tests of their own (Vitest), for the rules they check before asking the server: what still needs a tap before Packed, one of each item at the counter, the old-system question, what needs checking on the Stock page, and Newfoundland times shown right wherever the browser is:
+
+```powershell
+cd frontend
+npm test
+```
+
+**GitHub Actions** runs both sets of tests, plus the lint and the build, on every push ([.github/workflows/tests.yml](.github/workflows/tests.yml)), with a real PostgreSQL 18 and a new secret key for each run.
 
 The load test empties the test database too:
 
@@ -229,11 +251,13 @@ The load test empties the test database too:
 .venv\Scripts\python -m loadtest.run                  # 300 + 60 students, 1 place per time
 .venv\Scripts\python -m loadtest.run --capacity 20    # 20 places per time
 .venv\Scripts\python -m loadtest.run --one-core       # like a small 1-CPU cloud server
+.venv\Scripts\python -m loadtest.run --capacity 20 --workers 4   # 4 server processes
 ```
 
 ## Project layout
 
 ```
+.github/workflows/   the tests on every push
 backend/
   app/
     main.py          FastAPI app, error handlers, the queue at the door
@@ -267,8 +291,6 @@ The rules were agreed before any code was written, and every choice is written d
 - Hosting on a cloud server with at least 2 CPU cores, and the cloud's own database backups
 - `SECRET_KEY` kept in the cloud's secrets setting, apart from the database
 - The scheduler set up to run the jobs script every 15 minutes
-- Turning off the API docs page on the live site, adding security headers and a server error log, and running the tests on every push with GitHub Actions
-- A paper plan for when the internet is down at the counter
 - Agreement from the Campus Food Bank on the open questions in [CONSTRAINTS.md](CONSTRAINTS.md#to-ask-the-campus-food-bank)
 
 **Not planned for this version:** reminders by email or text, families, picking up for someone else, other campuses, and other languages.

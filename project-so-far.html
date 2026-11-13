@@ -78,7 +78,7 @@
 
 <div class="stats">
   <div class="stat"><b>9 of 9</b><span>building steps done</span></div>
-  <div class="stat"><b>562</b><span>tests, all passing</span></div>
+  <div class="stat"><b>596</b><span>tests, all passing (574 server, 22 pages)</span></div>
   <div class="stat"><b>24</b><span>tables in the database</span></div>
   <div class="stat"><b>87</b><span>commits on GitHub</span></div>
 </div>
@@ -490,8 +490,13 @@
     <td><code>README.md</code></td>
   </tr>
   <tr>
+    <td>13 Nov</td><td><b>The logo, real hours, more food, hardening</b> <span class="tag done">done</span></td>
+    <td>The food bank's logo. Its real hours, Monday and Thursday 3:30 to 7:30 pm. 13 more kinds of food with photos. Safety headers, the API docs page off on the live site, a server error log, page tests (Vitest), and GitHub Actions running every test on each push. A paper plan for the internet going down: not needed.</td>
+    <td><code>README.md</code>, DECISIONS.md, 13 Nov</td>
+  </tr>
+  <tr>
     <td>Next</td><td><b>Before going live</b> <span class="tag next">next</span></td>
-    <td>Small hardening, a paper plan, then hosting.</td>
+    <td>Hosting, once the food bank agrees.</td>
     <td>See <a href="#next">part 12</a></td>
   </tr>
 </table>
@@ -667,17 +672,7 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
 <table>
   <tr><th>Step</th><th>What it adds</th><th>Main rules</th></tr>
   <tr>
-    <td><b>Small hardening</b> <span class="tag next">next</span></td>
-    <td>Turn off the API docs page on the live site, add safety headers, write server errors to a log, run the tests on GitHub on every push (GitHub Actions), and maybe a few tests for the React pages. Try the load test with 4 server processes.</td>
-    <td>—</td>
-  </tr>
-  <tr>
-    <td><b>A paper plan</b></td>
-    <td>What volunteers do when the internet is down at the counter.</td>
-    <td>Known issues</td>
-  </tr>
-  <tr>
-    <td><b>Before real students</b></td>
+    <td><b>Before real students</b> <span class="tag next">next</span></td>
     <td>Hosting on a cloud server with at least 2 CPU cores, the cloud's own database backups, <code>SECRET_KEY</code> in the cloud's secrets setting, and the host running <code>python -m app.jobs</code> every 15 minutes. Then the food bank's agreement.</td>
     <td>See <code>CONSTRAINTS.md</code></td>
   </tr>
@@ -704,7 +699,7 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
   <li><b>The 5 pm rush.</b> Times go to whoever is free when booking opens.</li>
   <li><b>Password resets only at the counter.</b> There's no email to send a reset link to.</li>
   <li><b>Closures can't reach students.</b> We have no contact details, on purpose.</li>
-  <li><b>Internet down at the counter.</b> We'll plan for it later.</li>
+  <li><b>Internet down at the counter.</b> No paper plan: not needed (decided 13 Nov).</li>
   <li><b>Still logged in on a shared computer.</b> University computers log everyone out at the end of a session.</li>
   <li><b>No "Delete my account" button.</b> Accounts are deleted after a year with no pickup.</li>
   <li><b>Food with a number counted in the minutes before the jobs run</b> can be counted twice. Most food has no number now, so it's rare.</li>

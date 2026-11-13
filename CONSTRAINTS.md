@@ -134,7 +134,7 @@ Problems we know about and accept for now.
 - **Password resets only at the counter.** A student who forgets their password on booking night can't book until they reach the counter. They can walk in and reset it there. A MUN-email reset would fix this if MUN ever gives access.
 - **Closures can't reach students.** We have no contact details, so we can't tell students their day was closed. MUN email might fix this if MUN approves the project.
 - **A volunteer could use a setup code first.** The volunteer sees the ID number and the setup code. We trust volunteers for now.
-- **Internet down at the counter.** Volunteers can't check cards or the pickup gap. We'll plan for this later.
+- **Internet down at the counter.** Volunteers can't check cards or the pickup gap. No paper plan: Prakash decided it isn't needed (13 November).
 - **First visit in person.** A new student can't book online until they've been to the counter for an account. They can take food as a walk-in on that visit.
 - **A stranger guessing can delay a reset on a new phone.** If someone keeps guessing a student's password, the student's usual phone still gets in. A phone that has never logged in to the account shares the stranger's wrong-try count, so it may wait up to 15 minutes to use a new setup code. It needs someone who knows the ID number and keeps guessing.
 - **Food with a number can still be counted twice.** If a volunteer counts it after the no-show time (8 pm), before the jobs mark a bag as a no-show, the no-show adds the bag's food back on top of the count. Only food with a number, which is now a few foods at a time, and only in the minutes before the jobs run (they run every 15 minutes). Food with no number can't be counted twice (decided 12 November).
