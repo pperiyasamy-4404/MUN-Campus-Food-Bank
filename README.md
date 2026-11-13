@@ -33,7 +33,7 @@ It was built for the Campus Food Bank at Memorial University of Newfoundland (MU
 - Get an account at the counter. A volunteer checks their MUN card and gives them a one-time setup code. The student then chooses their own password on their phone.
 - Pick a 10-minute pickup time. The time is held for 10 minutes while they choose their food, with a countdown.
 - Choose up to 13 things from food cards with photos and dietary tags (vegetarian, halal, gluten-free, contains nuts), plus up to 5 substitutes in order, in case something runs out.
-- Get a three-character booking code, like `W4E`, to say at the counter. They can cancel until booking closes.
+- Get a three-character booking code, like `K3P`, to say at the counter. They can cancel until booking closes.
 
 **Volunteers**
 - **Packing queue:** bags for today, earliest first. It shows "Sam is packing" so two people don't pack the same bag.
@@ -53,9 +53,11 @@ It was built for the Campus Food Bank at Memorial University of Newfoundland (MU
 
 ## Screenshots
 
+![The home page: the food bank's logo, the welcome, and the pickup days with their 10-minute times from 3:30 to 7:20 pm](docs/screenshots/0-home.png)
+
 | | |
 |---|---|
-| ![Book a pickup: pickup days with free 10-minute times](docs/screenshots/1-pick-a-time.png) **Student:** pick a time | ![Your booking: the code W4E, the time, the food and substitutes](docs/screenshots/3-your-booking.png) **Student:** the booking and its code |
+| ![Book a pickup: pickup days with free 10-minute times](docs/screenshots/1-pick-a-time.png) **Student:** pick a time | ![Your booking: the three-character code, the time, the food and substitutes](docs/screenshots/3-your-booking.png) **Student:** the booking and its code |
 | ![Packing queue: bags to pack and bags packed, with who packed them](docs/screenshots/4-packing-queue.png) **Volunteer:** packing queue | ![Pack a bag: Picked and Out of stock buttons for each item, substitutes, sticky note](docs/screenshots/5-pack-a-bag.png) **Volunteer:** pack a bag |
 | ![Hand over a bag: the bag found by its code, with extras to choose](docs/screenshots/6-counter.png) **Volunteer:** the counter | ![Food and stock: In stock, Few left and Out of stock buttons](docs/screenshots/9-stock.png) **Volunteer:** stock |
 | ![Pickup days: booking status for each day, Close this day, Move booking times](docs/screenshots/7-coordinator-days.png) **Coordinator:** pickup days | ![Weekly totals, with small numbers shown as "fewer than 5"](docs/screenshots/8-weekly-totals.png) **Coordinator:** weekly totals |
@@ -133,7 +135,7 @@ Every account's password is `blue kettle on the stove`.
 | Log in as | Who | What to try |
 |---|---|---|
 | `Alex` (Staff tab) | coordinator | Close a day, settings, weekly totals, staff |
-| `Sam` (Staff tab) | volunteer | Pack bag `W3F`, hand over bag `W4E` (card `202300001`) |
+| `Sam` (Staff tab) | volunteer | Pack the bag still to pack, then hand over 202300001's bag with card `202300001` (the demo prints each bag's code when it starts) |
 | `202300005` | student | Book next Monday |
 | `202300001` | student | See a packed booking and its code |
 | `202300004` | student | Picked up last Monday, so can't book again for 30 days |
