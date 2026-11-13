@@ -7,7 +7,7 @@ Everything here is made up. The real items and rules come from the Campus Food B
 
 from datetime import UTC, datetime, time
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.db import SessionLocal
 from app.models import Category, Item, PickupHours, Settings, Tag, Variety, VarietyTag
@@ -46,20 +46,53 @@ TAGS = ["Vegetarian", "Halal", "Gluten-free", "Contains nuts"]
 SAMPLE_FOOD = {
     "Breakfast": {
         "Oats": [("Quick oats", None, ["Vegetarian"]), ("Steel-cut oats", "few", ["Vegetarian"])],
-        "Cereal": [("Corn flakes", None, ["Vegetarian"]), ("Gluten-free cereal", 4, ["Vegetarian", "Gluten-free"])],
+        "Cereal": [
+            ("Corn flakes", None, ["Vegetarian"]),
+            ("Bran flakes", None, ["Vegetarian"]),
+            ("Toasted oat rings", None, ["Vegetarian"]),
+            # Not gluten-free: rice crisps usually have barley malt. "Gluten-free" only
+            # goes on food that really is (decided 13 Nov).
+            ("Rice crisps", "few", ["Vegetarian"]),
+            ("Gluten-free cereal", 4, ["Vegetarian", "Gluten-free"]),
+        ],
         "Peanut butter": [("Smooth peanut butter", 8, ["Vegetarian", "Contains nuts"])],
+        # Fruit, sugar and pectin only, so it really is gluten-free.
+        "Jam": [
+            ("Strawberry jam", None, ["Vegetarian", "Gluten-free"]),
+            ("Raspberry jam", None, ["Vegetarian", "Gluten-free"]),
+        ],
     },
     "Grains": {
         "Pasta": [("Spaghetti", None, ["Vegetarian"]), ("Gluten-free pasta", 5, ["Vegetarian", "Gluten-free"])],
         "Rice": [("White rice", None, ["Vegetarian", "Gluten-free"]), ("Brown rice", "few", ["Vegetarian", "Gluten-free"])],
+        "Instant noodles": [
+            ("Ramen cups (vegetable)", None, ["Vegetarian"]),
+            ("Rice noodles", "few", ["Vegetarian", "Gluten-free"]),
+        ],
     },
     "Protein": {
         "Canned chicken": [("Chunk chicken", 6, ["Halal"])],
         "Canned tuna": [("Tuna in water", None, [])],
         "Chickpeas": [("Chickpeas (canned)", 1, ["Vegetarian", "Halal", "Gluten-free"])],
+        "Canned beans": [
+            ("Black beans", None, ["Vegetarian", "Halal", "Gluten-free"]),
+            ("Kidney beans", None, ["Vegetarian", "Halal", "Gluten-free"]),
+        ],
+        # A sauce can hide wheat, so no "Gluten-free" here.
+        "Baked beans": [("Beans in tomato sauce", None, ["Vegetarian"])],
+    },
+    # One item each, so a student can take a can of each (one of each item, I3).
+    "Vegetables": {
+        "Canned corn": [("Whole kernel corn", None, ["Vegetarian", "Halal", "Gluten-free"])],
+        "Canned peas": [("Green peas", None, ["Vegetarian", "Halal", "Gluten-free"])],
+        "Canned tomatoes": [("Diced tomatoes", None, ["Vegetarian", "Halal", "Gluten-free"])],
     },
     "Cooking": {
         "Cooking oil": [("Sunflower oil", None, ["Vegetarian"]), ("Vegetable oil", None, ["Vegetarian"])],
+        "Pasta sauce": [("Tomato and basil", None, ["Vegetarian"])],
+    },
+    "Drinks": {
+        "Coffee": [("Instant coffee", 10, ["Vegetarian", "Gluten-free"])],
     },
 }
 
@@ -70,16 +103,32 @@ SAMPLE_EXTRAS = {
 }
 
 
-def add_food(db, food: dict, is_extra: bool, tags: dict[str, Tag]) -> None:
+def add_food(db, food: dict, is_extra: bool, tags: dict[str, Tag]) -> list[str]:
+    """Add the food, reusing any category, item or variety with that name already there.
+
+    So it fills an empty database, and also adds only what's missing to one that
+    has food already (app.add_sample_food). Food that's there is never changed:
+    its stock and tags may be the food bank's own by now. Returns what was added.
+    """
+    added = []
     for category_name, items in food.items():
-        category = Category(name=category_name)
-        db.add(category)
-        db.flush()
-        for item_name, varieties in items.items():
-            item = Item(name=item_name, category_id=category.id, is_extra=is_extra)
-            db.add(item)
+        category = db.scalar(select(Category).where(func.lower(Category.name) == category_name.lower()))
+        if category is None:
+            category = Category(name=category_name)
+            db.add(category)
             db.flush()
+        for item_name, varieties in items.items():
+            item = db.scalar(select(Item).where(func.lower(Item.name) == item_name.lower()))
+            if item is None:
+                item = Item(name=item_name, category_id=category.id, is_extra=is_extra)
+                db.add(item)
+                db.flush()
             for variety_name, stock, tag_names in varieties:
+                there = db.scalar(
+                    select(Variety).where(Variety.item_id == item.id, func.lower(Variety.name) == variety_name.lower())
+                )
+                if there is not None:
+                    continue
                 if stock == "few":
                     variety = Variety(item_id=item.id, name=variety_name, stock=None, few_left=True)
                 else:
@@ -88,6 +137,8 @@ def add_food(db, food: dict, is_extra: bool, tags: dict[str, Tag]) -> None:
                 db.flush()
                 for tag_name in tag_names:
                     db.add(VarietyTag(variety_id=variety.id, tag_id=tags[tag_name].id))
+                added.append(variety_name)
+    return added
 
 
 def add_sample_data(db, now: datetime) -> None:
