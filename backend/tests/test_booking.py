@@ -7,10 +7,11 @@ The web side is in test_booking_api.py.
 
 import re
 import threading
+from time import sleep
 from datetime import UTC, date, datetime, timedelta
 
 import pytest
-from sqlalchemy import delete, func, insert, select
+from sqlalchemy import delete, func, insert, select, text
 from sqlalchemy.orm import Session
 
 from app.models import (
@@ -517,3 +518,104 @@ def test_food_with_no_number_can_be_booked_by_anyone_and_keeps_no_number(db, mon
     rules.cancel(db, db.get(Student, first.student_id), OPEN + timedelta(hours=1))
 
     assert food["rice"].stock is None
+
+
+def test_two_bookings_with_each_others_food_as_substitutes_never_trap_each_other(engine, world, monkeypatch):
+    """Found by the load test with 4 server processes (13 Nov): a deadlock, so a 500.
+
+    Ana books oats with peanut butter as a substitute; Ben books peanut butter
+    with oats as a substitute. Saving a substitute makes the database take a
+    light lock on that food (to check it still exists). Taken last, out of
+    order, Ana held oats and waited for peanut butter while Ben held peanut
+    butter and waited for oats. book() now takes every food's lock, booked or
+    substitute, lowest id first.
+
+    To make it happen every time, each booking is paused just after taking its
+    food's locks (in _new_code, the step before anything is saved), and both
+    are let go together.
+    """
+    with Session(engine) as db:
+        butter_item = Item(name="Race butter", category_id=world["category"])
+        db.add(butter_item)
+        db.flush()
+        oats = Variety(item_id=world["item"], name="Race oats", stock=None)
+        butter = Variety(item_id=butter_item.id, name="Race peanut butter", stock=None)
+        db.add_all([oats, butter])
+        db.flush()
+        ids = {"oats": oats.id, "butter": butter.id, "butter_item": butter_item.id}
+        rules.hold_slot(db, db.get(Student, world["ana"]), world["slots"][0], OPEN)
+        rules.hold_slot(db, db.get(Student, world["ben"]), world["slots"][1], OPEN)
+        db.commit()
+
+    paused = {"ana": threading.Event(), "ben": threading.Event()}
+    go = threading.Event()
+    real_new_code = rules._new_code
+
+    def pause_here(db, day):
+        paused[threading.current_thread().name].set()
+        go.wait(timeout=10)
+        return real_new_code(db, day)
+
+    monkeypatch.setattr(rules, "_new_code", pause_here)
+    results = {}
+
+    def book(student_id, food, substitute):
+        name = threading.current_thread().name
+        with Session(engine) as db:
+            try:
+                rules.book(db, db.get(Student, student_id), [Choice(food)], [substitute], OPEN)
+                db.commit()
+                results[name] = "booked"
+            except Exception as error:  # noqa: BLE001 - a deadlock is exactly what this test looks for
+                results[name] = type(error).__name__
+
+    def ben_waiting_for_a_lock() -> bool:
+        with engine.connect() as watcher:
+            return watcher.execute(
+                text("SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock'")
+            ).scalar_one() > 0
+
+    try:
+        ana = threading.Thread(target=book, name="ana", args=(world["ana"], ids["oats"], ids["butter"]))
+        ben = threading.Thread(target=book, name="ben", args=(world["ben"], ids["butter"], ids["oats"]))
+        ana.start()
+        assert paused["ana"].wait(timeout=10)
+        ben.start()
+        # Ben either reaches the same point (the old order: he holds peanut butter),
+        # or waits for Ana's lock on the oats first (the new order: he holds nothing yet).
+        for _ in range(200):
+            if paused["ben"].is_set() or ben_waiting_for_a_lock():
+                break
+            sleep(0.05)
+        go.set()
+        ana.join(timeout=15)
+        ben.join(timeout=15)
+
+        assert results == {"ana": "booked", "ben": "booked"}
+    finally:
+        go.set()
+        with engine.begin() as tidy:
+            tidy.execute(delete(Booking).where(Booking.pickup_day_id == world["day"]))
+            tidy.execute(delete(Variety).where(Variety.id.in_([ids["oats"], ids["butter"]])))
+            tidy.execute(delete(Item).where(Item.id == ids["butter_item"]))
+
+
+def test_one_student_holds_two_different_times_from_two_phones_at_the_same_moment(engine, world):
+    """Found by the load test with 4 server processes (13 Nov): a 500.
+
+    Each phone locked only its own slot, so neither waited: both saw no hold and
+    both saved one, and the second broke "one hold per student". Now holding
+    locks the student first, like booking: the second phone waits, finds the
+    first one's hold, and moves it to its own time (the newest choice wins).
+    """
+    first_slot, second_slot = world["slots"]
+
+    results = at_the_same_moment(
+        engine,
+        lambda db: rules.hold_slot(db, db.get(Student, world["ana"]), first_slot, OPEN),
+        lambda db: rules.hold_slot(db, db.get(Student, world["ana"]), second_slot, OPEN),
+    )
+
+    assert results == {"second": "done"}
+    with Session(engine) as db:
+        assert db.scalars(select(Hold.slot_id).where(Hold.student_id == world["ana"])).all() == [second_slot]

@@ -128,6 +128,13 @@ def hold_slot(db: Session, student: Student, slot_id: int, now: datetime) -> Hol
     nobody else took it.
     """
     settings = food_bank_settings(db)
+    # The student first, like book(): the same student on two phones, holding two
+    # different times at once, would otherwise lock different slots, both find no
+    # hold, and both save one. The second broke "one hold per student" with a 500
+    # (load test, 13 Nov). Now the second waits, finds the first's hold, and moves it.
+    db.scalar(
+        select(Student).where(Student.id == student.id).with_for_update().execution_options(populate_existing=True)
+    )
     # The slot's row is locked, so two students can't both take the last place's hold.
     slot = db.scalar(select(Slot).where(Slot.id == slot_id).with_for_update())
     if slot is None:
@@ -229,13 +236,21 @@ def book(db: Session, student: Student, items: list[Choice], substitutes: list[i
     # 4. A place in the slot. The hold kept it free, and the database rule is the safety net.
     slot.booked_count += 1
 
-    # 5. The food off stock, lowest id first, each row locked.
-    for choice in sorted(items, key=lambda choice: choice.variety_id):
+    # 5. The food off stock, and the substitutes locked, all lowest id first.
+    # Substitutes get only a light lock (FOR KEY SHARE): they aren't reserved (U3)
+    # and other students can still book them. But saving a substitute below takes
+    # that lock anyway (the database checks the food still exists), and taken
+    # there, after the booked food, it was out of order: Ana held oats and waited
+    # for peanut butter while Ben held peanut butter and waited for oats, and the
+    # database stopped one with a deadlock (found by the load test, 13 Nov).
+    booked = {choice.variety_id: choice for choice in items}
+    for variety_id in sorted(set(booked) | set(substitutes)):
+        if variety_id not in booked:
+            db.scalar(select(Variety.id).where(Variety.id == variety_id).with_for_update(read=True, key_share=True))
+            continue
+        choice = booked[variety_id]
         variety = db.scalar(
-            select(Variety)
-            .where(Variety.id == choice.variety_id)
-            .with_for_update()
-            .execution_options(populate_existing=True)
+            select(Variety).where(Variety.id == variety_id).with_for_update().execution_options(populate_existing=True)
         )
         if not variety.has(choice.quantity):
             raise TimeTaken(f"Sorry, {variety.name} has just run out. Choose something else.")
