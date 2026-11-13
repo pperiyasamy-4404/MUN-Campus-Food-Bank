@@ -91,6 +91,7 @@
   <p class="eyebrow">Campus Food Bank Booking System · Step 2 · 3 Nov 2026</p>
   <h1>The tables, explained simply</h1>
   <p class="lead">This page is the plan for the database: which tables there are, what goes in each one, and where every rule from CONSTRAINTS.md is kept. Nothing on it is built yet.</p>
+<p class="hours-note" style="border-left:4px solid #b45309;background:#fef3c7;padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0">Updated 13 November: the food bank's real hours are Monday and Thursday, 3:30 to 7:30 pm, with no-shows at 8 pm. The times on this page say so.</p>
   <p class="lead">Nine choices are marked like this <span class="choice">Choice A</span> and listed again in <a href="#choices">part 11</a>. All nine were agreed on 3 Nov 2026, as suggested.</p>
   <p class="lead">Built the same evening: the tables and their rules are in <code>backend/app/models/</code>, and every rule has a test in <code>backend/tests/test_database_rules.py</code> that tries to break it. <a href="#built">Part 12</a> lists what exists now.</p>
 </header>
@@ -415,7 +416,7 @@
   <tr><td>pickup_gap_days</td><td>28</td><td>booking_opens_days_before</td><td>1</td></tr>
   <tr><td>slot_minutes</td><td>10</td><td>booking_opens_time</td><td>17:00</td></tr>
   <tr><td>slot_capacity</td><td>1</td><td>booking_closes_time</td><td>12:00</td></tr>
-  <tr><td>hold_minutes</td><td>10</td><td>no_show_time</td><td>18:00</td></tr>
+  <tr><td>hold_minutes</td><td>10</td><td>no_show_time</td><td>20:00</td></tr>
   <tr><td>item_limit</td><td>13</td><td>no_shows_count</td><td>false</td></tr>
   <tr><td>max_per_item</td><td>1</td><td>retention_days</td><td>90</td></tr>
   <tr><td>substitute_limit</td><td>5</td><td>setup_code_days</td><td>7</td></tr>
@@ -427,16 +428,16 @@
 <h3><code>pickup_hours</code>: the weekly pattern</h3>
 <table class="data">
   <tr><th>weekday</th><th>starts_at</th><th>ends_at</th></tr>
-  <tr><td>1 (Monday)</td><td>15:30</td><td>17:30</td></tr>
-  <tr><td>4 (Thursday)</td><td>15:30</td><td>17:30</td></tr>
+  <tr><td>1 (Monday)</td><td>15:30</td><td>19:30</td></tr>
+  <tr><td>4 (Thursday)</td><td>15:30</td><td>19:30</td></tr>
 </table>
 <p><b>Database rules:</b> the weekday is 1 to 7, each day appears at most once, and the hours end after they start. <span class="rule">S1</span></p>
 
 <h3><code>pickup_days</code>: one row per real date</h3>
 <table class="data">
   <tr><th>id</th><th>pickup_date</th><th>booking_opens_at</th><th>booking_closes_at</th><th>no_show_at</th><th>closed_at</th></tr>
-  <tr><td>30</td><td>Mon 9 Nov</td><td>Sun 8 Nov, 5 pm</td><td>Mon 9 Nov, 12 pm</td><td>Mon 9 Nov, 6 pm</td><td class="empty">—</td></tr>
-  <tr><td>31</td><td>Thu 12 Nov</td><td>Wed 11 Nov, 5 pm</td><td>Thu 12 Nov, 12 pm</td><td>Thu 12 Nov, 6 pm</td><td class="empty">—</td></tr>
+  <tr><td>30</td><td>Mon 9 Nov</td><td>Sun 8 Nov, 5 pm</td><td>Mon 9 Nov, 12 pm</td><td>Mon 9 Nov, 8 pm</td><td class="empty">—</td></tr>
+  <tr><td>31</td><td>Thu 12 Nov</td><td>Wed 11 Nov, 5 pm</td><td>Thu 12 Nov, 12 pm</td><td>Thu 12 Nov, 8 pm</td><td class="empty">—</td></tr>
 </table>
 <p>When a pickup day is made, the times are worked out from the settings and saved on the day's own row.</p>
 <ul>
@@ -448,12 +449,12 @@
 <p><b>Database rules:</b> one row per date, and booking opens before it closes, which comes before the no-show time. <span class="rule">S5</span></p>
 <p class="suggest">Each pickup day is its own row, with its own times. <span class="choice">Choice D</span></p>
 
-<h3><code>slots</code>: twelve per pickup day</h3>
+<h3><code>slots</code>: twenty-four per pickup day</h3>
 <table class="data">
   <tr><th>id</th><th>pickup_day_id</th><th>starts_at</th><th>capacity</th><th>booked_count</th></tr>
   <tr><td>301</td><td>30</td><td>Mon 9 Nov, 3:30 pm</td><td>1</td><td>1</td></tr>
   <tr><td>302</td><td>30</td><td>Mon 9 Nov, 3:40 pm</td><td>1</td><td>0</td></tr>
-  <tr><td>…</td><td></td><td>… up to 5:20 pm</td><td></td><td></td></tr>
+  <tr><td>…</td><td></td><td>… up to 7:20 pm</td><td></td><td></td></tr>
 </table>
 <p><code>booked_count</code> is like stock, turned upside down. Stock counts what's <b>left</b> and can't go below 0. <code>booked_count</code> counts what's <b>taken</b> and can't go above <code>capacity</code>. Booking adds 1, and cancelling takes 1 away. <span class="rule">S2</span></p>
 <p><b>Example.</b> Slot 301 has 1 booking. If two students press Book on it at the same moment, the database rule lets only one of them in. The same rule also stops a mistake from the other side: if the coordinator lowers a slot's capacity to 1 while it already has 2 bookings, the database refuses the change.</p>
@@ -544,7 +545,7 @@
   <tr><th style="width:24%">Kind</th><th style="width:30%">Example</th><th>Why</th></tr>
   <tr><td><b>A moment</b>: <code>timestamptz</code></td><td><code>booked_at</code>, <code>held_until</code>, <code>booking_opens_at</code></td><td>Saved as one exact moment (in UTC) and shown in Newfoundland time. Summer time and the half hour are handled for us.</td></tr>
   <tr><td><b>A calendar date</b>: <code>date</code></td><td><code>pickup_date</code>, <code>last_pickup_on</code></td><td>The 30-day rule counts calendar days in Newfoundland <span class="rule">F1</span>, so a pickup at 5 pm and a slot at 3:30 pm four weeks later are 30 days apart.</td></tr>
-  <tr><td><b>A clock time</b>: <code>time</code></td><td>The settings: 17:00, 12:00, 18:00</td><td>Means "this time on a Newfoundland clock". It's turned into a moment when a pickup day is made, so each day gets the right summer or winter time.</td></tr>
+  <tr><td><b>A clock time</b>: <code>time</code></td><td>The settings: 17:00, 12:00, 20:00</td><td>Means "this time on a Newfoundland clock". It's turned into a moment when a pickup day is made, so each day gets the right summer or winter time.</td></tr>
 </table>
 <p><b>Why not save plain clock times everywhere?</b> On 1 November the clocks went back, and 1:30 am happened twice. A plain clock time can't say which one it means. A moment can.</p>
 

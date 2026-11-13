@@ -55,6 +55,7 @@
 <p class="eyebrow">Campus Food Bank · Step 9, the coordinator · 10 November 2026</p>
 <h1>The coordinator's pages</h1>
 <p class="lead">The last step of the build order. The coordinator can now close a day for snow or the Christmas break, move one day's booking times, change the food bank's numbers, and see what each week added up to, without ever seeing a number small enough to point at someone. Under one new menu item, <b>Coordinator</b>, with the Volunteers page moved in beside them.</p>
+<p class="hours-note" style="border-left:4px solid #b45309;background:#fef3c7;padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0">Updated 13 November: the food bank's real hours are Monday and Thursday, 3:30 to 7:30 pm, with no-shows at 8 pm. The times on this page say so.</p>
 
 <ol class="toc">
   <li><a href="#pages">The four pages</a></li>
@@ -93,7 +94,7 @@
 back on the stock count. Those students can book another day.</pre>
 <p>Then, in one transaction <span class="rule">S7</span>:</p>
 <ol class="steps">
-  <li>Lock the day. If it's closed already, or over (past 6 pm), refuse.</li>
+  <li>Lock the day. If it's closed already, or over (past the 8 pm no-show time), refuse.</li>
   <li>Lock all its slots. From here on, nobody can book it (part 3 says why).</li>
   <li>Cancel every booking still to come, packed or not, with the reason <code>day_closed</code>. Each one's place in its slot goes back.</li>
   <li>Put the food back on the stock count: what was really in each bag.</li>
@@ -210,7 +211,7 @@ back on the stock count. Those students can book another day.</pre>
   <tr><td>Most of one item ≤ things per booking</td><td>The most of one item can't be more than the item limit.</td></tr>
   <tr><td>Details kept at least as long as the pickup gap</td><td>Booking details have to be kept at least as long as the pickup gap. Otherwise a pickup could be deleted while it still counts.</td></tr>
   <tr><td>Booking closes by the time pickup starts, every pickup weekday</td><td>Monday: booking closes at 4:00 p.m., after pickup starts at 3:30 p.m. It has to close first, so the bags can be packed.</td></tr>
-  <tr><td>No-shows after pickup ends, every pickup weekday</td><td>Thursday: pickup ends at 6:30 p.m., after the no-show time, 6:00 p.m. No-shows have to come after pickup ends.</td></tr>
+  <tr><td>No-shows after pickup ends, every pickup weekday</td><td>Thursday: pickup ends at 8:30 p.m., after the no-show time, 8:00 p.m. No-shows have to come after pickup ends.</td></tr>
   <tr><td>Pickup hours hold at least one slot</td><td>Monday: the pickup hours are shorter than one 10-minute slot.</td></tr>
   <tr><td>Booking opens at most 6 days before</td><td>Booking can open at most 6 days before, because days are made a week ahead.</td></tr>
   <tr><td>At least one pickup weekday</td><td>Choose at least one pickup day of the week. To stop for a while, close the days instead.</td></tr>

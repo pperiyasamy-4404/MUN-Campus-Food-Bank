@@ -56,6 +56,7 @@
 <p class="eyebrow">Campus Food Bank · Step 4, items and stock · 6 November 2026</p>
 <h1>Food and stock</h1>
 <p class="lead">Volunteers and the coordinator now have a <b>Stock</b> page. Before each booking window opens, they count what's on the shelf and type the numbers in. When a donation of something new comes in, they add it. This page explains how it works and why.</p>
+<p class="hours-note" style="border-left:4px solid #b45309;background:#fef3c7;padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0">Updated 13 November: the food bank's real hours are Monday and Thursday, 3:30 to 7:30 pm, with no-shows at 8 pm. The times on this page say so.</p>
 
 <div class="warn">
   <p><b>Changed on 12 November: the number is optional.</b> Most food now has no number. A volunteer taps <b>In stock</b> or <b>Few left</b>, and any number of students can book it. Only food worth sharing out exactly is counted, like 6 jars of peanut butter from one donation: the first 6 students get one, then it's out of stock.</p>
@@ -144,7 +145,7 @@ Count again after Sam presses Packed.</pre>
 
 <h2 id="fresh"><span class="num">4</span>What needs counting</h2>
 <p>Each variety remembers its last count: <code>counted_at</code> and <code>counted_by_staff_id</code>. A database rule keeps the two together, so a count always says who made it.</p>
-<p>Food <b>needs counting</b> if it hasn't been counted since the last pickup ended. "Ended" means that day's no-show time, 6 pm, when every pickup, walk-in and no-show is settled. The page shows:</p>
+<p>Food <b>needs counting</b> if it hasn't been counted since the last pickup ended. "Ended" means that day's no-show time, 8 pm, when every pickup, walk-in and no-show is settled. The page shows:</p>
 <ul>
   <li>when the next booking window opens, like <i>"Count the shelf before booking for Monday, November 9 opens, Sunday, November 8 at 5:00 p.m."</i></li>
   <li>how many foods still need counting, with an amber edge on each one</li>

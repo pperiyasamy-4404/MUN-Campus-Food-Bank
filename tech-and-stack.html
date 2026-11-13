@@ -117,6 +117,7 @@
   <p class="eyebrow">Campus Food Bank Booking System · 30 Oct 2026</p>
   <h1>The tech, explained simply</h1>
   <p class="lead">For each tool, this page shows what it is, a small example from our food bank, why we picked it, and what else we could have used and why we didn't.</p>
+<p class="hours-note" style="border-left:4px solid #b45309;background:#fef3c7;padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0">Updated 13 November: the food bank's real hours are Monday and Thursday, 3:30 to 7:30 pm, with no-shows at 8 pm. The times on this page say so.</p>
   <p class="lead">All six choices were agreed on 1 Nov 2026, as suggested. They're marked like this <span class="choice">Choice 1</span>, listed again at the end, and written into DECISIONS.md.</p>
 </header>
 
@@ -597,7 +598,7 @@ def test_allowed_after_30_days():
   <tr><th style="width:38%">What</th><th>How</th></tr>
   <tr><td>A hold runs out after 10 minutes <span class="rule">S8</span></td><td><b>Nothing needs to run.</b> Each hold stores "held until 5:12 pm". Any hold past its time counts as free.</td></tr>
   <tr><td>Booking opens at 5 pm and closes at 12 pm <span class="rule">S5</span></td><td><b>Nothing needs to run.</b> The server compares the time now with that day's open and close times.</td></tr>
-  <tr><td>Bookings not picked up become no-shows at 6 pm <span class="rule">B3</span></td><td>A small <b>jobs script</b>.</td></tr>
+  <tr><td>Bookings not picked up become no-shows at 8 pm <span class="rule">B3</span></td><td>A small <b>jobs script</b>.</td></tr>
   <tr><td>Delete booking details after 90 days, and accounts after a year <span class="rule">P7</span> <span class="rule">P13</span></td><td>The same jobs script.</td></tr>
 </table>
 <p>The jobs script runs every 15 minutes and does whatever is due. On your laptop, Windows Task Scheduler can run it. On a real server, that server's scheduler does.</p>
@@ -605,7 +606,7 @@ def test_allowed_after_30_days():
 <span class="label">Why it's built this way</span>
 <ul>
   <li><b>Why not a timer for every hold?</b> 50 students holding slots would mean 50 timers. If the server restarts, the timers are lost and those slots stay stuck. A stored "held until 5:12 pm" can't be lost.</li>
-  <li><b>Why every 15 minutes, not exactly at 6 pm?</b> If the computer is off at 6 pm, a 6 pm job is simply missed. A job every 15 minutes catches up on its next run.</li>
+  <li><b>Why every 15 minutes, not exactly at 8 pm?</b> If the computer is off at 8 pm, an 8 pm job is simply missed. A job every 15 minutes catches up on its next run.</li>
   <li><b>Why not a job queue</b> (like Celery with Redis)? Those are extra programs that run all the time, made for systems with thousands of background tasks. We have one small script.</li>
 </ul>
 

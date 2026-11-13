@@ -86,6 +86,7 @@
 <p class="eyebrow">Campus Food Bank · 11 November 2026</p>
 <h1>What could still go wrong</h1>
 <p class="lead">All 9 steps are built and the walkthrough works from an empty start. This page lists what could still go wrong once real students and volunteers use it. I found these by walking through the system with you today and reading the code again. Each one has a small story, why it matters, the choices, and what I'd pick.</p>
+<p class="hours-note" style="border-left:4px solid #b45309;background:#fef3c7;padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0">Updated 13 November: the food bank's real hours are Monday and Thursday, 3:30 to 7:30 pm, with no-shows at 8 pm. The times on this page say so.</p>
 
 <div class="note">
   <p><b>How to answer:</b> reply with numbers and letters, like <b>"1B, 3A, 5 wait, 8A"</b>. Say "explain 5 again" if a story isn't clear. Nothing on this page has been changed in the code yet.</p>
@@ -102,7 +103,7 @@
 <div class="table-wrap">
 <table>
   <tr><th>#</th><th>What could go wrong</th><th>How much it matters</th><th>What I'd pick</th></tr>
-  <tr><td>1</td><td><a href="#q1">Nobody runs the 6 pm jobs</a></td><td><span class="tag big">Before real use</span></td><td><b>Decided 11 Nov:</b> the hosting team schedules it</td></tr>
+  <tr><td>1</td><td><a href="#q1">Nobody runs the no-show jobs</a></td><td><span class="tag big">Before real use</span></td><td><b>Decided 11 Nov:</b> the hosting team schedules it</td></tr>
   <tr><td>2</td><td><a href="#q2">No backup of the data or the secret key</a></td><td><span class="tag big">Before real use</span></td><td><b>Decided 11 Nov:</b> the cloud's backups; the key in its secrets setting</td></tr>
   <tr><td>3</td><td><a href="#q3">Only one coordinator</a></td><td><span class="tag big">Before real use</span></td><td><b>Built 11 Nov:</b> A, several coordinators</td></tr>
   <tr><td>4</td><td><a href="#q4">Who looks after it when you leave MUN</a></td><td><span class="tag big">Before real use</span></td><td><b>Later (11 Nov):</b> once the food bank accepts it</td></tr>
@@ -123,7 +124,7 @@
 <h2>Before real students use it</h2>
 
 <div class="card" id="q1">
-  <h3><span class="num">1</span>Nobody runs the 6 pm jobs <span class="tag big">Before real use</span></h3>
+  <h3><span class="num">1</span>Nobody runs the no-show jobs <span class="tag big">Before real use</span></h3>
   <div class="note"><p><b>Decided on 11 November:</b> whoever hosts the system runs the jobs every 15 minutes with the server's own scheduler. That's the hosting team's job, not the coordinator's, so no warning is built. The README will say how. The demo keeps running them by hand.</p></div>
   <p>The <b>jobs</b> are the small script (<code>python -m app.jobs</code>) that does the work nobody clicks for. It makes next week's pickup days, marks bags nobody collected as no-shows, and deletes old data. On 10 November you chose to run it by hand, not on a timer. That's fine for a demo. My worry is real use.</p>
   <span class="label">A small story</span>
@@ -217,7 +218,7 @@
     <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker></defs>
     <g font-family="system-ui, Segoe UI, sans-serif" text-anchor="middle" fill="#0f172a">
       <rect x="10" y="20" width="210" height="150" rx="12" fill="#f1f5f9" stroke="#94a3b8"/>
-      <text x="115" y="48" font-weight="700" font-size="15">Thu 6:00 pm</text>
+      <text x="115" y="48" font-weight="700" font-size="15">Thu 8:00 pm</text>
       <text x="115" y="74" font-size="13">Bag K3P wasn't collected.</text>
       <text x="115" y="93" font-size="13">It has 1 rice.</text>
       <text x="115" y="128" font-size="13">Shelf: 4 · System: 4</text>
@@ -251,7 +252,7 @@
   <span class="label">Choices</span>
   <ul class="options">
     <li><b class="opt">A.</b> A rule for volunteers: "run the jobs before you count". Easy to forget.</li>
-    <li><b class="opt">B.</b> A code fix: when a no-show puts food back, it <b>skips food that was counted after that day's 6 pm</b>, because the count already included it.</li>
+    <li><b class="opt">B.</b> A code fix: when a no-show puts food back, it <b>skips food that was counted after that day's no-show time</b>, because the count already included it.</li>
     <li><b class="opt">C.</b> Run the jobs every 15 minutes (question 1, choice B). The gap shrinks from days to minutes, so it almost never happens.</li>
   </ul>
   <div class="suggest">
@@ -303,7 +304,7 @@
         </div>
       </div>
     </li>
-    <li><b class="opt">B.</b> Leave it. Volunteers split the bags among themselves, for example Sam takes 3:30–4:30 and Jo takes 4:30–5:30.</li>
+    <li><b class="opt">B.</b> Leave it. Volunteers split the bags among themselves, for example Sam takes 3:30–5:30 and Jo takes 5:30–7:30.</li>
   </ul>
   <div class="suggest"><p><b>What I'd pick:</b> wait for <a href="#q14">question 14</a>. If only one person packs at a time, B is enough. If several pack together, A.</p></div>
   <div class="note"><p><b>Built on 12 November (choice A):</b> opening a bag to pack it puts "Sam is packing (since 12:31 p.m.)" on the queue. Anyone else who opens it sees a warning first, with <b>Pack it anyway</b>. Packed or Undo clears it. Built without waiting for question 14: it costs nothing when one person packs.</p></div>
@@ -406,11 +407,11 @@
 <p>For the list in CONSTRAINTS.md under "To ask the Campus Food Bank".</p>
 
 <div class="card ask" id="q13">
-  <h3><span class="num">13</span>What happens to uncollected bags at 6 pm? <span class="tag fb">Ask the food bank</span></h3>
+  <h3><span class="num">13</span>What happens to uncollected bags at the no-show time? <span class="tag fb">Ask the food bank</span></h3>
   <p>Are they unpacked onto the shelf that evening, or kept bagged for a while in case the student comes back?</p>
   <p class="label">Why we ask</p>
   <p>It decides how to fix <a href="#q5">question 5</a> (food counted twice). Since 12 November that's only possible for the few foods with a number.</p>
-  <div class="note"><p><b>Answered on 12 November:</b> unpacked that evening, because the student's slot is over. That's what the system already does: at 6 pm the bag becomes a no-show and its food goes back on the shelf.</p></div>
+  <div class="note"><p><b>Answered on 12 November:</b> unpacked that evening, because the student's slot is over. That's what the system already does: at the no-show time (8 pm since 13 Nov) the bag becomes a no-show and its food goes back on the shelf.</p></div>
 </div>
 
 <div class="card ask" id="q14">

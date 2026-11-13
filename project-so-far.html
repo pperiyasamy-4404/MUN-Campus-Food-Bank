@@ -75,6 +75,7 @@
 <p class="eyebrow">Campus Food Bank · The whole project so far · 13 November 2026, after the load test and the README</p>
 <h1>The project so far</h1>
 <p class="lead">Read this page first. It explains the whole project in one place: what we're building, who uses it, how the pieces fit together, what's done, and what's next. The other pages go deeper into one step each. This one links to them.</p>
+<p class="hours-note" style="border-left:4px solid #b45309;background:#fef3c7;padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0">Updated 13 November: the food bank's real hours are Monday and Thursday, 3:30 to 7:30 pm, with no-shows at 8 pm. The times on this page say so.</p>
 
 <div class="stats">
   <div class="stat"><b>9 of 9</b><span>building steps done</span></div>
@@ -205,7 +206,7 @@
     <text x="470" y="309" font-size="13" font-weight="700" fill="#065f46">Step 6, built</text>
 
     <rect x="640" y="200" width="280" height="120" rx="12" fill="#d1fae5" stroke="#059669"/>
-    <text x="780" y="228" font-weight="700">6. Pickup, 3:30 to 5:30 pm</text>
+    <text x="780" y="228" font-weight="700">6. Pickup, 3:30 to 7:30 pm</text>
     <text x="780" y="252" font-size="13">They say K3P. The volunteer</text>
     <text x="780" y="271" font-size="13">types the card number, which</text>
     <text x="780" y="290" font-size="13">must match the booking.</text>
@@ -217,7 +218,7 @@
 
     <!-- row 3 -->
     <rect x="330" y="380" width="280" height="80" rx="12" fill="#d1fae5" stroke="#059669"/>
-    <text x="470" y="408" font-weight="700">7. 6 pm: anyone who didn't come</text>
+    <text x="470" y="408" font-weight="700">7. 8 pm: anyone who didn't come</text>
     <text x="470" y="428" font-size="13">is a no-show. Their food goes back.</text>
     <text x="470" y="448" font-size="13" font-weight="700" fill="#065f46">Step 8, built</text>
 
@@ -380,9 +381,9 @@
 <table>
   <tr><th>Setting</th><th>Sample</th><th>Setting</th><th>Sample</th></tr>
   <tr><td>Pickup gap</td><td>30 days</td><td>Item limit</td><td>13 per booking</td></tr>
-  <tr><td>Pickup days</td><td>Mon and Thu, 3:30–5:30 pm</td><td>Max of each item</td><td>1</td></tr>
+  <tr><td>Pickup days</td><td>Mon and Thu, 3:30–7:30 pm</td><td>Max of each item</td><td>1</td></tr>
   <tr><td>Booking opens</td><td>5 pm the day before</td><td>Substitutes</td><td>up to 5</td></tr>
-  <tr><td>Booking and cancelling close</td><td>12 pm on pickup day</td><td>No-show time</td><td>6 pm</td></tr>
+  <tr><td>Booking and cancelling close</td><td>12 pm on pickup day</td><td>No-show time</td><td>8 pm</td></tr>
   <tr><td>Slot length</td><td>10 minutes</td><td>Booking details kept</td><td>90 days</td></tr>
   <tr><td>Students per slot</td><td>1</td><td>Setup code lasts</td><td>7 days</td></tr>
   <tr><td>Hold time</td><td>10 minutes</td><td>Wrong passwords</td><td>5 per 15 minutes</td></tr>
@@ -456,7 +457,7 @@
   </tr>
   <tr>
     <td>9 Nov</td><td><b>Step 8, jobs</b> <span class="tag done">done</span></td>
-    <td>A script every 15 minutes: no-shows at 6 pm, pickup days ahead (one week since 10 Nov), totals saved then details deleted after 90 days, accounts deleted after a year with no pickup, tidying up. The Fix a pickup page. Walk-ins only during pickup hours. 439 tests.</td>
+    <td>A script every 15 minutes: no-shows at the no-show time (8 pm since 13 Nov), pickup days ahead (one week since 10 Nov), totals saved then details deleted after 90 days, accounts deleted after a year with no pickup, tidying up. The Fix a pickup page. Walk-ins only during pickup hours. 439 tests.</td>
     <td><a href="jobs.html">jobs</a></td>
   </tr>
   <tr>
@@ -548,7 +549,7 @@
   <div class="card">
     <h3>Days (4)</h3>
     <p><code>settings</code> the food bank's numbers, in one row<br>
-    <code>pickup_hours</code> the weekly pattern: Mon and Thu, 3:30–5:30<br>
+    <code>pickup_hours</code> the weekly pattern: Mon and Thu, 3:30–7:30<br>
     <code>pickup_days</code> one real date, with its own booking times<br>
     <code>slots</code> one 10-minute time, with how many have booked it</p>
   </div>
@@ -681,8 +682,8 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
 
 <h3>Questions still open</h3>
 <p><b>Answered 7 Nov</b>, from step 4: volunteers can add categories and tags and fix names too (now built), and an extra with none left isn't shown to students (as built).</p>
-<p><b>Answered 7 Nov</b>, from step 6: volunteers can pack until 6 pm (as built), and a volunteer can undo Packed on the wrong bag until it's handed over (now built). For step 7: a walk-in who hasn't reached 30 days is refused, with no override. Students keep seeing exact counts like "6 left".</p>
-<p><b>Answered 9 Nov</b>, from step 7: walk-ins are served only during pickup hours, 3:30 to 5:30 (now built, see <a href="counter.html#when">counter.html</a>). Booked bags can still be handed over until 6 pm.</p>
+<p><b>Answered 7 Nov</b>, from step 6: volunteers can pack until the no-show time (as built), and a volunteer can undo Packed on the wrong bag until it's handed over (now built). For step 7: a walk-in who hasn't reached 30 days is refused, with no override. Students keep seeing exact counts like "6 left".</p>
+<p><b>Answered 9 Nov</b>, from step 7: walk-ins are served only during pickup hours, 3:30 to 7:30 since 13 Nov (now built, see <a href="counter.html#when">counter.html</a>). Booked bags can still be handed over until the no-show time, 8 pm.</p>
 <p><b>Answered 10 Nov</b>, from steps 8 and 9: the jobs are run by hand, with no Task Scheduler. Pickup days are made one week ahead (now built). A closed day that cancelled bookings stays closed (as built). 0 shows as 0 on Weekly totals, and 1 to 4 as "fewer than 5" (now built).</p>
 <p>And a change to "students per slot" also reaches days already made, until their booking opens (now built).</p>
 <p><b>Answered 11 and 12 Nov</b>, from what-could-go-wrong.html: the hosting team schedules the jobs, not the coordinator. Backups come from the cloud. Several coordinators. Optional stock numbers. One look per bag, and Found it clears it for everyone. "Sam is packing". Finding a bag by MUN card. Closing a range of dates. A 30-day gap, with pickups from the old system counted. No card, no food. Shared computers and "Delete my account" left as they are. All built or recorded.</p>
@@ -791,7 +792,7 @@ npm run dev</pre>
   <dt>Substitute</dt><dd>Food the student would take instead, if something they booked is missing.</dd>
   <dt>Extra</dt><dd>Food like bread or eggs, given at the counter, not booked online.</dd>
   <dt>Walk-in</dt><dd>A student who comes without a booking.</dd>
-  <dt>No-show</dt><dd>A booking nobody came for by 6 pm.</dd>
+  <dt>No-show</dt><dd>A booking nobody came for by the no-show time, 8 pm.</dd>
   <dt>Test</dt><dd>A small program that checks one thing and fails loudly if it's wrong.</dd>
 </dl>
 

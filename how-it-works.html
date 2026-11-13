@@ -120,6 +120,7 @@
   <p class="eyebrow">Campus Food Bank Booking System</p>
   <h1>How it works, step by step</h1>
   <p class="lead">This page explains everything we have decided so far, from the beginning. It follows a student from getting an account to picking up their food, and then shows what volunteers and the coordinator do.</p>
+<p class="hours-note" style="border-left:4px solid #b45309;background:#fef3c7;padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0">Updated 13 November: the food bank's real hours are Monday and Thursday, 3:30 to 7:30 pm, with no-shows at 8 pm. The times on this page say so.</p>
   <p class="lead">Codes like <span class="rule">F1</span> or <span class="rule">P3</span> are the rule numbers in CONSTRAINTS.md. Anything we haven't decided yet is marked <span class="open">Not decided yet</span>. Problems we accept for now are marked <span class="known">Known issue</span>.</p>
   <p class="lead">Updated 30 Oct 2026 with your answers.</p>
 </header>
@@ -431,38 +432,38 @@
 
 <!-- 7 -->
 <h2 id="s7"><span class="num">7</span>When booking is open</h2>
-<p><b>Pickup:</b> Monday and Thursday, 3:30–5:30 pm, in 10-minute slots. <span class="rule">S1</span> The food bank is closed on the other days.</p>
+<p><b>Pickup:</b> Monday and Thursday, 3:30–7:30 pm, in 10-minute slots. <span class="rule">S1</span> The food bank is closed on the other days.</p>
 <p><b>Booking for a pickup day is open from 5 pm the day before until 12 pm on the day.</b> All of that day's slots open at the same time. <span class="rule">S5</span> Cancelling is allowed until 12 pm too. <span class="rule">S6</span></p>
 <div class="diagram">
-  <svg viewBox="0 0 900 170" role="img" aria-label="Booking for Monday is open from Sunday 5 pm until Monday 12 pm. Volunteers pack from 12 pm to 3 pm. Pickup is 3:30 to 5:30 pm.">
+  <svg viewBox="0 0 940 170" role="img" aria-label="Booking for Monday is open from Sunday 5 pm until Monday 12 pm. Volunteers pack from 12 pm to 3 pm. Pickup is 3:30 to 7:30 pm.">
     <rect x="120" y="10" width="300" height="26" fill="#f1f5f9" stroke="#e2e8f0"/>
     <text x="270" y="28" class="t-b mid" style="font-size:14px">Sunday (food bank closed)</text>
-    <rect x="420" y="10" width="450" height="26" fill="#fff" stroke="#e2e8f0"/>
-    <text x="645" y="28" class="t-b mid" style="font-size:14px">Monday</text>
+    <rect x="420" y="10" width="500" height="26" fill="#fff" stroke="#e2e8f0"/>
+    <text x="670" y="28" class="t-b mid" style="font-size:14px">Monday</text>
     <g stroke="#e2e8f0" stroke-width="1.5">
       <line x1="245" y1="36" x2="245" y2="120"/><line x1="420" y1="36" x2="420" y2="120"/>
-      <line x1="720" y1="36" x2="720" y2="120"/><line x1="807" y1="36" x2="807" y2="120"/><line x1="857" y1="36" x2="857" y2="120"/>
+      <line x1="720" y1="36" x2="720" y2="120"/><line x1="807" y1="36" x2="807" y2="120"/><line x1="907" y1="36" x2="907" y2="120"/>
     </g>
     <text x="245" y="54" class="t-s mid">5 pm</text>
     <text x="420" y="54" class="t-s mid">midnight</text>
     <text x="720" y="54" class="t-s mid">12 pm</text>
     <text x="807" y="54" class="t-s mid">3:30</text>
-    <text x="857" y="54" class="t-s mid">5:30</text>
+    <text x="907" y="54" class="t-s mid">7:30</text>
     <text x="8" y="84" class="t-b" style="font-size:14px">Monday</text>
     <text x="8" y="102" class="t-s">pickups</text>
     <rect x="245" y="72" width="475" height="32" rx="6" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.5"/>
     <text x="482" y="93" class="t-s mid" style="fill:#1e3a8a">booking and cancelling open: Sun 5 pm → Mon 12 pm</text>
     <rect x="720" y="72" width="75" height="32" rx="6" fill="#fef3c7" stroke="#b45309" stroke-width="1.5"/>
     <text x="757" y="93" class="t-s mid" style="fill:#78350f">packing</text>
-    <rect x="807" y="72" width="50" height="32" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
-    <text x="832" y="93" class="t-s mid" style="fill:#065f46">pickup</text>
-    <text x="120" y="150" class="t-s">Thursday is the same, one day later: booking Wednesday 5 pm → Thursday 12 pm, packing 12–3 pm, pickup 3:30–5:30 pm.</text>
+    <rect x="807" y="72" width="100" height="32" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+    <text x="857" y="93" class="t-s mid" style="fill:#065f46">pickup</text>
+    <text x="120" y="150" class="t-s">Thursday is the same, one day later: booking Wednesday 5 pm → Thursday 12 pm, packing 12–3 pm, pickup 3:30–7:30 pm.</text>
   </svg>
 </div>
 <table>
   <tr><th>Pickup day</th><th>Booking opens</th><th>Booking and cancelling close</th><th>Packing</th><th>Pickup</th></tr>
-  <tr><td>Monday</td><td>Sunday 5 pm</td><td>Monday 12 pm</td><td>Monday 12–3 pm</td><td>Monday 3:30–5:30 pm</td></tr>
-  <tr><td>Thursday</td><td>Wednesday 5 pm</td><td>Thursday 12 pm</td><td>Thursday 12–3 pm</td><td>Thursday 3:30–5:30 pm</td></tr>
+  <tr><td>Monday</td><td>Sunday 5 pm</td><td>Monday 12 pm</td><td>Monday 12–3 pm</td><td>Monday 3:30–7:30 pm</td></tr>
+  <tr><td>Thursday</td><td>Wednesday 5 pm</td><td>Thursday 12 pm</td><td>Thursday 12–3 pm</td><td>Thursday 3:30–7:30 pm</td></tr>
 </table>
 <div class="why">
   <p><b>Why 5 pm the day before?</b> Students with daytime classes can book in the evening. And booking close to pickup means the stock students see is close to what's really on the shelf.</p>
@@ -475,18 +476,18 @@
 
 <!-- 8 -->
 <h2 id="s8"><span class="num">8</span>How many students per slot</h2>
-<p>3:30–5:30 is 12 slots of 10 minutes. For now, <b>one student per slot</b>, so 12 online bookings per pickup day. <span class="rule">S2</span> It's a setting, so it can change without touching the code.</p>
+<p>3:30–7:30 is 24 slots of 10 minutes. For now, <b>one student per slot</b>, so 24 online bookings per pickup day. <span class="rule">S2</span> It's a setting, so it can change without touching the code.</p>
 <div class="card">
   <h4>Example Monday</h4>
   <div class="slots" id="slots"></div>
   <div class="legend"><span><span class="sq online"></span>booked</span><span><span class="sq empty"></span>free</span></div>
-  <p>10 of the 12 slots are booked. 4:30 and 5:20 are still free.</p>
+  <p>22 of the 24 slots are booked. 4:30 and 7:20 are still free.</p>
 </div>
 <ul>
   <li><b>Walk-ins don't use slots.</b> They have their own line with their own volunteers (<a href="#s13">section 13</a>). <span class="rule">W3</span></li>
-  <li><b>If slots fill up quickly every week</b> and the counter has spare time, the number per slot can go up to 2 (24 a day). Bags are already packed, so a pickup only takes a few minutes.</li>
+  <li><b>If slots fill up quickly every week</b> and the counter has spare time, the number per slot can go up to 2 (48 a day). Bags are already packed, so a pickup only takes a few minutes.</li>
 </ul>
-<p><b>No daily limit.</b> The system only controls online bookings, and the slots already limit those to 12 a day. Walk-ins come as they come. The aim is to move everyone to booking online over time. <span class="done">Decided</span></p>
+<p><b>No daily limit.</b> The system only controls online bookings, and the slots already limit those to 24 a day. Walk-ins come as they come. The aim is to move everyone to booking online over time. <span class="done">Decided</span></p>
 
 <!-- 9 -->
 <h2 id="s9"><span class="num">9</span>Step 2: Making a booking</h2>
@@ -578,7 +579,7 @@
   <li><b>Cancel:</b> the student can cancel until 12 pm on the pickup day. <span class="rule">S6</span> Booking is still open until then, so the slot and the items go straight back for someone else to book. <span class="rule">I6</span></li>
   <li>A cancelled booking doesn't count toward the 30 days. <span class="rule">F3</span></li>
   <li><b>No booking again that day:</b> a student who cancels can't book again for that same pickup day. Otherwise cancelling and booking again would be a way to change items. They can book a later pickup day. <span class="rule">S6</span></li>
-  <li>After 12 pm there's no cancel button, because the bags are being packed. If the student doesn't come, it becomes a no-show at 6 pm (<a href="#s14">section 14</a>).</li>
+  <li>After 12 pm there's no cancel button, because the bags are being packed. If the student doesn't come, it becomes a no-show at 8 pm (<a href="#s14">section 14</a>).</li>
 </ul>
 
 <!-- 12 -->
@@ -647,12 +648,12 @@
 
 <!-- 13 -->
 <h2 id="s13"><span class="num">13</span>Step 5: Pickup at the counter</h2>
-<p>From 3:30 to 5:30 there are <b>two lines side by side</b>, each with its own volunteers. <span class="rule">W3</span> One hands out bags that were booked online. The other serves walk-ins. Most students are expected to move to booking online over time.</p>
+<p>From 3:30 to 7:30 there are <b>two lines side by side</b>, each with its own volunteers. <span class="rule">W3</span> One hands out bags that were booked online. The other serves walk-ins. Most students are expected to move to booking online over time.</p>
 <p>Booking online doesn't prove the student is eligible. The check at the counter does. <span class="rule">P5</span></p>
 <div class="two">
   <div>
     <p class="col-title">Line 1: a student with a booking</p>
-    <div class="step s"><b class="n">1</b>Arrives in their slot. Late is fine, until 5:30.</div>
+    <div class="step s"><b class="n">1</b>Arrives in their slot. Late is fine, until 7:30.</div>
     <div class="down">↓</div>
     <div class="step v"><b class="n">2</b>Volunteer opens their booking by its booking code.</div>
     <div class="down">↓</div>
@@ -685,7 +686,7 @@
 <h2 id="s14"><span class="num">14</span>The life of a booking</h2>
 <p>Every booking is in exactly one <b>status</b>. It can only move along the arrows. <span class="rule">B1</span> <span class="rule">B2</span></p>
 <div class="diagram">
-  <svg viewBox="0 0 890 330" role="img" aria-label="Booked goes to packed, packed goes to picked up. Booked goes to cancelled if the student cancels before 12 pm or the day is closed. Packed goes to cancelled if the day is closed. Packed goes to no-show if not picked up by 6 pm.">
+  <svg viewBox="0 0 890 330" role="img" aria-label="Booked goes to packed, packed goes to picked up. Booked goes to cancelled if the student cancels before 12 pm or the day is closed. Packed goes to cancelled if the day is closed. Packed goes to no-show if not picked up by 8 pm.">
     <defs>
       <marker id="m4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#334155"/></marker>
       <marker id="m5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#94a3b8"/></marker>
@@ -724,13 +725,13 @@
 
     <path d="M475,100 L581,234" stroke="#334155" stroke-width="2" marker-end="url(#m4)"/>
     <text x="548" y="158" class="lbl">not picked up by</text>
-    <text x="548" y="176" class="lbl">6 pm</text>
+    <text x="548" y="176" class="lbl">8 pm</text>
 
     <path d="M762,104 L654,232" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 5" fill="none" marker-start="url(#m5)" marker-end="url(#m5)"/>
     <text x="732" y="172" class="lbl" style="fill:#475569">volunteer fixes</text>
     <text x="732" y="190" class="lbl" style="fill:#475569">a mistake (logged)</text>
   </svg>
-  <p class="caption">The three boxes with thick borders are the end. The only move between them is the dashed line: a volunteer fixing a mistake, which is logged. <span class="rule">B6</span> The system marks no-shows by itself at 6 pm, which gives volunteers half an hour after closing to finish marking bags picked up. A booking that was never packed also becomes a no-show at 6 pm. Any other move is refused, so a cancelled booking can't be marked picked up. <span class="rule">B2</span> <span class="rule">B3</span> <span class="rule">I6</span></p>
+  <p class="caption">The three boxes with thick borders are the end. The only move between them is the dashed line: a volunteer fixing a mistake, which is logged. <span class="rule">B6</span> The system marks no-shows by itself at 8 pm, which gives volunteers half an hour after closing to finish marking bags picked up. A booking that was never packed also becomes a no-show at 8 pm. Any other move is refused, so a cancelled booking can't be marked picked up. <span class="rule">B2</span> <span class="rule">B3</span> <span class="rule">I6</span></p>
 </div>
 <ul>
   <li><b>Snow day after packing:</b> the bookings are cancelled and the items go back into the stock count, so volunteers unpack the bags to make the shelf match. <span class="rule">S7</span></li>
@@ -778,7 +779,7 @@
 <table>
   <tr><th>Setting</th><th>Sample value</th></tr>
   <tr><td>Pickup gap</td><td>30 days</td></tr>
-  <tr><td>Pickup days and hours</td><td>Monday and Thursday, 3:30–5:30 pm</td></tr>
+  <tr><td>Pickup days and hours</td><td>Monday and Thursday, 3:30–7:30 pm</td></tr>
   <tr><td>Booking opens</td><td>5 pm the day before the pickup day</td></tr>
   <tr><td>Booking closes (and cancelling)</td><td>12 pm on the pickup day</td></tr>
   <tr><td>Slot length</td><td>10 minutes</td></tr>
@@ -788,7 +789,7 @@
   <tr><td>Max of each item</td><td>1</td></tr>
   <tr><td>Substitute limit</td><td>5 per booking</td></tr>
   <tr><td>Extras per student</td><td>1 of each extra item</td></tr>
-  <tr><td>No-show time</td><td>6 pm on the pickup day</td></tr>
+  <tr><td>No-show time</td><td>8 pm on the pickup day</td></tr>
   <tr><td>No-shows count toward the pickup gap</td><td>No</td></tr>
   <tr><td>Retention period</td><td>90 days</td></tr>
   <tr><td>Category limits inside the item limit</td><td>None</td></tr>
@@ -876,9 +877,10 @@
 </main>
 
 <script>
-  // Example Monday: 12 ten-minute slots, one student each
-  const times = ['3:30', '3:40', '3:50', '4:00', '4:10', '4:20', '4:30', '4:40', '4:50', '5:00', '5:10', '5:20'];
-  const booked = [1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0];
+  // Example Monday: 24 ten-minute slots, 3:30 to 7:20, one student each
+  const times = ['3:30', '3:40', '3:50', '4:00', '4:10', '4:20', '4:30', '4:40', '4:50', '5:00', '5:10', '5:20',
+                 '5:30', '5:40', '5:50', '6:00', '6:10', '6:20', '6:30', '6:40', '6:50', '7:00', '7:10', '7:20'];
+  const booked = [1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0];
   const slots = document.getElementById('slots');
   times.forEach((t, i) => {
     const col = document.createElement('div');

@@ -58,6 +58,7 @@
 <p class="eyebrow">Campus Food Bank · Step 7, the counter · 7 November 2026</p>
 <h1>The counter</h1>
 <p class="lead">This is where students actually get their food. Booked students say their code, a volunteer checks their MUN card, and hands over the packed bag. Students without a booking are served as walk-ins, from what's left on the shelf. Both count toward the 30 days, so nobody can walk in one week and book online the next.</p>
+<p class="hours-note" style="border-left:4px solid #b45309;background:#fef3c7;padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0">Updated 13 November: the food bank's real hours are Monday and Thursday, 3:30 to 7:30 pm, with no-shows at 8 pm. The times on this page say so.</p>
 
 <ol class="toc">
   <li><a href="#lines">Two lines, one counter</a></li>
@@ -122,15 +123,15 @@
 
 <!-- ============================================================ -->
 <h2 id="when"><span class="num">2</span>When the counter is open</h2>
-<p>On a pickup day, from when booking closes (12 pm) until the no-show time (6 pm). Handing over can't start earlier anyway, because bags are packed from 12 pm, and only a packed bag can be picked up <span class="rule">B2</span>. Otherwise the page says why:</p>
+<p>On a pickup day, from when booking closes (12 pm) until the no-show time (8 pm). Handing over can't start earlier anyway, because bags are packed from 12 pm, and only a packed bag can be picked up <span class="rule">B2</span>. Otherwise the page says why:</p>
 <pre class="code">The counter opens when booking closes, at 12:00 p.m.
 Pickup for Monday, November 9 is over.
 Today isn't a pickup day. The next one is Thursday, November 12.</pre>
-<p><b>Walk-ins are served only during pickup hours</b>, 3:30 to 5:30 pm with the sample hours <span class="rule">W3</span>. (Your answer, 9 Nov.) They start the moment pickup starts and stop the moment it ends. A student with a booking who comes late, at 5:45, still gets their bag, because a booking waits until the no-show time. Outside those hours the Walk-in page says:</p>
-<pre class="code">Walk-ins are served from 3:30 p.m. to 5:30 p.m., during pickup hours.
-Walk-ins are over for today. They're served from 3:30 p.m. to 5:30 p.m., during pickup hours.</pre>
+<p><b>Walk-ins are served only during pickup hours</b>, 3:30 to 7:30 pm, the food bank's hours <span class="rule">W3</span>. (Your answer, 9 Nov.) They start the moment pickup starts and stop the moment it ends. A student with a booking who comes late, at 5:45, still gets their bag, because a booking waits until the no-show time. Outside those hours the Walk-in page says:</p>
+<pre class="code">Walk-ins are served from 3:30 p.m. to 7:30 p.m., during pickup hours.
+Walk-ins are over for today. They're served from 3:30 p.m. to 7:30 p.m., during pickup hours.</pre>
 <p><b>Each pickup day keeps its own pickup hours</b>, like its booking and no-show times. They're copied from the weekly hours when the day is made. Why: if the coordinator changes the weekly hours, a day that's already made, with its slots, doesn't move. Why not read the weekly hours each time: the walk-in hours of a day already made would change, but its slots wouldn't.</p>
-<p>The database also keeps a day's times in order: booking closes, then pickup starts, then pickup ends, then no-shows. Example: a day whose no-shows come at 5 pm but pickup ends at 5:30 is refused, because the last slots would be no-shows before their time came.</p>
+<p>The database also keeps a day's times in order: booking closes, then pickup starts, then pickup ends, then no-shows. Example: a day whose no-shows come at 7 pm but pickup ends at 7:30 is refused, because the last slots would be no-shows before their time came.</p>
 
 <!-- ============================================================ -->
 <h2 id="handover"><span class="num">3</span>Handing over a bag</h2>
@@ -263,8 +264,8 @@ UNIQUE (booking_id, item_id) WHERE is_extra             <span class="c">-- one B
 <!-- ============================================================ -->
 <h2 id="ask"><span class="num">10</span>One question for you (answered)</h2>
 <div class="ask">
-  <p><b>Walk-in hours.</b> The counter is open 12 pm to 6 pm on pickup days, and walk-ins can be served any time in that window. Should walk-ins only be served during pickup hours, 3:30 to 5:30?</p>
-  <p><b>Answered 9 Nov: yes, 3:30 to 5:30, like pickups.</b> Now built: see <a href="#when">part 2</a>.</p>
+  <p><b>Walk-in hours.</b> The counter was open 12 pm to 6 pm on pickup days (now 8 pm), and walk-ins can be served any time in that window. Should walk-ins only be served during pickup hours, 3:30 to 5:30 (the sample hours then)?</p>
+  <p><b>Answered 9 Nov: yes, during pickup hours, like pickups</b> (3:30 to 7:30 since 13 Nov). Now built: see <a href="#when">part 2</a>.</p>
 </div>
 
 <!-- ============================================================ -->

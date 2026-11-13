@@ -54,12 +54,13 @@
 <main>
 <p class="eyebrow">Campus Food Bank · Step 8, the jobs · 9 November 2026</p>
 <h1>Things that happen by themselves</h1>
-<p class="lead">Some things must happen even when nobody clicks anything. At 6 pm, a bag nobody collected becomes a no-show and its food goes back on the shelf. After 90 days, booking details are deleted and only totals are kept. An account with no pickup for a year is deleted. A small script does all of this every 15 minutes. And when a volunteer forgets to press Hand over, a new page lets them fix it.</p>
+<p class="lead">Some things must happen even when nobody clicks anything. At 8 pm, a bag nobody collected becomes a no-show and its food goes back on the shelf. After 90 days, booking details are deleted and only totals are kept. An account with no pickup for a year is deleted. A small script does all of this every 15 minutes. And when a volunteer forgets to press Hand over, a new page lets them fix it.</p>
+<p class="hours-note" style="border-left:4px solid #b45309;background:#fef3c7;padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0">Updated 13 November: the food bank's real hours are Monday and Thursday, 3:30 to 7:30 pm, with no-shows at 8 pm. The times on this page say so.</p>
 
 <ol class="toc">
   <li><a href="#timeline">A bag's life after pickup day</a></li>
   <li><a href="#script">The jobs script</a></li>
-  <li><a href="#noshows">No-shows at 6 pm</a></li>
+  <li><a href="#noshows">No-shows at 8 pm</a></li>
   <li><a href="#fixes">Fixing a pickup marked wrong</a></li>
   <li><a href="#totals">After 90 days: totals, then delete</a></li>
   <li><a href="#accounts">Accounts with no pickup for a year</a></li>
@@ -74,14 +75,14 @@
 <!-- ============================================================ -->
 <h2 id="timeline"><span class="num">1</span>A bag's life after pickup day</h2>
 <div class="diagram">
-<svg viewBox="0 0 940 250" role="img" aria-label="Timeline: 6 pm no-shows; fixes until the next booking window; 90 days later totals are saved and details deleted; a year with no pickup deletes the account.">
+<svg viewBox="0 0 940 250" role="img" aria-label="Timeline: 8 pm no-shows; fixes until the next booking window; 90 days later totals are saved and details deleted; a year with no pickup deletes the account.">
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
   </defs>
   <g font-family="system-ui, Segoe UI, sans-serif" font-size="14" text-anchor="middle">
     <line x1="30" y1="120" x2="910" y2="120" stroke="#64748b" stroke-width="3" marker-end="url(#a)"/>
     <circle cx="90" cy="120" r="9" fill="#2563eb"/>
-    <text x="90" y="98" font-weight="700">Mon 6 pm</text>
+    <text x="90" y="98" font-weight="700">Mon 8 pm</text>
     <rect x="20" y="140" width="150" height="80" rx="10" fill="#dbeafe" stroke="#2563eb"/>
     <text x="95" y="166" font-weight="700">No-shows</text>
     <text x="95" y="186" font-size="12">food back on the shelf</text>
@@ -114,25 +115,25 @@
 <p>One small program, <code>backend/app/jobs.py</code>. It runs every 15 minutes, does whatever is due, and stops. On a laptop, Windows Task Scheduler can start it, through <code>backend/run_jobs.cmd</code>. On a real server, the server's own scheduler does.</p>
 <ol class="steps">
   <li>Make the pickup days for the next week.</li>
-  <li>No-shows: bookings not picked up by 6 pm.</li>
+  <li>No-shows: bookings not picked up by 8 pm.</li>
   <li>Booking details older than 90 days: save their totals, then delete them.</li>
   <li>The activity log older than 90 days.</li>
   <li>Accounts with no pickup for a year. This comes after 3, so old details can't keep an account alive.</li>
   <li>Tidy up: logins, setup codes, wrong tries and holds that ran out.</li>
 </ol>
 <p>What it prints each time, only numbers (P10):</p>
-<pre class="code">Jobs, Monday, November 9 at 6:15 p.m.:
+<pre class="code">Jobs, Monday, November 9 at 8:15 p.m.:
   2 no-shows. Their food is back on the shelf.</pre>
 
 <div class="why">
-  <p><b>It looks at what's due now, not at when it last ran.</b> Example: the laptop was off from 5 pm to 9 pm. The 9 pm run finds Monday's bags still "packed" after 6 pm, and makes them no-shows then. Nothing is missed, and a second run straight after finds nothing to do.</p>
+  <p><b>It looks at what's due now, not at when it last ran.</b> Example: the laptop was off from 7 pm to 10 pm. The 10 pm run finds Monday's bags still "packed" after 8 pm, and makes them no-shows then. Nothing is missed, and a second run straight after finds nothing to do.</p>
   <p><b>One run at a time.</b> If a run is still going when the next one starts, the new one does nothing. A PostgreSQL "advisory lock" (a named lock that isn't on any row) makes sure.</p>
   <p><b>Small transactions.</b> Each no-show, each day's deletion and each account is saved on its own. So a student booking, or a volunteer counting the shelf, never waits long. If one piece fails, the others still happen, and the script ends with an error so the scheduler shows it.</p>
   <p><b>Why not a timer inside the web server?</b> It would only run while the server runs, and a restart would forget what was waiting. <b>Why not a job queue like Celery?</b> It needs another service running (a message broker). For a few small jobs every 15 minutes, a plain script is simpler. (The same choice as in <a href="tech-and-stack.html#jobs">tech-and-stack.html, part 12</a>.)</p>
 </div>
 
 <!-- ============================================================ -->
-<h2 id="noshows"><span class="num">3</span>No-shows at 6 pm</h2>
+<h2 id="noshows"><span class="num">3</span>No-shows at 8 pm</h2>
 <p>A booking still "booked" or "packed" at the no-show time becomes a no-show <span class="rule">B3</span>. Its food goes back on the shelf, so others can book it <span class="rule">I6</span>. What goes back is what was <b>really in the bag</b>:</p>
 <div class="table-wrap">
 <table>
@@ -142,12 +143,12 @@
 </table>
 </div>
 <ul>
-  <li>The no-show time saved is the day's (6 pm), even if the job runs at 9 pm.</li>
+  <li>The no-show time saved is the day's (8 pm), even if the job runs at 10 pm.</li>
   <li>A day the coordinator closed has no no-shows: nobody is a no-show on a day the food bank was closed. Closing a day will cancel its bookings (step 9).</li>
-  <li>Walk-ins stop at 5:30, but a booked bag waits for its student until 6 pm.</li>
+  <li>Walk-ins stop at 7:30, but a booked bag waits for its student until 8 pm.</li>
 </ul>
-<h3>Hand over at 5:59, and the job at 6:00</h3>
-<p>A volunteer presses Hand over one second before 6 pm, just as the job starts. Both want the same bag. The job takes the same locks as the counter, in the same order: the student, then the booking, then the food. So it waits until the hand-over is saved, then reads the bag again, sees "picked up", and leaves it alone.</p>
+<h3>Hand over at 7:59, and the job at 8:00</h3>
+<p>A volunteer presses Hand over one second before 8 pm, just as the job starts. Both want the same bag. The job takes the same locks as the counter, in the same order: the student, then the booking, then the food. So it waits until the hand-over is saved, then reads the bag again, sees "picked up", and leaves it alone.</p>
 <p>A test runs exactly this on two database connections. With the lock taken out, the job tried to mark a picked-up bag as a no-show, and the test failed.</p>
 
 <!-- ============================================================ -->
@@ -157,7 +158,7 @@
 <table>
   <tr><th>The mistake</th><th>The fix</th><th>What changes</th></tr>
   <tr>
-    <td>Sam handed over bag K3P at 5:50 but forgot to press Hand over. At 6 pm it became a no-show.</td>
+    <td>Sam handed over bag K3P at 7:50 but forgot to press Hand over. At 8 pm it became a no-show.</td>
     <td><b>They did take it</b> → picked up</td>
     <td>The bag's food comes off the stock count again. The 30 days count from that pickup day. Recorded as picked up by whoever fixed it, at the time of the fix.</td>
   </tr>
@@ -170,14 +171,14 @@
 </div>
 <ul>
   <li>The page asks first, and every fix is logged with who made it. The log also keeps who pressed Hand over.</li>
-  <li>Fixes start once the day is over, at 6 pm. Before that, a bag that wasn't handed over isn't a no-show yet.</li>
+  <li>Fixes start once the day is over, at 8 pm. Before that, a bag that wasn't handed over isn't a no-show yet.</li>
   <li>A bag that was never packed can't be fixed to picked up: "Bag T5J was never packed, so it can't have been handed over."</li>
   <li>The page says when to fix by: "Fix mistakes before Wednesday, November 11 at 5:00 p.m., when booking opens for the next pickup day." After that, the stock count might already have been used for new bookings.</li>
   <li>If the shelf count is already lower than what's in the bag, it stops at 0. The shelf can't have less than none. (Since 12 Nov, most food has no number, and nothing is taken off or put back for it. See stock.html.)</li>
 </ul>
 
 <h3>A late "picked up" fix cancels a booking that's now too soon <span class="muted">(added 12 Nov)</span></h3>
-<p>The problem: Monday's bag was handed over, but nobody pressed Hand over, so at 6 pm it became a no-show. On Tuesday the student booked Thursday, which was allowed, because Monday didn't count. On Friday, Sam fixes Monday to picked up. Now the student has two pickups in four days.</p>
+<p>The problem: Monday's bag was handed over, but nobody pressed Hand over, so at 8 pm it became a no-show. On Tuesday the student booked Thursday, which was allowed, because Monday didn't count. On Friday, Sam fixes Monday to picked up. Now the student has two pickups in four days.</p>
 <p>Now the fix also cancels the later booking when it's less than 30 days after the fixed pickup <span class="rule">F1</span>. Its food goes back, and its time is free for someone else. The Fix page says:</p>
 <pre class="code">Their booking for Thursday, November 12 (bag K3P) was cancelled: it's less than 30 days after this pickup.</pre>
 <p>The cancel reason is <code>pickup_fixed</code>, and the log says <code>cancelled_too_soon</code>, with who made the fix. A booking 30 or more days after the fixed pickup stays.</p>
@@ -266,7 +267,7 @@ weekly_item_totals  Oats 1   Lentils 1   Bread 1   Rice 2
 <h2 id="tests"><span class="num">10</span>The tests</h2>
 <p>56 new tests, 439 in all, every one passing.</p>
 <ul>
-  <li><code>tests/test_no_shows.py</code>: what goes back on the shelf for a bag never packed and a packed one; not before 6 pm; picked-up, cancelled and closed-day bookings left alone; once only; both fixes, a fix made twice, a bag never packed, the 30 days after a fix; and the "Hand over at 5:59" race on two connections.</li>
+  <li><code>tests/test_no_shows.py</code>: what goes back on the shelf for a bag never packed and a packed one; not before the no-show time (the tests use their own afternoon, with no-shows at 6 pm); picked-up, cancelled and closed-day bookings left alone; once only; both fixes, a fix made twice, a bag never packed, the 30 days after a fix; and the "Hand over at 5:59" race on two connections.</li>
   <li><code>tests/test_retention.py</code>: 90 days to the minute (midnight in St. John's); the totals example above; two days in one week; a day counted once; the log; the year rule, with an account made at 11:30 pm Newfoundland time that's already the next day in UTC; what keeps an account; tidying up.</li>
   <li><code>tests/test_jobs.py</code>: days made a week ahead; a closed day left alone; a whole run, then a second run that finds nothing; one run at a time; a failing job not stopping the others; no settings.</li>
   <li><code>tests/test_fixes_api.py</code> and <code>tests/test_database_rules.py</code>: the page's answers, staff only, nothing about the student; the new tables' rules.</li>

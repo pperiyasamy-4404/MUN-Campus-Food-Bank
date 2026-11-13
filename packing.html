@@ -67,6 +67,7 @@
 <p class="eyebrow">Campus Food Bank · Step 6, packing and substitutes · 7 November 2026</p>
 <h1>Packing</h1>
 <p class="lead">On a pickup day, after booking closes, volunteers pack each student's bag. When something isn't on the shelf, the system says which of the student's substitutes goes in instead, and what to write on the sticky note. Other bags that need the same food get a warning. This page explains how.</p>
+<p class="hours-note" style="border-left:4px solid #b45309;background:#fef3c7;padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0">Updated 13 November: the food bank's real hours are Monday and Thursday, 3:30 to 7:30 pm, with no-shows at 8 pm. The times on this page say so.</p>
 
 <ol class="toc">
   <li><a href="#flow">Queue, bag, Packed</a></li>
@@ -133,20 +134,20 @@
 <!-- ============================================================ -->
 <h2 id="when"><span class="num">2</span>When packing happens</h2>
 <div class="diagram">
-<svg viewBox="0 0 940 170" role="img" aria-label="Pickup day timeline: booking closes at 12, pickup 3:30 to 5:30, no-show at 6. Packing allowed from 12 to 6.">
+<svg viewBox="0 0 940 170" role="img" aria-label="Pickup day timeline: booking closes at 12, pickup 3:30 to 7:30, no-show at 8. Packing allowed from 12 to 8.">
   <g font-family="system-ui, Segoe UI, sans-serif" font-size="14" text-anchor="middle">
     <line x1="40" y1="80" x2="900" y2="80" stroke="#94a3b8" stroke-width="2"/>
     <rect x="40" y="62" width="180" height="36" rx="6" fill="#dbeafe"/>
     <text x="130" y="85" font-size="13">booking open</text>
     <rect x="220" y="62" width="620" height="36" rx="6" fill="#d1fae5"/>
     <text x="400" y="85" font-size="13" font-weight="700" fill="#065f46">packing allowed</text>
-    <rect x="560" y="104" width="200" height="22" rx="5" fill="#fef3c7"/>
-    <text x="660" y="120" font-size="12">pickup 3:30 – 5:30</text>
+    <rect x="491" y="104" width="310" height="22" rx="5" fill="#fef3c7"/>
+    <text x="646" y="120" font-size="12">pickup 3:30 – 7:30</text>
     <line x1="220" y1="50" x2="220" y2="110" stroke="#0f172a" stroke-width="2"/>
     <text x="220" y="40">12:00 pm</text>
     <text x="220" y="150" font-size="12" fill="#475569">booking closes</text>
     <line x1="840" y1="50" x2="840" y2="110" stroke="#0f172a" stroke-width="2"/>
-    <text x="840" y="40">6:00 pm</text>
+    <text x="840" y="40">8:00 pm</text>
     <text x="840" y="150" font-size="12" fill="#475569">no-show time</text>
   </g>
 </svg>
@@ -154,7 +155,7 @@
 <p>Packing starts when booking closes <span class="rule">K1</span>. Before that, students can still cancel, so the list isn't final. Trying earlier gets:</p>
 <pre class="code">Packing for Monday, November 9 starts at 12:00 p.m., when booking closes. Until then, students can still cancel.</pre>
 <p>Volunteers plan to finish by 3:30, but the system lets them go on until the no-show time. Why: only a packed bag can be picked up <span class="rule">B2</span>. If a bag was missed and the student is standing at the counter at 3:40, a volunteer can still pack it. At 6 pm, the day is over.</p>
-<p>The queue shows the <b>packing day</b>: the first pickup day, not closed, whose no-show time hasn't passed. On a Monday that's Monday until 6 pm, then Thursday.</p>
+<p>The queue shows the <b>packing day</b>: the first pickup day, not closed, whose no-show time hasn't passed. On a Monday that's Monday until 8 pm, then Thursday.</p>
 
 <!-- ============================================================ -->
 <h2 id="refill"><span class="num">3</span>The refill rule</h2>
@@ -256,7 +257,7 @@ for substitute in substitutes, best first:
 <p>Packed sends the same findings, plus <code>uses</code>: the substitutes the page told the volunteer to put in. <code>pack()</code> in <code>app/services/packing.py</code> then does this, all or nothing:</p>
 <ol class="steps">
   <li><b>Lock the booking.</b> A second press of Packed waits here, then finds the bag packed: "Bag G2T is packed already, by Sam at 12:30 p.m." <span class="rule">B2</span></li>
-  <li><b>Check it can be packed:</b> still "booked", the day isn't closed, and it's between 12 pm and 6 pm.</li>
+  <li><b>Check it can be packed:</b> still "booked", the day isn't closed, and it's between 12 pm and the no-show time, 8 pm.</li>
   <li><b>Lock the food</b> in the bag and its substitutes, lowest id first, and read the stock again.</li>
   <li><b>Work the plan out again.</b> If it isn't what the page showed, refuse with 409. The page then asks for the plan again and shows what to put in now.</li>
   <li><b>Save:</b> how much of each food was missing, which substitute replaced what, each substitute's stock minus one, "ran out" for anything nobody found, and the bag as packed, with who and when.</li>
@@ -377,7 +378,7 @@ for substitute in substitutes, best first:
 <h2 id="tests"><span class="num">10</span>The tests</h2>
 <p>58 new tests for packing, with the 6 for Undo Packed added later the same day. 309 in all, every one passing. Highlights:</p>
 <ul>
-  <li><code>tests/test_packing.py</code>: 11 tests of the refill rule on its own, including both examples. Packing between 12 pm and 6 pm only. What Packed saves, with stock before and after. Only the bag's own food <span class="rule">U5</span>. A changed plan saves nothing. A bag is packed once <span class="rule">B2</span>. Flags appear when food runs out and go when it's counted <span class="rule">U7</span>. And the two "same moment" tests from part 5.</li>
+  <li><code>tests/test_packing.py</code>: 11 tests of the refill rule on its own, including both examples. Packing between 12 pm and the no-show time only. What Packed saves, with stock before and after. Only the bag's own food <span class="rule">U5</span>. A changed plan saves nothing. A bag is packed once <span class="rule">B2</span>. Flags appear when food runs out and go when it's counted <span class="rule">U7</span>. And the two "same moment" tests from part 5.</li>
   <li><code>tests/test_packing_api.py</code>: the addresses, used the way the pages use them. Staff only. A bag shows nothing about the student <span class="rule">P4</span>.</li>
   <li><code>tests/test_database_rules.py</code>: the three new database rules, and deleting a packed booking deletes its swaps too (the retention job in step 8 will do that).</li>
 </ul>
@@ -386,7 +387,7 @@ for substitute in substitutes, best first:
 <!-- ============================================================ -->
 <h2 id="ask"><span class="num">11</span>Two questions for you (both answered)</h2>
 <div class="ask">
-  <p><b>1. Packing until 6 pm?</b> <b>Answered 7 Nov: yes</b>, as built. K1 in CONSTRAINTS.md now says so.</p>
+  <p><b>1. Packing until the no-show time (6 pm then, 8 pm now)?</b> <b>Answered 7 Nov: yes</b>, as built. K1 in CONSTRAINTS.md now says so.</p>
   <p><b>2. Undo Packed?</b> <b>Answered 7 Nov: yes, until the bag is handed over.</b> Now built: see below.</p>
 </div>
 <h3>Undo Packed</h3>
