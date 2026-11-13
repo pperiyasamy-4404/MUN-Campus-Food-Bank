@@ -25,6 +25,10 @@ class Config(BaseSettings):
     # so this stays on while we work. Turn it off only to try the site from a
     # phone on the home network, which uses plain http.
     cookie_secure: bool = True
+    # Database connections for each server process, and so how many requests it
+    # works on at once (app/door.py). The cloud database must allow this many for
+    # every server process, plus a few for the jobs script.
+    db_connections: int = 15
 
 
 config = Config()

@@ -2,6 +2,9 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from app.config import config
+from app.door import WaitAtTheDoor
+from app.problems import Problem
 from app.routes import (
     accounts,
     booking,
@@ -17,7 +20,6 @@ from app.routes import (
     stock,
     totals,
 )
-from app.problems import Problem
 from app.services.accounts import TooManyTries
 
 app = FastAPI(title="Campus Food Bank")
@@ -70,3 +72,7 @@ async def never_keep_a_copy(request: Request, call_next):
     if request.url.path.startswith("/api") and "cache-control" not in response.headers:
         response.headers["Cache-Control"] = "no-store"
     return response
+
+
+# Added last, so it's the outermost layer: a request waits here before anything else runs.
+app.add_middleware(WaitAtTheDoor, places=config.db_connections)

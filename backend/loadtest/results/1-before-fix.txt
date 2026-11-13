@@ -1,0 +1,86 @@
+Setting up: 300 students for Monday 2026-11-16, 60 for Thursday 2026-11-19, 1 place(s) per 10-minute slot (12 slots a day).
+Server: 1 worker(s), the app's own database pool.
+
+1. Log-in rush, Sun 15 Nov 04:59 PM: every student logs in at the same moment
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    staff log in                     1     1        0        0     162ms    162ms    162ms
+    student log in                 370     0        0      370  120432ms 120452ms 120507ms
+  BUG: student log in: 120 x 500
+  BUG: student log in: 250 x EXC ReadTimeout
+    Took 120.6 s. Server memory: biggest process peaked at 1108 MB (1112 MB all processes).
+
+2. Booking rush: booking opens at Sun 15 Nov 05:00 PM. Everyone is refreshing, then books at once.
+   (30 press everything twice, 10 use two phones, 20 cancel; the coordinator closes Thursday partway.)
+  BUG: Nobody could see that booking had opened within 90 seconds
+    Coordinator closed Thursday at 17:05:15: no answer
+  BUG: A phase was still going after 15 minutes, so it was stopped
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    see pickup days               2520     0        0     2520  120017ms 120564ms 120690ms
+  BUG: see pickup days: 2520 x EXC ReadTimeout
+    coordinator closes a day         1     0        0        1  120088ms 120088ms 120088ms
+  BUG: coordinator closes a day: 1 x EXC ReadTimeout
+    Took 900.1 s. Server memory: biggest process peaked at 1153 MB (1157 MB all processes).
+    Monday outcomes: 300 couldn't log in
+    Thursday outcomes: 60 couldn't log in
+  Checking the database after the booking rush...
+  All rules hold.
+  Every one of the 0 students told 'booked' has a booking, and nobody else does.
+
+3. Packing, Mon 16 Nov 12:05 PM: six volunteers pack every bag at once (5 bags by two at the same moment)
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    staff log in                     6     6        0        0     420ms    421ms    421ms
+    packing queue                    7     7        0        0      69ms     94ms    146ms
+    Took 0.2 s. Server memory: biggest process peaked at 486 MB (490 MB all processes).
+  Checking the database after packing...
+  All rules hold.
+
+4. Counter, Mon 16 Nov 03:31 PM: everyone arrives at once, three volunteers at the counter
+   (5 codes typed at two counters at once, 5 tried with the wrong card first, 30 walk-ins, 5 of them at two counters)
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    see the food                     1     1        0        0      31ms     31ms     31ms
+    record a walk-in                35    19       16        0     714ms    817ms    822ms
+    Took 0.9 s. Server memory: biggest process peaked at 151 MB (155 MB all processes).
+  0 bags handed over, each exactly once, matching what the volunteers were told.
+  19 walk-ins recorded (19 told yes).
+  Checking the database after the counter...
+  All rules hold.
+
+5. Jobs, Mon 16 Nov 06:05 PM: the jobs script runs twice at the same moment, while volunteers use the pages
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    browse /api/counter              6     6        0        0     389ms    453ms    469ms
+    browse /api/stock                6     6        0        0     488ms    498ms    498ms
+    browse /api/packing              6     6        0        0     469ms    492ms    492ms
+    Took 0.5 s. Server memory: biggest process peaked at 151 MB (155 MB all processes).
+    Jobs run: 0 no-shows, skipped: Another jobs run is still going, so this one did nothing., problems: none
+    Jobs run: 0 no-shows, skipped: no, problems: none
+  0 uncollected bags became no-shows exactly once, and their food went back once.
+  Checking the database after the jobs...
+  All rules hold.
+
+6. A normal hour: 300 students and 6 volunteers browse for 30 s
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    browse /api/food                76    15        0       61   31067ms  61274ms  61288ms
+  BUG: browse /api/food: 61 x 500
+    browse /api/pickup-days         67    48        0       19   61448ms  61554ms  61591ms
+  BUG: browse /api/pickup-days: 19 x 500
+    browse /api/my-booking          85     0       85        0   61366ms  61395ms  61416ms
+    browse /api/me                  72    72        0        0   61478ms  61488ms  61496ms
+    browse /api/counter              4     4        0        0   61612ms  61613ms  61614ms
+    browse /api/stock                1     1        0        0   61611ms  61611ms  61611ms
+    browse /api/packing              1     1        0        0   61612ms  61612ms  61612ms
+    Took 65.6 s. Server memory: biggest process peaked at 151 MB (155 MB all processes).
+    5 requests a second on average.
+
+Errors in the server log (loadtest/server.log):
+  1378 x sqlalchemy.exc.TimeoutError: QueuePool limit of size 5 overflow 10 reached, connection timed out, timeout 30.00 (Background on this error at: https://sqlalche.me/e/21/3o7r)
+
+======================================================================
+8 PROBLEM(S) FOUND:
+  - student log in: 120 x 500
+  - student log in: 250 x EXC ReadTimeout
+  - Nobody could see that booking had opened within 90 seconds
+  - A phase was still going after 15 minutes, so it was stopped
+  - see pickup days: 2520 x EXC ReadTimeout
+  - coordinator closes a day: 1 x EXC ReadTimeout
+  - browse /api/food: 61 x 500
+  - browse /api/pickup-days: 19 x 500

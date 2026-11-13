@@ -1,0 +1,81 @@
+Setting up: 300 students for Monday 2026-11-16, 60 for Thursday 2026-11-19, 20 place(s) per 10-minute slot (12 slots a day).
+Server: 1 worker(s), the app's own database pool.
+
+1. Log-in rush, Sun 15 Nov 04:59 PM: every student logs in at the same moment
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    staff log in                     1     1        0        0     256ms    256ms    256ms
+    student log in                 370   370        0        0    8959ms  15648ms  16418ms
+    Took 16.7 s. Server memory: biggest process peaked at 389 MB (393 MB all processes).
+
+2. Booking rush: booking opens at Sun 15 Nov 05:00 PM. Everyone is refreshing, then books at once.
+   (30 press everything twice, 10 use two phones, 20 cancel; the coordinator closes Thursday partway.)
+    Coordinator closed Thursday at 17:00:11: 200
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    see pickup days               1413  1413        0        0    3185ms   5911ms   7076ms
+    hold a time                   1190   333      857        0    5764ms   7132ms   7466ms
+    hold a time (2nd phone)         10    10        0        0    7072ms   7140ms   7213ms
+    see the food                   315   315        0        0    6066ms   6981ms   7055ms
+    coordinator closes a day         1     1        0        0    7036ms   7036ms   7036ms
+    see my booking                 315   315        0        0    4768ms   5614ms   6058ms
+    press Book                     625   247      378        0    5004ms   6638ms   7309ms
+    press Book (2nd tap)            89     9       80        0    5182ms   6584ms   7272ms
+    cancel                          36    18       18        0    3587ms   5919ms   6164ms
+    let go of the time               1     1        0        0    3996ms   3996ms   3996ms
+    Took 75.5 s. Server memory: biggest process peaked at 389 MB (393 MB all processes).
+    Monday outcomes: 238 booked, 43 kept losing the time, 18 booked, then cancelled, 1 all chosen food ran out
+    Thursday outcomes: 58 Book refused: Thursday, November 19 is closed: Snow storm, 2 hold refused: Thursday, November 19 is closed: Snow storm
+  Checking the database after the booking rush...
+  All rules hold.
+  Every one of the 238 students told 'booked' has a booking, and nobody else does.
+
+3. Packing, Mon 16 Nov 12:05 PM: six volunteers pack every bag at once (5 bags by two at the same moment)
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    staff log in                     6     6        0        0     427ms    535ms    537ms
+    packing queue                  257   257        0        0      63ms    142ms    408ms
+    open a bag                     260   260        0        0      34ms    183ms    683ms
+    see a bag                      243   243        0        0      35ms    229ms    320ms
+    work out the bag               243   243        0        0      39ms    163ms    306ms
+    press Packed                   243   238        5        0      65ms    139ms    176ms
+    Took 45.0 s. Server memory: biggest process peaked at 358 MB (362 MB all processes).
+  Checking the database after packing...
+  All rules hold.
+
+4. Counter, Mon 16 Nov 03:31 PM: everyone arrives at once, three volunteers at the counter
+   (5 codes typed at two counters at once, 5 tried with the wrong card first, 30 walk-ins, 5 of them at two counters)
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    see the food                     1     1        0        0      41ms     41ms     41ms
+    find a bag                     212   212        0        0    2629ms   4246ms   5650ms
+    hand over a bag                212   202       10        0    5721ms   6464ms   6561ms
+    record a walk-in                35    30        5        0    4821ms   5499ms   5657ms
+    Took 11.2 s. Server memory: biggest process peaked at 151 MB (155 MB all processes).
+  202 bags handed over, each exactly once, matching what the volunteers were told.
+  30 walk-ins recorded (30 told yes).
+  Checking the database after the counter...
+  All rules hold.
+
+5. Jobs, Mon 16 Nov 06:05 PM: the jobs script runs twice at the same moment, while volunteers use the pages
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    browse /api/packing              6     6        0        0     555ms    621ms    640ms
+    browse /api/counter              6     6        0        0     533ms    603ms    616ms
+    browse /api/stock                6     6        0        0     624ms    646ms    656ms
+    Took 0.8 s. Server memory: biggest process peaked at 151 MB (155 MB all processes).
+    Jobs run: 0 no-shows, skipped: Another jobs run is still going, so this one did nothing., problems: none
+    Jobs run: 36 no-shows, skipped: no, problems: none
+  36 uncollected bags became no-shows exactly once, and their food went back once.
+  Checking the database after the jobs...
+  All rules hold.
+
+6. A normal hour: 300 students and 6 volunteers browse for 20 s
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    browse /api/food               467   467        0        0     802ms   3058ms   4130ms
+    browse /api/pickup-days        425   425        0        0     810ms   2929ms   4002ms
+    browse /api/my-booking         451   451        0        0     912ms   3181ms   4186ms
+    browse /api/me                 464   464        0        0     834ms   2933ms   4167ms
+    browse /api/counter             13    13        0        0     917ms   4328ms   4334ms
+    browse /api/packing             11    11        0        0     823ms   1019ms   4295ms
+    browse /api/stock                8     8        0        0     770ms    978ms   4361ms
+    Took 24.4 s. Server memory: biggest process peaked at 151 MB (155 MB all processes).
+    75 requests a second on average.
+
+======================================================================
+No problems: no 500s, no dropped connections, every rule held.

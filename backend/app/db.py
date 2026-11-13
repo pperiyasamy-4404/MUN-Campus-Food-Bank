@@ -30,5 +30,6 @@ class Base(DeclarativeBase):
 
 # hide_parameters: if a database error is printed or logged, it shows the SQL
 # but not the values in it, like a password hash or an ID hash (P3, P10).
-engine = create_engine(config.database_url, hide_parameters=True)
+# A fixed number of connections, the same number the door lets in (app/door.py).
+engine = create_engine(config.database_url, hide_parameters=True, pool_size=config.db_connections, max_overflow=0)
 SessionLocal = sessionmaker(engine)
