@@ -27,6 +27,10 @@ class PickupDayOut(BaseModel):
     booking_opens_at: datetime
     booking_closes_at: datetime
     booking_status: BookingStatus
+    # Seconds until booking opens, by the server's clock, for the page's countdown.
+    # 0 once it has opened. The page counts down from this, not from the phone's
+    # own clock, which may be wrong (13 Nov).
+    seconds_until_booking_opens: int
     closed_reason: str | None
     slots: list[SlotOut]
 
@@ -64,6 +68,7 @@ def upcoming_pickup_days(db: DB, now: Now) -> list[PickupDayOut]:
             booking_opens_at=day.booking_opens_at.astimezone(NEWFOUNDLAND),
             booking_closes_at=day.booking_closes_at.astimezone(NEWFOUNDLAND),
             booking_status=booking_status(day, now),
+            seconds_until_booking_opens=max(0, int((day.booking_opens_at - now).total_seconds())),
             closed_reason=day.closed_reason,
             slots=slots_by_day[day.id],
         )

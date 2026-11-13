@@ -106,3 +106,16 @@ def test_a_closed_day_says_why(client, db_with_sample_week):
 def test_no_pickup_days_is_an_empty_list(client, db_with_sample_week):
     assert pickup_days(client) == []
 
+
+
+def test_the_seconds_until_booking_opens_come_from_the_servers_clock(client, db_with_sample_week):
+    # The page counts down from this, so a phone with a wrong clock still shows the right countdown (13 Nov).
+    make_pickup_day(db_with_sample_week, date(2026, 11, 9))
+    stop_the_clock_at(at(date(2026, 11, 8), time(14, 45)))
+
+    [day] = pickup_days(client)
+    assert day["seconds_until_booking_opens"] == (2 * 60 + 15) * 60  # opens at 5 pm
+
+    stop_the_clock_at(at(date(2026, 11, 8), time(17, 30)))
+    [day] = pickup_days(client)
+    assert day["seconds_until_booking_opens"] == 0

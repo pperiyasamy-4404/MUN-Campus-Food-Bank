@@ -131,6 +131,12 @@ def test_cancelling(client, db, setup):
     assert mine(client)["booking"] is None
     assert places_left(client, first.id) == 1
     assert client.post("/api/my-booking/cancel").status_code == 404
+    # The page then says on that day that it can't be booked again (S6), before any tap (13 Nov).
+    assert mine(client)["cancelled_days"] == [{"pickup_date": "2026-11-09", "you_cancelled": True}]
+
+
+def test_no_cancelled_days_before_any_cancelling(client, db, setup):
+    assert mine(client)["cancelled_days"] == []
 
 
 def test_the_gap_shows_on_the_booking_page(client, db, setup):

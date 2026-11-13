@@ -71,6 +71,12 @@ class ClosedDay(BaseModel):
     reason: str
 
 
+class CancelledDay(BaseModel):
+    pickup_date: date
+    # True if the student cancelled it, false if it was cancelled for them (a walk-in, a fix).
+    you_cancelled: bool
+
+
 class MyBooking(BaseModel):
     limits: Limits
     booking: BookingOut | None
@@ -79,6 +85,10 @@ class MyBooking(BaseModel):
     next_pickup_allowed_on: date | None
     # Until that day is over. We have no other way to tell them (CONSTRAINTS.md, known issues).
     closed_day: ClosedDay | None
+    # Days not over yet that had a booking of theirs, now cancelled. They can't be
+    # booked again (S6), so the page says so on that day instead of offering times
+    # that would only be refused (13 Nov).
+    cancelled_days: list[CancelledDay]
 
 
 def hold_out(hold: Hold, db: DB, now: datetime) -> HoldOut:
@@ -141,7 +151,18 @@ def my_booking(student: CurrentStudent, db: DB, now: Now) -> MyBooking:
         hold=hold_out(hold, db, now) if hold is not None and hold.held_until > now else None,
         next_pickup_allowed_on=booking_rules.next_pickup_allowed_on(db, student, settings),
         closed_day=closed_day(db, student, now),
+        cancelled_days=cancelled_days(db, student, now),
     )
+
+
+def cancelled_days(db: DB, student: Student, now: datetime) -> list[CancelledDay]:
+    rows = db.execute(
+        select(PickupDay.pickup_date, Booking.cancel_reason)
+        .join(Booking, Booking.pickup_day_id == PickupDay.id)
+        .where(Booking.student_id == student.id, Booking.status == "cancelled", PickupDay.no_show_at > now)
+        .order_by(PickupDay.pickup_date)
+    ).all()
+    return [CancelledDay(pickup_date=day, you_cancelled=reason == "student") for day, reason in rows]
 
 
 def closed_day(db: DB, student: Student, now: datetime) -> ClosedDay | None:
