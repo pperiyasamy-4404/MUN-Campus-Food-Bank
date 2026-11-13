@@ -18,7 +18,7 @@ It plays one pickup week, each phase with the server's clock moved to that momen
 4. Counter. Monday 3:31 pm: everyone arrives at once. Three volunteers hand
    over bags; some codes are typed at two counters at once, some with the wrong
    card. Students with no booking come as walk-ins, a few at two counters.
-5. Jobs. Monday 6:05 pm: the jobs script runs twice at the same moment while
+5. Jobs. Monday, 5 minutes after the no-show time: the jobs script runs twice at the same moment while
    volunteers use the pages.
 6. A normal hour: people browsing for a while, to measure everyday speed.
 
@@ -38,6 +38,7 @@ import subprocess
 import sys
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
@@ -256,11 +257,37 @@ class Server:
         while time.monotonic() < deadline:
             try:
                 if httpx.get(f"{BASE}/api/pickup-days", timeout=2).status_code == 200:
-                    return
+                    break
             except httpx.HTTPError:
                 pass
             time.sleep(0.3)
-        raise RuntimeError("The server didn't start. See loadtest/server.log")
+        else:
+            raise RuntimeError("The server didn't start. See loadtest/server.log")
+        if self.workers > 1:
+            self._wait_for_every_worker(deadline)
+
+    def _wait_for_every_worker(self, deadline: float) -> None:
+        """With several server processes, wait until all of them answer, not just the first.
+
+        Found on 13 Nov: on Windows, a process still starting up already takes
+        its share of new connections, and doesn't answer them. Right after the
+        first answer, 41 of 200 requests timed out; 15 seconds later, all 200
+        answered in under a second. A real server starts long before 5 pm, so
+        the rush must not begin until every process is up.
+        """
+
+        def answers() -> bool:
+            try:
+                return httpx.get(f"{BASE}/api/pickup-days", timeout=3).status_code == 200
+            except httpx.HTTPError:
+                return False
+
+        # Plain threads: this runs inside the load test's own event loop.
+        with ThreadPoolExecutor(max_workers=10 * self.workers) as pool:
+            while time.monotonic() < deadline:
+                if all(pool.map(lambda _: answers(), range(10 * self.workers))):
+                    return
+        raise RuntimeError("Not every server process started. See loadtest/server.log")
 
     def memory(self) -> tuple[int, int]:
         """(largest peak of any server process, sum of peaks) in MB, from Windows."""
@@ -275,10 +302,56 @@ $ids | ForEach-Object {{ $p = Get-Process -Id $_ -ErrorAction SilentlyContinue; 
         return (max(peaks, default=0), sum(peaks))
 
     def stop(self) -> None:
-        if self.process is not None:
-            subprocess.run(["taskkill", "/T", "/F", "/PID", str(self.process.pid)], capture_output=True)
-            self.process.wait()
-            self.process = None
+        """Stop the server and every process under it.
+
+        Found on 13 Nov: killing the tree from the top sometimes left uvicorn's
+        worker processes running on their own, each holding its 15 database
+        connections. Four of them used 60 of PostgreSQL's 100, and the next run
+        failed for want of connections. So every process is listed first, from
+        the top down, and each is stopped by its own id.
+        """
+        if self.process is None:
+            return
+        family = self._family()
+        subprocess.run(["taskkill", "/T", "/F", "/PID", str(self.process.pid)], capture_output=True)
+        for pid in family:
+            subprocess.run(["taskkill", "/F", "/PID", str(pid)], capture_output=True)
+        self.process.wait()
+        self.process = None
+        # A process can take a moment to really end on Windows. Until it has, it may
+        # still answer requests with the last phase's clock (seen 13 Nov: the packing
+        # queue was answered by a process still living on Sunday). So wait for each one.
+        deadline = time.monotonic() + 20
+        while (left := self._alive(family)) and time.monotonic() < deadline:
+            for pid in left:
+                subprocess.run(["taskkill", "/F", "/PID", str(pid)], capture_output=True)
+            time.sleep(0.5)
+        if left:
+            raise RuntimeError(f"Server processes still running 20 seconds after stopping: {left}")
+
+    def _family(self) -> list[int]:
+        """The server's process id and all its descendants', from Windows. Python processes only.
+
+        Windows reuses process ids, so another program's "parent" can be an id
+        that once belonged to the server (seen 13 Nov: an ASUS utility). The
+        server and its workers are all Python, so nothing else is ever included.
+        """
+        script = f"""
+$all = Get-CimInstance Win32_Process | Where-Object {{ $_.Name -like 'python*' }}
+$ids = @({self.process.pid})
+do {{ $new = @($all | Where-Object {{ $ids -contains $_.ParentProcessId -and $ids -notcontains $_.ProcessId }} | ForEach-Object ProcessId); $ids += $new }} while ($new.Count)
+$ids
+"""
+        out = subprocess.run(["powershell", "-NoProfile", "-Command", script], capture_output=True, text=True).stdout
+        return [int(line) for line in out.split() if line.strip().isdigit()]
+
+    @staticmethod
+    def _alive(pids: list[int]) -> list[int]:
+        if not pids:
+            return []
+        script = f"@({','.join(map(str, pids))}) | ForEach-Object {{ if (Get-Process -Id $_ -ErrorAction SilentlyContinue) {{ $_ }} }}"
+        out = subprocess.run(["powershell", "-NoProfile", "-Command", script], capture_output=True, text=True).stdout
+        return [int(line) for line in out.split() if line.strip().isdigit()]
 
 
 # ---------- people and requests ----------
@@ -534,6 +607,11 @@ async def booking_rush(server: Server, monday: list[Person], thursday: list[Pers
 async def pack_everything(volunteers: list[Person], stats: Stats) -> float:
     rng = random.Random(11)
     first = await call(stats, volunteers[0].client, "GET", "/api/packing", "packing queue")
+    if first is None or first.status_code != 200 or "bags" not in first.json():
+        # Say what came back, rather than stopping the whole run (seen once, 13 Nov).
+        answer = "no answer" if first is None else f"{first.status_code} {first.text[:200]}"
+        bug(f"The packing queue didn't list the bags: {answer}")
+        return 0.0
     bags = [b for b in first.json()["bags"] if b["status"] == "booked"]
     clash = bags[:5]
 
@@ -666,8 +744,11 @@ def say(moment: datetime) -> str:
 
 async def staff_log_in(names: list[str], stats: Stats) -> list[Person]:
     people = [Person(name, new_client()) for name in names]
-    await asyncio.gather(*(call(stats, p.client, "POST", "/api/staff/login", "staff log in",
-                                {"username": p.name, "password": PASSWORD}) for p in people))  # fmt: skip
+    answers = await asyncio.gather(*(call(stats, p.client, "POST", "/api/staff/login", "staff log in",
+                                          {"username": p.name, "password": PASSWORD}) for p in people))  # fmt: skip
+    for person, answer in zip(people, answers):
+        if answer is None or answer.status_code != 200:
+            bug(f"{person.name} couldn't log in: {'no answer' if answer is None else f'{answer.status_code} {answer.text[:200]}'}")
     return people
 
 
@@ -767,7 +848,10 @@ async def main(args) -> int:
         check_the_rules(world, "the counter", walk_in_food, closed_thursday=True)
 
         # 5.
-        jobs_at = nl(MONDAY, clock(18, 5))
+        # 5 minutes after Monday's no-show time, whatever the settings say (8 pm since 13 Nov).
+        with SessionLocal() as db:
+            no_show_at = db.scalar(select(PickupDay.no_show_at).where(PickupDay.pickup_date == MONDAY))
+        jobs_at = no_show_at + timedelta(minutes=5)
         server.stop()
         server.start(jobs_at)
         print(f"\n5. Jobs, {say(server.now())}: the jobs script runs twice at the same moment, while volunteers use the pages")

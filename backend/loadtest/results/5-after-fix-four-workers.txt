@@ -1,0 +1,110 @@
+Setting up: 300 students for Monday 2026-11-16, 60 for Thursday 2026-11-19, 20 place(s) per 10-minute slot (12 slots a day).
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 5275c044df61, create the tables for steps 3 to 5
+INFO  [alembic.runtime.migration] Running upgrade 5275c044df61 -> 8be36cf65217, check password and setup code hashes, log staff account changes
+INFO  [alembic.runtime.migration] Running upgrade 8be36cf65217 -> 017e822f0ed9, remember when each variety was counted, and by whom
+INFO  [alembic.runtime.migration] Running upgrade 017e822f0ed9 -> c250b0a6f9de, remember what each bag was packed with
+INFO  [alembic.runtime.migration] Running upgrade c250b0a6f9de -> 8ed315f3aef8, add walk-ins and food handed over at the counter
+INFO  [alembic.runtime.migration] Running upgrade 8ed315f3aef8 -> 22ef6889a3d0, add a photo for each item
+INFO  [alembic.runtime.migration] Running upgrade 22ef6889a3d0 -> fcb637478c41, keep each pickup day's own pickup hours
+INFO  [alembic.runtime.migration] Running upgrade fcb637478c41 -> 661761c56987, keep weekly totals after booking details are deleted
+INFO  [alembic.runtime.migration] Running upgrade 661761c56987 -> d19b90ad39dc, say which pickup day an audit log line is about
+INFO  [alembic.runtime.migration] Running upgrade d19b90ad39dc -> a7c3e91f0b24, make the stock number optional, and add "few left"
+INFO  [alembic.runtime.migration] Running upgrade a7c3e91f0b24 -> b81d4c2e9a70, say who is packing a bag
+INFO  [alembic.runtime.migration] Running upgrade b81d4c2e9a70 -> c4f19a27d3e5, found it clears the out-of-stock flag for every bag
+INFO  [alembic.runtime.migration] Running upgrade c4f19a27d3e5 -> d7a2e5c813f6, last pickup in the food bank's old system
+INFO  [alembic.runtime.migration] Running upgrade d7a2e5c813f6 -> e3b9c1f47a20, cancel a booking made too soon by a fixed pickup
+Server: 4 worker(s), the app's own database pool.
+
+1. Log-in rush, Sun 15 Nov 04:59 PM: every student logs in at the same moment
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    staff log in                     1     1        0        0     124ms    124ms    124ms
+    student log in                 370   280        0       90    7135ms 120294ms 120304ms
+  BUG: student log in: 90 x EXC ReadTimeout
+    Took 120.3 s. Server memory: biggest process peaked at 362 MB (1272 MB all processes).
+
+2. Booking rush: booking opens at Sun 15 Nov 05:00 PM. Everyone is refreshing, then books at once.
+   (30 press everything twice, 10 use two phones, 20 cancel; the coordinator closes Thursday partway.)
+ERROR [asyncio] Exception in callback _ProactorBasePipeTransport._call_connection_lost()
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost()>
+Traceback (most recent call last):
+  File "C:\Users\ajiak\AppData\Roaming\uv\python\cpython-3.14.7-windows-x86_64-none\Lib\asyncio\events.py", line 94, in _run
+    self._context.run(self._callback, *self._args)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ajiak\AppData\Roaming\uv\python\cpython-3.14.7-windows-x86_64-none\Lib\asyncio\proactor_events.py", line 166, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+    Coordinator closed Thursday at 17:01:45: 200
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    see pickup days                679   679        0        0     978ms   1647ms   1948ms
+    hold a time                    723   290      433        0    1354ms   2220ms   2871ms
+    hold a time (2nd phone)         10     6        4        0     722ms   1336ms   1997ms
+    see the food                   273   273        0        0     800ms   1754ms   2307ms
+    see my booking                 273   270        3        0     625ms   1520ms   1882ms
+    press Book                     450   222      228        0      37ms    104ms   1032ms
+    coordinator closes a day         1     1        0        0     182ms    182ms    182ms
+    press Book (2nd tap)            59     7       52        0      41ms    102ms   1025ms
+    cancel                          26    13       13        0      22ms     41ms     49ms
+    let go of the time               2     2        0        0      13ms      7ms     19ms
+    Took 21.0 s. Server memory: biggest process peaked at 362 MB (1272 MB all processes).
+    Monday outcomes: 214 booked, 69 hold refused: Please log in., 13 booked, then cancelled, 2 Book refused: Please log in., 2 all chosen food ran out
+    Thursday outcomes: 40 Book refused: Thursday, November 19 is closed: Snow storm, 16 hold refused: Please log in., 2 hold refused: Thursday, November 19 is closed: Snow storm, 2 booked
+  Checking the database after the booking rush...
+  All rules hold.
+  Every one of the 214 students told 'booked' has a booking, and nobody else does.
+
+3. Packing, Mon 16 Nov 12:05 PM: six volunteers pack every bag at once (5 bags by two at the same moment)
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    staff log in                     6     6        0        0     299ms    301ms    302ms
+    packing queue                  227   227        0        0      19ms     59ms    191ms
+    open a bag                     230   230        0        0      10ms     57ms    247ms
+    see a bag                      219   219        0        0      11ms     97ms    193ms
+    work out the bag               219   219        0        0      11ms     75ms     99ms
+    press Packed                   219   214        5        0      22ms     41ms     75ms
+    Took 33.4 s. Server memory: biggest process peaked at 295 MB (880 MB all processes).
+  Checking the database after packing...
+  All rules hold.
+
+4. Counter, Mon 16 Nov 03:31 PM: everyone arrives at once, three volunteers at the counter
+   (5 codes typed at two counters at once, 5 tried with the wrong card first, 30 walk-ins, 5 of them at two counters)
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    see the food                     1     1        0        0      41ms     41ms     41ms
+    find a bag                     191   191        0        0    1212ms   2138ms   2411ms
+    hand over a bag                191   181       10        0    1540ms   1871ms   2062ms
+    record a walk-in                35    30        5        0    1723ms   2617ms   2747ms
+    Took 3.5 s. Server memory: biggest process peaked at 153 MB (646 MB all processes).
+  181 bags handed over, each exactly once, matching what the volunteers were told.
+  30 walk-ins recorded (30 told yes).
+  Checking the database after the counter...
+  All rules hold.
+
+5. Jobs, Mon 16 Nov 08:05 PM: the jobs script runs twice at the same moment, while volunteers use the pages
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    browse /api/stock                6     6        0        0     317ms    321ms    398ms
+    browse /api/packing              6     6        0        0     216ms    380ms    387ms
+    browse /api/counter              6     6        0        0     316ms    364ms    374ms
+    Took 0.6 s. Server memory: biggest process peaked at 153 MB (646 MB all processes).
+    Jobs run: 0 no-shows, skipped: Another jobs run is still going, so this one did nothing., problems: none
+    Jobs run: 33 no-shows, skipped: no, problems: none
+  33 uncollected bags became no-shows exactly once, and their food went back once.
+  Checking the database after the jobs...
+  All rules hold.
+
+6. A normal hour: 300 students and 6 volunteers browse for 30 s
+    request                       sent    ok  refused 5xx/fail   median      p95      max
+    browse /api/my-booking         895   691      204        0      15ms   1028ms   1748ms
+    browse /api/me                 894   894        0        0      10ms    870ms   1664ms
+    browse /api/pickup-days        877   877        0        0      11ms    900ms   1685ms
+    browse /api/food               932   932        0        0      11ms    855ms   1682ms
+    browse /api/counter             25    25        0        0      16ms   1672ms   1681ms
+    browse /api/stock               21    21        0        0      23ms     32ms   1674ms
+    browse /api/packing             18    18        0        0      28ms     51ms   1695ms
+    Took 34.0 s. Server memory: biggest process peaked at 153 MB (647 MB all processes).
+    108 requests a second on average.
+
+======================================================================
+1 PROBLEM(S) FOUND:
+  - student log in: 90 x EXC ReadTimeout
+exit 1
