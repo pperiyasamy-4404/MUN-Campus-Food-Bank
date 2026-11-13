@@ -123,6 +123,7 @@ def test_the_coordinator_sees_fewer_than_5_for_1_to_4(client, db_with_sample_wee
 
 
 def test_no_weeks_yet(client, db_with_sample_week):
+    stop_the_clock_at(THURSDAY_7PM)
     log_in(client, db_with_sample_week, coordinator(db_with_sample_week), THURSDAY_7PM)
 
     assert client.get("/api/totals").json() == {"weeks": []}
