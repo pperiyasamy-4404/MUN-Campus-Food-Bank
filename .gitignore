@@ -11,3 +11,6 @@ jobs.log
 
 # The load test server's log (big, made fresh each run)
 backend/loadtest/server.log
+
+# Server errors on this computer (app/main.py), and its older copies
+backend/errors.log*

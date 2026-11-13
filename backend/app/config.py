@@ -29,6 +29,12 @@ class Config(BaseSettings):
     # works on at once (app/door.py). The cloud database must allow this many for
     # every server process, plus a few for the jobs script.
     db_connections: int = 15
+    # FastAPI's page that lists every address (/docs). Handy while we work, but on
+    # the live site it would show anyone every address, so it's off unless turned on.
+    api_docs: bool = False
+    # Server errors (500s) are written here, so a crash at 5 pm leaves a record.
+    # Never the request's body or query, so never an ID number (P10). Empty: no file.
+    error_log: str = str(BACKEND_DIR / "errors.log")
 
 
 config = Config()
