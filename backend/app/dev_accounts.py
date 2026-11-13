@@ -8,6 +8,7 @@ It makes (or puts back) these, all with the password "Password":
 - Admin       coordinator
 - Staff       volunteer
 - 202681309   student (students log in with the 9 digits on a MUN card, not a name)
+- 202681310   a second student, so one can still book while the other has a booking
 
 Why: the demo (app.demo) and the tests empty the TEST database every time, so
 anything typed there is gone the next day. The working database is never
@@ -34,7 +35,7 @@ from app.services import accounts
 PASSWORD = "Password"
 COORDINATOR = "Admin"
 VOLUNTEER = "Staff"
-STUDENT_ID = "202681309"
+STUDENT_IDS = ("202681309", "202681310")
 
 
 def main() -> int:
@@ -48,13 +49,15 @@ def main() -> int:
         accounts.food_bank_settings(db)  # refuses an empty database: run app.sample_data first
         admin = _coordinator(db, now)
         staff = _volunteer(db, admin, now)
-        issued = accounts.give_student_setup_code(db, STUDENT_ID, staff, now)
-        accounts.set_student_password(db, STUDENT_ID, issued.code, PASSWORD, None, now)
+        for student_id in STUDENT_IDS:
+            issued = accounts.give_student_setup_code(db, student_id, staff, now)
+            accounts.set_student_password(db, student_id, issued.code, PASSWORD, None, now)
 
     print("Ready, in the working database (not emptied by the demo or the tests):")
     print(f"  {COORDINATOR:10} coordinator   password: {PASSWORD}")
     print(f"  {VOLUNTEER:10} volunteer     password: {PASSWORD}")
-    print(f"  {STUDENT_ID:10} student       password: {PASSWORD}")
+    for student_id in STUDENT_IDS:
+        print(f"  {student_id:10} student       password: {PASSWORD}")
     return 0
 
 

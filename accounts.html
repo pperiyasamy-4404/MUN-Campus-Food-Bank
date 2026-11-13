@@ -401,13 +401,14 @@ npm run dev</pre>
 <p>Use made-up numbers only. Real ones wait until the Campus Food Bank agrees to anything live.</p>
 
 <h3>Accounts that stay put <span class="muted">(added 12 Nov)</span></h3>
-<p>The demo and the tests empty the <b>test</b> database every time, so anything typed there is gone the next day. For trying things in the <b>working</b> database, one command makes three accounts, all with the password <code>Password</code>:</p>
+<p>The demo and the tests empty the <b>test</b> database every time, so anything typed there is gone the next day. For trying things in the <b>working</b> database, one command makes these accounts, all with the password <code>Password</code>:</p>
 <pre class="code">cd "D:\MUN Project\backend"
 .venv\Scripts\python -m app.dev_accounts
 
 <span class="c">Admin       coordinator (Staff tab)
 Staff       volunteer   (Staff tab)
-202681309   student     (Student tab)</span></pre>
+202681309   student     (Student tab)
+202681310   student     (Student tab): a second one, so one can book while the other has a booking</span></pre>
 <p>It's safe to run again: it sets the passwords back and switches the accounts on, and never makes anything twice. It refuses any database that isn't on this computer, so these easy passwords can never reach a real server.</p>
 
 </main>
