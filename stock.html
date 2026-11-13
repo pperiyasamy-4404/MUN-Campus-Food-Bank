@@ -26,6 +26,7 @@
   li { margin: 4px 0; }
   a { color: var(--blue); }
   .lead { color: var(--muted); font-size: 1.05rem; }
+  .muted { color: var(--muted); font-weight: 400; font-size: .85em; }
   code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
   .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
   table { border-collapse: collapse; width: 100%; background: #fff; font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
@@ -119,6 +120,15 @@
 <p><b>Fewer on the shelf than were booked?</b> Say 1 box is there, but 3 were booked. Stock can't go below 0 <span class="rule">I4</span>, so it's set to 0, and the page says: <i>"Saved. 2 booked ones are missing from the shelf: those bags will need a substitute."</i></p>
 <p>A count above 999 is refused, to catch a typo like 1000 for 10.</p>
 
+<h3>Counting while someone is packing <span class="muted">(added 12 Nov)</span></h3>
+<p>The problem: Sam has a bag open and has put 1 jar of peanut butter in it, but hasn't pressed Packed. Alex counts the shelf. The jar is in Sam's bag, not on the shelf, and the server still counts it as "booked, not packed". So the count comes out 1 too low.</p>
+<p>The count is still saved, but the answer now says who is packing a bag with that food:</p>
+<pre class="code">Sam is packing a bag with this right now, so some may be in that bag, not on the shelf.
+Count again after Sam presses Packed.</pre>
+<div class="why">
+  <p><b>Why only a warning, and not an exact count?</b> The server would need every Picked tick, and those stay on Sam's phone until Packed. A count that's a little low is the safe side: nobody books food that isn't there.</p>
+</div>
+
 <h2 id="lock"><span class="num">3</span>A count and a booking at the same moment</h2>
 <p>Sam counts 5 tins and presses Save. At the same moment, a student books one. Without care:</p>
 <pre class="code"><span class="c">    Sam (count)                       Student (booking)</span>
@@ -141,6 +151,7 @@
   <li>a tick box: <b>Only show food that needs counting</b></li>
 </ul>
 <p>Hidden food never needs counting.</p>
+<p><b>Changed on 12 November:</b> the page now says <b>needs checking</b>, because most food has no number to count. Food needs checking if it was marked out of stock while packing, or marked out of stock and then found while packing (see packing.html, part 6), or if it has a number that was counted before the last pickup ended. Food with no number never needs counting. Checking it means tapping In stock, Few left or Out of stock, or counting it.</p>
 
 <h2 id="adding"><span class="num">5</span>Adding food</h2>
 <ul>

@@ -26,6 +26,7 @@
   li { margin: 4px 0; }
   a { color: var(--blue); }
   .lead { color: var(--muted); font-size: 1.05rem; }
+  .muted { color: var(--muted); font-weight: 400; font-size: .85em; }
   code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
   .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
   .table-wrap { overflow-x: auto; }
@@ -71,15 +72,15 @@
 <body>
 <main>
 
-<p class="eyebrow">Campus Food Bank · The whole project so far · 10 November 2026, after step 9</p>
+<p class="eyebrow">Campus Food Bank · The whole project so far · 13 November 2026, after the load test and the README</p>
 <h1>The project so far</h1>
 <p class="lead">Read this page first. It explains the whole project in one place: what we're building, who uses it, how the pieces fit together, what's done, and what's next. The other pages go deeper into one step each. This one links to them.</p>
 
 <div class="stats">
   <div class="stat"><b>9 of 9</b><span>building steps done</span></div>
-  <div class="stat"><b>497</b><span>tests, all passing</span></div>
+  <div class="stat"><b>562</b><span>tests, all passing</span></div>
   <div class="stat"><b>24</b><span>tables in the database</span></div>
-  <div class="stat"><b>58</b><span>commits on GitHub</span></div>
+  <div class="stat"><b>87</b><span>commits on GitHub</span></div>
 </div>
 
 <ol class="toc">
@@ -140,13 +141,13 @@
   <tr>
     <td><b>Volunteer</b></td>
     <td>A username (like a first name) and a password <span class="rule">R3</span>.</td>
-    <td>Make student accounts and give setup codes (the Counter page). Count the shelf, add food, categories and tags, and fix names (the Stock page). Pack bags and swap in substitutes (the Packing page). Hand over bags, serve walk-ins, give out extras, and fix a pickup marked wrong afterwards (the Counter page).</td>
+    <td>Make student accounts and give setup codes, with the last pickup from the old system (the Counter page). Mark food In stock, Few left or Out of stock, count food that has a number, add food, photos, categories and tags, and fix names (the Stock page). Pack bags, tick each thing as Picked, and swap in substitutes, with "Sam is packing" so two people don't pack one bag (the Packing page). Hand over bags, by code or by MUN card, serve walk-ins, give out extras, and fix a pickup marked wrong afterwards (the Counter page).</td>
     <td>Nothing more.</td>
   </tr>
   <tr>
     <td><b>Coordinator</b></td>
-    <td>A username and password. The very first one is made by a script on the server.</td>
-    <td>Everything a volunteer can do, plus the Coordinator pages: close a day, move one day's booking times, change the settings, see weekly totals, and add volunteers and switch them off and on.</td>
+    <td>A username and password. The very first one is made by a script on the server. There can be several: a coordinator makes a volunteer a coordinator (11 Nov).</td>
+    <td>Everything a volunteer can do, plus the Coordinator pages: close a day or a range of dates, move one day's booking times, change the settings, see weekly totals, and manage staff on the Staff page (add volunteers, switch them off and on, make them coordinators).</td>
     <td>Nothing more.</td>
   </tr>
 </table>
@@ -155,9 +156,9 @@
 
 <!-- ================================================================ -->
 <h2 id="journey"><span class="num">3</span>A student's journey, start to end</h2>
-<p>Green is built. Amber is the next step.</p>
+<p>Every stage is built.</p>
 <div class="diagram">
-<svg viewBox="0 0 940 470" role="img" aria-label="A student's journey in seven stages, six built, one next">
+<svg viewBox="0 0 940 470" role="img" aria-label="A student's journey in seven stages, all built">
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
   </defs>
@@ -268,7 +269,7 @@
     <text x="632" y="140" font-size="12" fill="#475569">rows</text>
 
     <rect x="345" y="220" width="575" height="64" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="6 4"/>
-    <text x="632" y="246" font-weight="700">The tests: pytest, 497 of them</text>
+    <text x="632" y="246" font-weight="700">The tests: pytest, 562 of them</text>
     <text x="632" y="268" font-size="13">They call the server and the rules, against a separate test database, rebuilt every run.</text>
     <line x1="470" y1="220" x2="470" y2="184" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#b)"/>
   </g>
@@ -291,7 +292,7 @@
   </div>
   <div class="card">
     <h3>The tests: pytest</h3>
-    <p>497 small programs that each check one thing, like "a 14th item is refused". They run against a real PostgreSQL test database, never the working one. Each test is undone when it ends, so tests can't affect each other.</p>
+    <p>562 small programs that each check one thing, like "a 14th item is refused". They run against a real PostgreSQL test database, never the working one. Each test is undone when it ends, so tests can't affect each other.</p>
   </div>
 </div>
 
@@ -316,29 +317,37 @@
 <!-- ================================================================ -->
 <h2 id="folders"><span class="num">6</span>Where everything lives</h2>
 <pre class="code">MUN Project/
+├── README.md               <span class="c">← the front page on GitHub: what it is, screenshots, how to run it</span>
 ├── CONSTRAINTS.md          <span class="c">← the rules (P1, F1, S2...), the settings, open questions</span>
 ├── DECISIONS.md            <span class="c">← every choice we made, by date, with the reason</span>
 ├── project-so-far.html     <span class="c">← this page</span>
 ├── *.html                  <span class="c">← one explainer page per step</span>
+├── docs/screenshots/       <span class="c">← the pictures in the README, taken from the demo</span>
 │
 ├── backend/                <span class="c">← the server (Python)</span>
 │   ├── .env                <span class="c">← passwords and the secret key. Never committed.</span>
 │   ├── app/
 │   │   ├── main.py         <span class="c">← starts the server and joins the routes together</span>
+│   │   ├── door.py         <span class="c">← the queue at the door: no more requests inside than database connections</span>
 │   │   ├── models/         <span class="c">← the 24 tables: people, food, days, bookings, counter, totals</span>
 │   │   ├── routes/         <span class="c">← the web addresses: /api/bookings, /api/stock...</span>
 │   │   ├── services/       <span class="c">← the rules: booking.py, stock.py, accounts.py</span>
 │   │   ├── security/       <span class="c">← hashing, passwords, login cookies, wrong tries</span>
 │   │   ├── sample_data.py  <span class="c">← made-up days and food for trying things</span>
+│   │   ├── jobs.py         <span class="c">← the script that runs every 15 minutes</span>
+│   │   ├── demo.py         <span class="c">← the one-command demo</span>
+│   │   ├── dev_accounts.py <span class="c">← Admin, Staff and a student, for trying the working database</span>
 │   │   └── first_coordinator.py  <span class="c">← makes the very first coordinator</span>
-│   ├── migrations/         <span class="c">← Alembic's history of table changes (5 so far)</span>
-│   └── tests/              <span class="c">← the 497 tests, one file per area</span>
+│   ├── migrations/         <span class="c">← Alembic's history of table changes (15 so far)</span>
+│   ├── tests/              <span class="c">← the 562 tests, one file per area</span>
+│   └── loadtest/           <span class="c">← a whole pickup week with 360 students at once, and its results</span>
 │
 └── frontend/               <span class="c">← the pages (React + TypeScript)</span>
     └── src/
         ├── App.tsx         <span class="c">← every page and its web address</span>
         ├── api.ts          <span class="c">← the code that talks to the server</span>
         ├── Layout.tsx      <span class="c">← the bar at the top, and who may see which page</span>
+        ├── styles/         <span class="c">← the MUN colours and sizes, in one place (theme.css)</span>
         └── pages/          <span class="c">← Book, HandOver, WalkIn, Packing, Stock, Volunteers...</span></pre>
 <div class="short">
   <p><b>To read the code, start here:</b> <code>backend/app/services/booking.py</code>. It's the heart of the system, and every function says which rule it follows. Then read <code>backend/tests/test_booking.py</code> next to it: each test is one rule, written as an example. After that, <code>refill()</code> in <code>backend/app/services/packing.py</code> is the shortest rule to read: it doesn't touch the database at all.</p>
@@ -456,8 +465,33 @@
     <td><a href="coordinator.html">coordinator</a></td>
   </tr>
   <tr>
-    <td>Next</td><td><b>Your answers, then before going live</b> <span class="tag next">next</span></td>
-    <td>The open questions, then what CONSTRAINTS.md lists before going live.</td>
+    <td>10 Nov</td><td><b>Accessibility, and the demo</b> <span class="tag done">done</span></td>
+    <td>Automatic accessibility checks (axe) on every page, booking with the keyboard only, every page fits a 320-pixel phone. <code>python -m app.demo</code>: the whole system on a busy pickup afternoon, with one command.</td>
+    <td>DECISIONS.md, 10 Nov</td>
+  </tr>
+  <tr>
+    <td>11 Nov</td><td><b>A walk-through from empty, and what could go wrong</b> <span class="tag done">done</span></td>
+    <td>Your Picked button on each packing line, "Out of stock" instead of "None on the shelf", 12 problems found and listed, and several coordinators.</td>
+    <td><a href="what-could-go-wrong.html">what-could-go-wrong</a>, <a href="packing.html#tap">packing</a>, <a href="accounts.html#script">accounts</a></td>
+  </tr>
+  <tr>
+    <td>12 Nov</td><td><b>The problems, answered</b> <span class="tag done">done</span></td>
+    <td>Stock numbers optional ("In stock", "Few left"). One look per bag at food someone marked out of stock, and Found it clears it for everyone. "Sam is packing". Finding a bag by MUN card. Closing a range of dates. Packing taps kept on a reload. The 30-day gap, counting pickups from the old system. The MUN look, and Student and Staff tabs on Log in.</td>
+    <td><a href="stock.html">stock</a>, <a href="packing.html#ranout">packing</a>, <a href="counter.html#handover">counter</a>, <a href="coordinator.html#later">coordinator</a></td>
+  </tr>
+  <tr>
+    <td>12 Nov</td><td><b>The load test</b> <span class="tag done">done</span></td>
+    <td>A whole pickup week with 360 students at once. It found the server freezing at 5 pm, when booking opens (0 of 370 logins worked). Fixed with a queue at the door: then 370 of 370, and every rule held. 562 tests.</td>
+    <td><a href="load-test.html">load-test</a></td>
+  </tr>
+  <tr>
+    <td>13 Nov</td><td><b>The README</b> <span class="tag done">done</span></td>
+    <td>The front page on GitHub: what it does, screenshots, the rules, privacy, the load test, and how to run it.</td>
+    <td><code>README.md</code></td>
+  </tr>
+  <tr>
+    <td>Next</td><td><b>Before going live</b> <span class="tag next">next</span></td>
+    <td>Small hardening, a paper plan, then hosting.</td>
     <td>See <a href="#next">part 12</a></td>
   </tr>
 </table>
@@ -468,16 +502,19 @@
 <table>
   <tr><th>Address</th><th>Who</th><th>What it does</th></tr>
   <tr><td><code>/</code></td><td>Anyone</td><td>The pickup days, their times, and the food that's in stock.</td></tr>
-  <tr><td><code>/setup</code>, <code>/login</code></td><td>Students</td><td>Set up an account with a setup code, then log in.</td></tr>
+  <tr><td><code>/setup</code>, <code>/login</code></td><td>Students</td><td>Set up an account with a setup code, then log in (the Student tab).</td></tr>
   <tr><td><code>/book</code></td><td>Students</td><td>Choose a time and food, book, see the booking, cancel.</td></tr>
-  <tr><td><code>/staff/setup</code>, <code>/staff/login</code></td><td>Staff</td><td>The same, for volunteers and the coordinator.</td></tr>
-  <tr><td><code>/counter</code></td><td>Staff</td><td>Hand over a bag: the code, any gaps and extras, the card check.</td></tr>
-  <tr><td><code>/counter/walk-in</code></td><td>Staff</td><td>Serve a student without a booking: the card twice, the check, what they take.</td></tr>
-  <tr><td><code>/counter/setup-code</code></td><td>Staff</td><td>Type a card number twice, get a setup code for the student.</td></tr>
+  <tr><td><code>/staff/setup</code>, <code>/staff/login</code></td><td>Staff</td><td>The same, for volunteers and coordinators (the Staff tab).</td></tr>
+  <tr><td><code>/counter</code></td><td>Staff</td><td>Hand over a bag: the code (or the MUN card if there's no code), any gaps and extras, the card check.</td></tr>
+  <tr><td><code>/counter/walk-in</code></td><td>Staff</td><td>Serve a student without a booking: the card twice, the last pickup in the old system, the check, what they take.</td></tr>
+  <tr><td><code>/counter/setup-code</code></td><td>Staff</td><td>Type a card number twice and the last pickup in the old system, and get a setup code for the student.</td></tr>
   <tr><td><code>/counter/fix</code></td><td>Staff</td><td>After the day is over: mark a no-show picked up, or a pickup a no-show. Logged.</td></tr>
-  <tr><td><code>/stock</code></td><td>Staff</td><td>Count the shelf, add food, tags, hide or show.</td></tr>
-  <tr><td><code>/packing</code></td><td>Staff</td><td>The bags for the pickup day. Open one, tap Picked as each thing goes in or Out of stock if it's not there, see what goes in instead and the sticky note, press Packed.</td></tr>
-  <tr><td><code>/volunteers</code></td><td>Coordinator</td><td>Add volunteers, give setup codes, switch accounts off and on.</td></tr>
+  <tr><td><code>/stock</code></td><td>Staff</td><td>Mark food In stock, Few left or Out of stock, or count it. Add food, photos and tags, hide or show.</td></tr>
+  <tr><td><code>/packing</code></td><td>Staff</td><td>The bags for the pickup day, and who is packing each one. Open one, tap Picked as each thing goes in or Out of stock if it's not there, see what goes in instead and the sticky note, press Packed.</td></tr>
+  <tr><td><code>/coordinator</code></td><td>Coordinators</td><td>Pickup days: close a day or a range of dates, open a day again, move one day's booking times.</td></tr>
+  <tr><td><code>/coordinator/totals</code></td><td>Coordinators</td><td>Weekly totals, with 1 to 4 shown as "fewer than 5".</td></tr>
+  <tr><td><code>/coordinator/settings</code></td><td>Coordinators</td><td>The food bank's numbers and the weekly pickup hours.</td></tr>
+  <tr><td><code>/coordinator/volunteers</code></td><td>Coordinators</td><td>The Staff page: add volunteers, give setup codes, switch accounts off and on, make someone a coordinator or a volunteer.</td></tr>
 </table>
 </div>
 
@@ -499,7 +536,7 @@
     <p><code>categories</code> Breakfast, Protein, Bakery...<br>
     <code>items</code> a kind of food, like Oats<br>
     <code>item_photos</code> one photo per item, kept apart so lists load fast<br>
-    <code>varieties</code> what's on the shelf, like Quick oats. Stock is counted here.<br>
+    <code>varieties</code> what's on the shelf, like Quick oats. In stock, Few left, or a count.<br>
     <code>tags</code> vegetarian, halal, gluten-free, contains nuts<br>
     <code>variety_tags</code> which variety has which tag</p>
   </div>
@@ -530,12 +567,13 @@
 </div>
 <h3>Items and varieties, a tiny example</h3>
 <pre class="code">Item: Oats  (category Breakfast)
-  ├── Variety: Quick oats       stock 6
-  └── Variety: Steel-cut oats   stock 2
+  ├── Variety: Quick oats       In stock   <span class="c">(no number: most food)</span>
+  └── Variety: Steel-cut oats   2 left     <span class="c">(counted: food worth sharing out exactly)</span>
 
 <span class="c">A student books one variety. The limit is one Oats, counting both kinds together (I3).</span>
 <span class="c">Any brand or size of quick oats counts as quick oats (U1).</span></pre>
 <p>Packing added four columns but no new tables: who packed a bag, what was missing, which substitute replaced what, and when a food ran out. The counter added two tables. Each table is added in the step that needs it, so it's designed when we understand that part best.</p>
+<p>The changes on 11 and 12 November added columns only: the stock number became optional (<code>stock</code> can be empty, and <code>few_left</code>), who is packing a bag and since when, when food marked out of stock was found, and a student's last pickup in the old system.</p>
 
 <!-- ================================================================ -->
 <h2 id="ideas"><span class="num">10</span>Five ideas that hold it together</h2>
@@ -564,7 +602,8 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
 <span class="good">With a lock:</span>
   Ana locks the tin's row, reads "1 left", takes it, saves, lets go
   Ben was waiting. Now he reads "0 left" and sees "Sorry, it has just run out."</pre>
-<p>Locks are always taken in the same order: the time, then the hold or booking, then the food from the lowest number up. If two people locked things in a different order, each could end up waiting for the other forever (a <b>deadlock</b>).</p>
+<p>Locks are always taken in the same order: the student, then the time, then the hold or booking, then the food from the lowest number up. If two people locked things in a different order, each could end up waiting for the other forever (a <b>deadlock</b>).</p>
+<p><b>And a queue at the door (12 Nov).</b> The load test sent 370 logins at the same moment, and the whole server froze: 0 of 370 got in. The server had 40 workers but only 15 database connections, and they ended up waiting for each other. Now only as many requests come in at once as there are connections. The rest wait in line for a few milliseconds. After the fix: 370 of 370, and every rule held. See <a href="load-test.html">load-test.html</a>.</p>
 
 <h3>4. All or nothing</h3>
 <p>Pressing Book changes four tables. A <b>transaction</b> makes them one change: either everything is saved, or nothing is. If the 9th of 9 foods has run out, the place and the first 8 foods are given back by themselves. Nobody has to write code to undo each step.</p>
@@ -620,7 +659,7 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
 </svg>
 </div>
 <p>A cancelled booking can never become picked up, for example. One more move isn't drawn: a volunteer can undo Packed on the wrong bag, which takes it from packed back to booked, until it's handed over. A day the coordinator closes cancels every booking on it too <span class="rule">S7</span>, packed or not, and puts back what was in each bag. Built in step 9.</p>
-<p>Food moves with the status. Booking takes it off stock. Cancelling or a no-show puts it back <span class="rule">I5</span> <span class="rule">I6</span>.</p>
+<p>Food moves with the status. Booking takes it off stock. Cancelling or a no-show puts it back <span class="rule">I5</span> <span class="rule">I6</span>. That's only for food with a number: food that's just "In stock" has nothing to take off or put back.</p>
 
 <!-- ================================================================ -->
 <h2 id="next"><span class="num">12</span>What's next</h2>
@@ -628,8 +667,18 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
 <table>
   <tr><th>Step</th><th>What it adds</th><th>Main rules</th></tr>
   <tr>
-    <td><b>Your answers</b> <span class="tag next">next</span></td>
-    <td>All nine steps of the build order are built. Next, the questions below, then what CONSTRAINTS.md lists before going live: a privacy review and where it's hosted, accessibility (the automatic and keyboard checks pass since 10 November; a real screen reader is still to try), and students without smartphones. And a README for GitHub.</td>
+    <td><b>Small hardening</b> <span class="tag next">next</span></td>
+    <td>Turn off the API docs page on the live site, add safety headers, write server errors to a log, run the tests on GitHub on every push (GitHub Actions), and maybe a few tests for the React pages. Try the load test with 4 server processes.</td>
+    <td>—</td>
+  </tr>
+  <tr>
+    <td><b>A paper plan</b></td>
+    <td>What volunteers do when the internet is down at the counter.</td>
+    <td>Known issues</td>
+  </tr>
+  <tr>
+    <td><b>Before real students</b></td>
+    <td>Hosting on a cloud server with at least 2 CPU cores, the cloud's own database backups, <code>SECRET_KEY</code> in the cloud's secrets setting, and the host running <code>python -m app.jobs</code> every 15 minutes. Then the food bank's agreement.</td>
     <td>See <code>CONSTRAINTS.md</code></td>
   </tr>
 </table>
@@ -640,10 +689,13 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
 <p><b>Answered 7 Nov</b>, from step 6: volunteers can pack until 6 pm (as built), and a volunteer can undo Packed on the wrong bag until it's handed over (now built). For step 7: a walk-in who hasn't reached 30 days is refused, with no override. Students keep seeing exact counts like "6 left".</p>
 <p><b>Answered 9 Nov</b>, from step 7: walk-ins are served only during pickup hours, 3:30 to 5:30 (now built, see <a href="counter.html#when">counter.html</a>). Booked bags can still be handed over until 6 pm.</p>
 <p><b>Answered 10 Nov</b>, from steps 8 and 9: the jobs are run by hand, with no Task Scheduler. Pickup days are made one week ahead (now built). A closed day that cancelled bookings stays closed (as built). 0 shows as 0 on Weekly totals, and 1 to 4 as "fewer than 5" (now built).</p>
-<p>And a change to "students per slot" also reaches days already made, until their booking opens (now built). No questions are open for you right now.</p>
+<p>And a change to "students per slot" also reaches days already made, until their booking opens (now built).</p>
+<p><b>Answered 11 and 12 Nov</b>, from what-could-go-wrong.html: the hosting team schedules the jobs, not the coordinator. Backups come from the cloud. Several coordinators. Optional stock numbers. One look per bag, and Found it clears it for everyone. "Sam is packing". Finding a bag by MUN card. Closing a range of dates. A 30-day gap, with pickups from the old system counted. No card, no food. Shared computers and "Delete my account" left as they are. All built or recorded.</p>
+<p>No questions are open for you right now.</p>
 <p><b>For the food bank</b>, when we talk to them. These are in <code>CONSTRAINTS.md</code>:</p>
 <ul>
-  <li>How is the 4-week rule checked today? When does new stock arrive? When do volunteers pack?</li>
+  <li>How is the 30-day rule checked today? When does new stock arrive? When do volunteers pack?</li>
+  <li>Is it right that nobody can pick up for someone else, and only MUN students are served?</li>
   <li>How many students can the counter serve in 10 minutes?</li>
 </ul>
 
@@ -653,10 +705,22 @@ UNIQUE (student_id) WHERE status IN ('booked', 'packed')
   <li><b>Password resets only at the counter.</b> There's no email to send a reset link to.</li>
   <li><b>Closures can't reach students.</b> We have no contact details, on purpose.</li>
   <li><b>Internet down at the counter.</b> We'll plan for it later.</li>
+  <li><b>Still logged in on a shared computer.</b> University computers log everyone out at the end of a session.</li>
+  <li><b>No "Delete my account" button.</b> Accounts are deleted after a year with no pickup.</li>
+  <li><b>Food with a number counted in the minutes before the jobs run</b> can be counted twice. Most food has no number now, so it's rare.</li>
 </ul>
+<p>The full list is in <code>CONSTRAINTS.md</code>, under Known issues.</p>
 
 <!-- ================================================================ -->
 <h2 id="run"><span class="num">13</span>How to run it</h2>
+<h3>The quickest way: the demo</h3>
+<pre class="code">cd "D:\MUN Project\frontend"
+npm run build
+cd "D:\MUN Project\backend"
+.venv\Scripts\python -m app.demo</pre>
+<p>Then open <a href="http://localhost:8000">http://localhost:8000</a>. It empties the <b>test</b> database and fills it with a busy pickup Thursday at 4 pm, so every page has something on it. The password for every account is <code>blue kettle on the stove</code>. Log in as Alex (coordinator) or Sam (volunteer) on the <b>Staff</b> tab, or as a student like 202300005 (who can book) on the <b>Student</b> tab. Ctrl+C stops it. The README lists every demo account.</p>
+
+<h3>Your own servers, with the working database</h3>
 <p>Each server needs its own terminal. The folder name has a space, so keep the quotes.</p>
 <pre class="code"><span class="c"># Terminal 1: the server</span>
 cd "D:\MUN Project\backend"
@@ -666,16 +730,22 @@ cd "D:\MUN Project\backend"
 cd "D:\MUN Project\frontend"
 npm run dev</pre>
 <p>Then open <a href="http://localhost:5173">http://localhost:5173</a>.</p>
-<p>If your working database has no coordinator yet, make one in a third terminal, then go to <code>/staff/setup</code> and use the code it prints:</p>
+<p>To have accounts ready to log in with, run this once. It makes <b>Admin</b> (coordinator), <b>Staff</b> (volunteer) and student <b>202681309</b>, all with the password <code>Password</code>, and they stay (see <a href="accounts.html#run">accounts.html</a>):</p>
+<pre class="code">cd "D:\MUN Project\backend"
+.venv\Scripts\python -m app.dev_accounts</pre>
+<p>Or make a coordinator of your own, then go to <code>/staff/setup</code> and use the code it prints:</p>
 <pre class="code">cd "D:\MUN Project\backend"
 .venv\Scripts\python -m app.first_coordinator YourName</pre>
 <p>To run the jobs once (no-shows, deleting old details, making pickup days ahead), see <a href="jobs.html#run">jobs.html, part 12</a>:</p>
 <pre class="code">cd "D:\MUN Project\backend"
 .venv\Scripts\python -m app.jobs</pre>
-<p>To run the tests (about 30 seconds):</p>
+<p>To run the tests (about a minute):</p>
 <pre class="code">cd "D:\MUN Project\backend"
 .venv\Scripts\python -m pytest</pre>
-<p>Booking for a sample day only opens at 5 pm the day before it. To try booking sooner, the coordinator can move that day's booking times on the Pickup days page <span class="rule">S9</span>. The same goes for packing and the counter: ask me and I'll set up today as a pickup day with a few bags.</p>
+<p>Booking for a sample day only opens at 5 pm the day before it. To try booking sooner, the coordinator can move that day's booking times on the Pickup days page <span class="rule">S9</span>. For packing and the counter, the demo is easiest: its clock is already a pickup afternoon.</p>
+<p>To run the load test (it empties the test database too, and takes a few minutes), see <a href="load-test.html">load-test.html</a>:</p>
+<pre class="code">cd "D:\MUN Project\backend"
+.venv\Scripts\python -m loadtest.run</pre>
 
 <!-- ================================================================ -->
 <h2 id="pages"><span class="num">14</span>Which page to read for what</h2>
@@ -693,7 +763,10 @@ npm run dev</pre>
   <tr><td><a href="packing.html">packing.html</a></td><td>The packing queue, the refill rule, the sticky note, and the "ran out" flags.</td></tr>
   <tr><td><a href="counter.html">counter.html</a></td><td>Handing over a bag with the card check, walk-ins, extras, and the student's lock.</td></tr>
   <tr><td><a href="jobs.html">jobs.html</a></td><td>What happens by itself: no-shows, fixing a pickup, totals and deleting after 90 days, the year rule.</td></tr>
-  <tr><td><a href="coordinator.html">coordinator.html</a></td><td>Closing a day and the lock that keeps Book out, moving booking times, the settings and their checks, weekly totals and "fewer than 5".</td></tr>
+  <tr><td><a href="coordinator.html">coordinator.html</a></td><td>Closing a day or a range of dates and the lock that keeps Book out, moving booking times, the settings and their checks, weekly totals and "fewer than 5".</td></tr>
+  <tr><td><a href="what-could-go-wrong.html">what-could-go-wrong.html</a></td><td>12 problems that could happen once real people use it, with the choices and your answers.</td></tr>
+  <tr><td><a href="load-test.html">load-test.html</a></td><td>360 students at once: the six phases, the 5 pm freeze it found, and the fix.</td></tr>
+  <tr><td><code>README.md</code></td><td>The front page on GitHub, for anyone new: what it does, screenshots, how to run it.</td></tr>
   <tr><td><code>CONSTRAINTS.md</code></td><td>The rules themselves, short. The one place to check a rule.</td></tr>
   <tr><td><code>DECISIONS.md</code></td><td>Every choice, by date, with the reason. Good for interview answers.</td></tr>
 </table>
@@ -727,7 +800,7 @@ npm run dev</pre>
   <dt>Test</dt><dd>A small program that checks one thing and fails loudly if it's wrong.</dd>
 </dl>
 
-<p class="lead" style="margin-top:40px">Written 7 November 2026, and brought up to date after step 7. The rules this page describes are in CONSTRAINTS.md, and the reason for each choice is in DECISIONS.md.</p>
+<p class="lead" style="margin-top:40px">Written 7 November 2026, and last brought up to date on 13 November, after the load test and the README. The rules this page describes are in CONSTRAINTS.md, and the reason for each choice is in DECISIONS.md.</p>
 
 </main>
 </body>

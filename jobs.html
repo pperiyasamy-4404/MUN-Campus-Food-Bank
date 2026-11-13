@@ -26,6 +26,7 @@
   li { margin: 4px 0; }
   a { color: var(--blue); }
   .lead { color: var(--muted); font-size: 1.05rem; }
+  .muted { color: var(--muted); font-weight: 400; font-size: .85em; }
   code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
   .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
   .table-wrap { overflow-x: auto; }
@@ -172,8 +173,17 @@
   <li>Fixes start once the day is over, at 6 pm. Before that, a bag that wasn't handed over isn't a no-show yet.</li>
   <li>A bag that was never packed can't be fixed to picked up: "Bag T5J was never packed, so it can't have been handed over."</li>
   <li>The page says when to fix by: "Fix mistakes before Wednesday, November 11 at 5:00 p.m., when booking opens for the next pickup day." After that, the stock count might already have been used for new bookings.</li>
-  <li>If the shelf count is already lower than what's in the bag, it stops at 0. The shelf can't have less than none.</li>
+  <li>If the shelf count is already lower than what's in the bag, it stops at 0. The shelf can't have less than none. (Since 12 Nov, most food has no number, and nothing is taken off or put back for it. See stock.html.)</li>
 </ul>
+
+<h3>A late "picked up" fix cancels a booking that's now too soon <span class="muted">(added 12 Nov)</span></h3>
+<p>The problem: Monday's bag was handed over, but nobody pressed Hand over, so at 6 pm it became a no-show. On Tuesday the student booked Thursday, which was allowed, because Monday didn't count. On Friday, Sam fixes Monday to picked up. Now the student has two pickups in four days.</p>
+<p>Now the fix also cancels the later booking when it's less than 30 days after the fixed pickup <span class="rule">F1</span>. Its food goes back, and its time is free for someone else. The Fix page says:</p>
+<pre class="code">Their booking for Thursday, November 12 (bag K3P) was cancelled: it's less than 30 days after this pickup.</pre>
+<p>The cancel reason is <code>pickup_fixed</code>, and the log says <code>cancelled_too_soon</code>, with who made the fix. A booking 30 or more days after the fixed pickup stays.</p>
+<div class="why">
+  <p><b>Why cancel instead of leaving it?</b> The 30-day rule is the one rule the food bank cares about most. Leaving the booking would give a second bag that the rule says no to, just because a button was pressed late.</p>
+</div>
 <div class="limit">
   <p><b>A small known limit.</b> Fixing a bag to "no-show" sets the 30 days from the student's last pickup still on record. If their only earlier pickup was more than 90 days ago, its record is already deleted. Then the year rule counts from when their account was made, which can be earlier. Example: account made 14 months ago, last pickup 5 months ago, today's pickup fixed to no-show. The no-show keeps the account for its 90 days, then it's deleted: 3 months after the fix, instead of 7. It needs that exact mix, so it should be very rare. The student would just get a new account at the counter next time.</p>
 </div>

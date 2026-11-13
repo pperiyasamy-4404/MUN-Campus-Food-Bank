@@ -26,6 +26,7 @@
   li { margin: 4px 0; }
   a { color: var(--blue); }
   .lead { color: var(--muted); font-size: 1.05rem; }
+  .muted { color: var(--muted); font-weight: 400; font-size: .85em; }
   code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
   .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
   .table-wrap { overflow-x: auto; }
@@ -117,7 +118,7 @@
   </g>
 </svg>
 </div>
-<p>The Counter page now has a small menu: <b>Hand over a bag</b> (<code>/counter</code>), <b>Walk-in</b> (<code>/counter/walk-in</code>), and <b>Setup code</b> (<code>/counter/setup-code</code>), which is the page from step 3.</p>
+<p>The Counter page now has a small menu: <b>Hand over a bag</b> (<code>/counter</code>), <b>Walk-in</b> (<code>/counter/walk-in</code>), and <b>Setup code</b> (<code>/counter/setup-code</code>), which is the page from step 3. Step 8 added a fourth, <b>Fix a pickup</b> (<code>/counter/fix</code>), explained in jobs.html.</p>
 
 <!-- ============================================================ -->
 <h2 id="when"><span class="num">2</span>When the counter is open</h2>
@@ -149,6 +150,16 @@ typed 202300009 → keyed hash 71c2…  !=  3f9a…                         <spa
 "That card doesn't match bag N5D. Check the code and the card. Don't hand over the bag until they match."</pre>
 <p>The number is typed once here: a typo just doesn't match. The refusal never repeats the number <span class="rule">P10</span>, and the volunteer never sees the hash <span class="rule">P4</span>.</p>
 
+<h3>No card, no food <span class="muted">(decided 12 Nov)</span></h3>
+<p>A student who lost their MUN card gets a new one first. Every box for a card number at the counter says so: <i>"Type it from the card itself. No card, no food: a student who lost it gets a new MUN card first."</i> Why: the card is the only proof of who they are. Typing a number the student says out loud would let anyone who knows a friend's number take their food.</p>
+
+<h3>No code? Use their MUN card <span class="muted">(added 12 Nov)</span></h3>
+<p>The problem: the student's phone is dead, so they can't show their code. Before, the volunteer had no way to find the bag.</p>
+<p>Now the page has a link, <b>No code? Use their MUN card</b>. The volunteer types the number from the card, and the page finds today's bag for that card (<code>POST /api/counter/find-by-card</code>). The card box for Hand over then already has that number in it, since it was just typed from the card. Handing over still checks it, as above.</p>
+<div class="why">
+  <p><b>Why it's safe:</b> the volunteer has the card in hand, and finding the bag shows nothing that the code wouldn't. The number goes in the body of a POST, never in a web address <span class="rule">P10</span>. The privacy test sends card numbers here too, and checks they never reach a log, an answer or the database.</p>
+</div>
+
 <h3>A short bag: choosing from the shelf</h3>
 <p>When packing couldn't fill a gap, the sticky note says "Sunflower oil → choose at the counter". At the counter, the page says "The bag is 1 short" and shows the shelf: only food nobody booked, with how many are left. The same limits as booking apply:</p>
 <ul>
@@ -172,6 +183,16 @@ typed 202300009 → keyed hash 71c2…  !=  3f9a…                         <spa
 </div>
 <p>Then the volunteer adds what they take from the shelf (up to 13 things, the per-item limit, food nobody booked) and any extras, and presses <b>Record the walk-in</b>. The answer says when their next pickup can be.</p>
 <p>For W4, the cancelled booking's place and food go back for someone else, in the same transaction. Its cancel reason is <code>walk_in</code>.</p>
+<p>The second card box says <b>Re-enter ID number</b> (changed 12 Nov), the same words as a second password box.</p>
+
+<h3>Pickups from the old system <span class="muted">(added 12 Nov)</span></h3>
+<p>The problem, with your example: a student got food on 12 November through the food bank's old system, got a setup code on 21 November, and booked for 26 November. The app knew nothing about 12 November, so it allowed a second bag after only 14 days.</p>
+<p>Now the <b>Setup code</b> page and the <b>Walk-in</b> page both ask: <b>"Last pickup in the old system"</b>. The volunteer looks the student up in the old records and either chooses the date or ticks <b>No pickup in the old system</b>. One of the two is required, so it can't be forgotten. Ticking the box clears the date and greys it out. The page checks this first, and the server checks it again.</p>
+<p>The date is saved on the student's account (<code>students.old_system_pickup_on</code>), and the 30 days count from the latest of: that date, a booked pickup, and a walk-in <span class="rule">F1</span>. After a setup code, the page says, for example, "they can't get food again until Saturday, December 12". A walk-in fed the old way 10 days ago is refused: "Not yet. Their next pickup can be on ..."</p>
+<div class="why">
+  <p><b>Why its own column, not the last pickup date?</b> Fixing a wrong pickup (jobs.html) works out the last pickup date again from this system's records, and that would wipe the old date.</p>
+  <p><b>Small rules:</b> a date in the future is refused. A later setup code without a date keeps the one already saved. Saving it is logged (<code>recorded_old_system_pickup</code>). It's only needed in the first month after switching over. After that, every recent pickup is in this system.</p>
+</div>
 
 <!-- ============================================================ -->
 <h2 id="extras"><span class="num">5</span>One of each extra, kept by the database</h2>
@@ -220,6 +241,7 @@ UNIQUE (booking_id, item_id) WHERE is_extra             <span class="c">-- one B
   <tr><th>Address</th><th>What it does</th></tr>
   <tr><td><code>GET /api/counter</code></td><td>Is the counter open, and what's on the shelf: food and extras with how many are left.</td></tr>
   <tr><td><code>POST /api/counter/find</code></td><td>Today's bag for a code. A POST, so codes don't end up in the browser's history.</td></tr>
+  <tr><td><code>POST /api/counter/find-by-card</code></td><td>Today's bag for a MUN card number, when the student has no code (12 Nov).</td></tr>
   <tr><td><code>POST /api/counter/pickups</code></td><td>Hand over a bag: the code, the card number, gap choices and extras.</td></tr>
   <tr><td><code>POST /api/walk-ins/check</code></td><td>Can this card be served now? Saves nothing.</td></tr>
   <tr><td><code>POST /api/walk-ins</code></td><td>Record a walk-in: the card number, the food, extras, and "yes, cancel their booking" for W4.</td></tr>
@@ -247,8 +269,8 @@ UNIQUE (booking_id, item_id) WHERE is_extra             <span class="c">-- one B
 
 <!-- ============================================================ -->
 <h2 id="run"><span class="num">11</span>How to try it</h2>
-<p>Run the two servers as usual (see <a href="project-so-far.html#run">project-so-far.html, part 13</a>). Then <b>Staff log in → Counter</b>.</p>
-<p>The counter only opens on a pickup day after 12 pm, and your working database's sample days are next week. Ask me and I'll set up today as a pickup day with a few bags, so you can try both lines.</p>
+<p>The easiest way is the demo: from <code>backend/</code>, run <code>.venv\Scripts\python -m app.demo</code> and open http://localhost:8000. Its clock is a pickup Thursday at 4 pm, so the counter and walk-ins are open. Log in on the <b>Staff</b> tab as Sam (password <code>blue kettle on the stove</code>), open <b>Counter</b>, and hand over bag <b>W4E</b> with card <b>202300001</b>. Or try "No code? Use their MUN card" with the same card.</p>
+<p>With your own servers (see <a href="project-so-far.html#run">project-so-far.html, part 13</a>), the counter only opens on a pickup day after 12 pm.</p>
 
 <p class="lead" style="margin-top:40px">Written 7 November 2026. The rules are in CONSTRAINTS.md, and the reason for each choice is in DECISIONS.md, 7 November.</p>
 

@@ -26,6 +26,7 @@
   li { margin: 4px 0; }
   a { color: var(--blue); }
   .lead { color: var(--muted); font-size: 1.05rem; }
+  .muted { color: var(--muted); font-weight: 400; font-size: .85em; }
   code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
   .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
   .table-wrap { overflow-x: auto; }
@@ -77,10 +78,10 @@
 <div class="table-wrap">
 <table>
   <tr><th>Page</th><th>Address</th><th>What it does</th><th>Rules</th></tr>
-  <tr><td>Pickup days</td><td><code>/coordinator</code></td><td>Close a day, open it again, move its booking times. Close a date further ahead.</td><td><span class="rule">S7</span> <span class="rule">S9</span></td></tr>
+  <tr><td>Pickup days</td><td><code>/coordinator</code></td><td>Close a day, open it again, move its booking times. Close dates further ahead, one or many.</td><td><span class="rule">S7</span> <span class="rule">S9</span></td></tr>
   <tr><td>Weekly totals</td><td><code>/coordinator/totals</code></td><td>Pickups, walk-ins, no-shows, cancellations and food given out, by week.</td><td><span class="rule">P7</span> <span class="rule">P12</span></td></tr>
   <tr><td>Settings</td><td><code>/coordinator/settings</code></td><td>The food bank's numbers and the weekly pickup hours.</td><td><span class="rule">R3</span></td></tr>
-  <tr><td>Volunteers</td><td><code>/coordinator/volunteers</code></td><td>Unchanged from step 3. The old address <code>/volunteers</code> still works: it sends you on.</td><td><span class="rule">R3</span></td></tr>
+  <tr><td>Staff (was Volunteers)</td><td><code>/coordinator/volunteers</code></td><td>Add volunteers, give setup codes, switch accounts off and on. Since 11 Nov, also Make coordinator and Make volunteer (see accounts.html). The old address <code>/volunteers</code> still works: it sends you on.</td><td><span class="rule">R3</span></td></tr>
 </table>
 </div>
 <p>Every change on these pages is written in the activity log with who made it <span class="rule">R4</span>: <code>closed_day</code>, <code>reopened_day</code>, <code>moved_booking_times</code>, <code>changed_settings</code>. The log needed one new column, <code>pickup_day_id</code>, to say which day (migration <code>d19b90ad39dc</code>).</p>
@@ -162,9 +163,16 @@ back on the stock count. Those students can book another day.</pre>
 </div>
 
 <!-- ============================================================ -->
-<h2 id="later"><span class="num">5</span>Closing a date further ahead</h2>
-<p>Days are made a week ahead, but the Christmas break is known in November. Under the days, <b>Close a later date</b> takes any pickup date up to a year ahead, like Monday 21 December. The day is made now, from today's settings, and closed straight away. The jobs script never touches a day that's made, so when its time comes it's still closed.</p>
+<h2 id="later"><span class="num">5</span>Closing dates further ahead</h2>
+<p>Days are made a week ahead, but the Christmas break is known in November. A pickup date up to a year ahead, like Monday 21 December, can be closed now. The day is made from today's settings and closed straight away. The jobs script never touches a day that's made, so when its time comes it's still closed.</p>
 <p>A Tuesday is refused ("isn't a pickup day"), and so is today or a date in the past.</p>
+
+<h3>Several dates at once <span class="muted">(changed 12 Nov)</span></h3>
+<p>The Christmas break is about six pickup days. Closing them one by one meant typing the same reason six times. Now, under the days, <b>Close dates</b> takes a <b>First date</b>, an optional <b>Last date</b>, and one reason, like "Christmas break, back on 7 January". Every pickup day in between is closed: days already made, and later Mondays and Thursdays, which are made first. Before the button is pressed, the page says how many bookings it will cancel.</p>
+<p>Days already closed or over are skipped and listed in the answer. They don't stop the rest: closing 19 December to 5 January shouldn't fail because 22 December was closed last week.</p>
+<div class="why">
+  <p><b>Why each day in its own transaction, not all in one?</b> One big transaction would hold one day's food locks while waiting for the next day's slots. A student booking that next day takes those same locks the other way round (slot first, then food). The two could wait for each other forever: a deadlock. One day at a time uses the same code as closing one day, in the same lock order. If one day fails, the days before it stay closed, and the answer says which were closed.</p>
+</div>
 
 <!-- ============================================================ -->
 <h2 id="move"><span class="num">6</span>Moving one day's booking times</h2>
@@ -247,6 +255,7 @@ Why: Snow storm</pre>
   <tr><th>Address</th><th>Does</th></tr>
   <tr><td><code>GET /api/coordinator/days</code></td><td>Days not over yet, each with its bookings and why each change can or can't be made.</td></tr>
   <tr><td><code>POST /api/coordinator/days/2026-11-12/close</code></td><td>Close, with <code>{"reason": "Snow storm"}</code>. A date not made yet is made first.</td></tr>
+  <tr><td><code>POST /api/coordinator/days/close-range</code></td><td>Close every pickup day from a first date to a last, with one reason (12 Nov).</td></tr>
   <tr><td><code>POST /api/coordinator/days/2026-11-12/reopen</code></td><td>Open it again.</td></tr>
   <tr><td><code>PUT /api/coordinator/days/2026-11-16/booking-times</code></td><td>Move booking times, with <code>opens_at</code> and <code>closes_at</code>.</td></tr>
   <tr><td><code>GET</code> and <code>PUT /api/settings</code></td><td>Read and save every setting at once.</td></tr>
@@ -287,7 +296,8 @@ Why: Snow storm</pre>
 
 cd "D:\MUN Project\frontend"
 npm run dev</pre>
-<p>Log in as the coordinator at <code>/staff/login</code> and choose <b>Coordinator</b> in the top bar. If you haven't made a coordinator yet:</p>
+<p>Or, instead of your own servers, run the demo (<code>.venv\Scripts\python -m app.demo</code>, then http://localhost:8000), and log in as Alex on the Staff tab.</p>
+<p>Log in as the coordinator on the <b>Staff</b> tab of the Log in page, and choose <b>Coordinator</b> in the top bar. If you haven't made a coordinator yet:</p>
 <pre class="code">cd "D:\MUN Project\backend"
 .venv\Scripts\python -m app.first_coordinator Alex
 <span class="c">It prints a setup code. Use it at /staff/setup to choose a password.</span></pre>

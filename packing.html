@@ -26,6 +26,7 @@
   li { margin: 4px 0; }
   a { color: var(--blue); }
   .lead { color: var(--muted); font-size: 1.05rem; }
+  .muted { color: var(--muted); font-weight: 400; font-size: .85em; }
   code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
   .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
   .table-wrap { overflow-x: auto; }
@@ -119,6 +120,15 @@
 </svg>
 </div>
 <p>Volunteers see the booking code (like <b>G2T</b>) and the food. Never anything about the student <span class="rule">P4</span>. A test checks that no answer from these addresses contains the student's hash or the word "student".</p>
+
+<h3>"Sam is packing" <span class="muted">(added 12 Nov)</span></h3>
+<p>When a volunteer opens a bag to pack it, the page tells the server (<code>POST /api/packing/bags/12/start</code>). The queue then shows <b>"Sam is packing (since 12:31 p.m.)"</b> on that bag, or "You are packing" on Sam's own screen <span class="rule">K2</span>.</p>
+<p>If Lee opens the same bag, Lee sees <b>"Sam is packing this bag"</b> first, before any of the packing page, with two choices: <b>Pack it anyway</b> or <b>Back to the queue</b>. Pack it anyway makes the bag Lee's. Pressing Packed, or Undo Packed, clears the name.</p>
+<div class="why">
+  <p><b>Why "anyway" is allowed:</b> Sam may have opened the bag and gone home. A bag must never be stuck.</p>
+  <p><b>Why show the time instead of letting the claim run out after, say, 20 minutes?</b> The volunteer can judge "since 12:31" for themselves, and there's no number to guess.</p>
+  <p><b>Two volunteers opening the same bag at the same second:</b> the booking is locked, so the second one waits, then sees the first one's name. A test runs this on two database connections, and fails with the lock taken out.</p>
+</div>
 
 <!-- ============================================================ -->
 <h2 id="when"><span class="num">2</span>When packing happens</h2>
@@ -230,8 +240,15 @@ for substitute in substitutes, best first:
 <p><b>Packed waits until every line is ticked</b>: Picked, or Out of stock. Until then the bottom of the page says, for example, "2 lines still to tick, then press Packed." So a bag can't be marked Packed with something forgotten.</p>
 <p>If the plan changes after a substitute was Picked (say the oil turned up after all, so the rice isn't needed), the rice line turns red: "Not needed now: take it out of the bag", with a <b>Taken out</b> button. Packed waits for that too.</p>
 <div class="why">
-  <p><b>Why only on the page?</b> Picked helps the volunteer keep track while packing one bag. It changes nothing in the stock, so the server doesn't need it, and there's nothing to save or undo. Like Out of stock, it's gone if the page is reloaded, and the volunteer ticks again.</p>
+  <p><b>Why only on the page?</b> Picked helps the volunteer keep track while packing one bag. It changes nothing in the stock, so the server doesn't need it, and there's nothing to save or undo.</p>
   <p><b>Why "Out of stock" and not "None on the shelf"?</b> It's the shorter, everyday words volunteers already use. (The database still calls it <code>not_on_shelf</code> and <code>ran_out_at</code>: only the words on the page changed.)</p>
+</div>
+
+<h3>Taps kept on a reload <span class="muted">(added 12 Nov)</span></h3>
+<p>At first, reloading the page lost every Picked tick. Now Picked, Out of stock and Found it are kept in the phone's browser (localStorage) until Packed, for up to 12 hours, like a staff login. Example: Sam has ticked 8 of 13 lines, the phone locks, and the page reloads. The 8 ticks are still there.</p>
+<p>If someone else has marked food out of stock since then, that's added on top, unless Sam already looked at that food on this bag. Still nothing reaches the server before Packed.</p>
+<div class="why">
+  <p><b>Why on the phone and not on the server?</b> No new tables, and no request for every tap. It only has to help the one phone that's packing this bag. In a private window, where the browser keeps nothing, packing still works. The taps just aren't kept.</p>
 </div>
 
 <!-- ============================================================ -->
@@ -294,8 +311,24 @@ for substitute in substitutes, best first:
   </g>
 </svg>
 </div>
-<p>When a volunteer opens a flagged bag, that food is already marked "Out of stock", with "A volunteer marked this out of stock at 12:26 p.m. If there is some, tap Found it." So nobody searches the shelf for it again.</p>
-<p><b>Counting the shelf clears the mark</b>, because a count is what's really there. The stock page lists food that ran out as needing a count, in red: "Marked out of stock while packing, Monday, November 9 at 12:26 p.m. Count it to take the flag off other bags."</p>
+<p>When a volunteer opens a flagged bag, that food is already marked out of stock, so the substitutes show at once and nobody searches the whole shelf again.</p>
+
+<h3>One look per bag <span class="muted">(changed 12 Nov)</span></h3>
+<p>The problem: Sam can't see the peanut butter (it's behind the rice) and taps Out of stock. Every other bag opened with it already marked, and since Picked came in, those lines counted as done. So 6 students could get a substitute while 10 jars sat on the shelf.</p>
+<p>Now the line still opens as out of stock, but it says <b>"Marked out of stock earlier"</b>, with two buttons: <b>Still out of stock</b> and <b>Found it</b>. Packed waits until one is tapped <span class="rule">U7</span>. Any other change to the line counts as having looked too, for example tapping Out of stock or choosing how many are on the shelf. It's only on the page, like Picked.</p>
+<div class="why">
+  <p><b>Why:</b> it's one tap per bag, only for food that ran out, and a wrong tap is caught by the very next bag.</p>
+</div>
+
+<h3>Found it takes the warning off every bag <span class="muted">(added 12 Nov)</span></h3>
+<p>When Lee taps Found it and presses Packed, the page sends that food in <code>found</code> with the rest. The server takes the "ran out" flag off <b>every</b> other bag, so the next volunteers aren't asked to look again.</p>
+<p>The food stays at 0, so students still can't book it. There's some on the shelf, but nobody knows how much. The stock page lists it as <b>"Marked out of stock, then found while packing"</b> (<code>varieties.found_at</code>) until someone taps In stock or counts it. If it runs out again, the flags come back.</p>
+<div class="why">
+  <p><b>Why keep it at 0 instead of going back to "In stock"?</b> It ran out once already. An unknown amount could be booked many times over.</p>
+  <p><b>Why send it with Packed, not when Found it is tapped?</b> Like every other tap, nothing is saved until Packed, so a wrong tap costs nothing.</p>
+</div>
+
+<p><b>Counting the shelf, or tapping In stock, also clears the mark</b>, because that's what's really there. The stock page lists food that ran out as needing checking: "Marked out of stock while packing, Monday, November 9 at 12:26 p.m."</p>
 
 <!-- ============================================================ -->
 <h2 id="note"><span class="num">7</span>The sticky note, and bags that go out short</h2>
@@ -315,7 +348,9 @@ for substitute in substitutes, best first:
   <tr><td><code>bookings.packed_by_staff_id</code></td><td>Who pressed Packed.</td><td>A packed bag always names who packed it, and only a packed bag does.</td></tr>
   <tr><td><code>booking_items.missing</code></td><td>How many of this food weren't on the shelf. Usually 0 or 1.</td><td>Between 0 and the number booked.</td></tr>
   <tr><td><code>booking_substitutes.replaces_variety_id</code></td><td>Empty unless it went in the bag. Then: the booked food it replaced. The note comes from this.</td><td>A foreign key on the pair (booking, food): it can only replace food booked <i>in the same booking</i> <span class="rule">U5</span>.</td></tr>
-  <tr><td><code>varieties.ran_out_at</code></td><td>When a volunteer found none on the shelf. Cleared by the next count.</td><td>—</td></tr>
+  <tr><td><code>varieties.ran_out_at</code></td><td>When a volunteer found none on the shelf. Cleared by the next count, In stock, or Found it.</td><td>—</td></tr>
+  <tr><td><code>bookings.packing_started_at</code>, <code>packing_by_staff_id</code> <span class="muted">(12 Nov)</span></td><td>Who opened the bag to pack it, and when. Cleared by Packed and Undo.</td><td>Both are set, or neither.</td></tr>
+  <tr><td><code>varieties.found_at</code> <span class="muted">(12 Nov)</span></td><td>When a packer found food that was marked out of stock. Cleared by a count or In stock.</td><td>—</td></tr>
 </table>
 </div>
 <div class="why">
@@ -330,8 +365,9 @@ for substitute in substitutes, best first:
   <tr><th>Address</th><th>What it does</th></tr>
   <tr><td><code>GET /api/packing</code></td><td>The packing day, whether packing is allowed now (and why not), and every bag with its flags.</td></tr>
   <tr><td><code>GET /api/packing/bags/{id}</code></td><td>One bag: its food, substitutes, and once packed, who packed it and the note.</td></tr>
+  <tr><td><code>POST /api/packing/bags/{id}/start</code></td><td>"I'm packing this bag." Answers who is packing it. With <code>anyway</code>, takes it over (12 Nov).</td></tr>
   <tr><td><code>POST /api/packing/bags/{id}/plan</code></td><td>What goes in instead, for what was found so far. Saves nothing.</td></tr>
-  <tr><td><code>POST /api/packing/bags/{id}/packed</code></td><td>Saves the bag. 409 if it's packed already, or if the plan changed.</td></tr>
+  <tr><td><code>POST /api/packing/bags/{id}/packed</code></td><td>Saves the bag, and the food marked Found it (12 Nov). 409 if it's packed already, or if the plan changed.</td></tr>
   <tr><td><code>POST /api/packing/bags/{id}/unpack</code></td><td>Undo Packed on the wrong bag, until it's handed over. 409 if it isn't packed.</td></tr>
 </table>
 </div>

@@ -26,6 +26,7 @@
   li { margin: 4px 0; }
   a { color: var(--blue); }
   .lead { color: var(--muted); font-size: 1.05rem; }
+  .muted { color: var(--muted); font-weight: 400; font-size: .85em; }
   code { font: .9em ui-monospace, Consolas, monospace; background: #e2e8f0; padding: 1px 5px; border-radius: 4px; }
   .rule { font: 600 .74em ui-monospace, Consolas, monospace; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
   table { border-collapse: collapse; width: 100%; background: #fff; font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
@@ -82,7 +83,7 @@
   <tr><th>Who</th><th>Logs in with</th><th>Their account is made by</th><th>Stays logged in</th></tr>
   <tr><td><b>Student</b></td><td>ID number from their MUN card + password</td><td>A volunteer at the counter, after checking the card <span class="rule">R1</span></td><td>30 days after their last visit</td></tr>
   <tr><td><b>Volunteer</b></td><td>Username (like "Sam") + password</td><td>The coordinator <span class="rule">R3</span></td><td>12 hours after logging in</td></tr>
-  <tr><td><b>Coordinator</b></td><td>Username + password</td><td>A setup script, run once on the server</td><td>12 hours after logging in</td></tr>
+  <tr><td><b>Coordinator</b></td><td>Username + password</td><td>The first one: a setup script, run once on the server. Others: a coordinator makes a volunteer a coordinator (since 11 Nov)</td><td>12 hours after logging in</td></tr>
 </table>
 <p>Everyone chooses their own password with a <b>setup code</b>: a one-time code like <code>K7QM-4TXP</code>. Nobody else ever sees the password, not the volunteer, not the coordinator.</p>
 
@@ -308,6 +309,19 @@ Open the staff setup page, type the username and the setup code, and choose a pa
 <p><b>Why a script and not a page?</b> Before the first coordinator exists, there's nobody who could be trusted to use such a page. Whoever can run commands on the server can already do anything.</p>
 </div>
 
+<h3>Several coordinators <span class="muted">(added 11 Nov)</span></h3>
+<p>The problem: with one coordinator, nobody could close a day in a snowstorm if Alex was ill. A new coordinator had to log in as "Alex".</p>
+<p>Now the page is called <b>Staff</b> (it was Volunteers), with coordinators listed first. To add a coordinator, add them as a volunteer, then press <b>Make coordinator</b>. It's the same account and the same password. <b>Make volunteer</b> goes back. Both ask first, and both are logged (<code>made_coordinator</code>, <code>made_volunteer</code>) <span class="rule">R3</span>.</p>
+<ul>
+  <li>A coordinator can give any <b>other</b> staff account a setup code, or switch it off or on, coordinators included. So a new coordinator can switch off the one who left.</li>
+  <li><b>Nobody can change their own account on this page.</b> Their row says "That's you" and has no buttons, and the server refuses too. So nobody switches themselves off by mistake, and the one making a change always stays a coordinator. There is never none.</li>
+  <li>A switched-off volunteer can't be made a coordinator. Switching them on first gives a new setup code, handed over in person, so it really is them.</li>
+  <li>Someone made a volunteer loses the coordinator pages on their next click, because every request reads the role from the database.</li>
+</ul>
+<div class="why">
+  <p><b>Two coordinators changing each other at the same moment.</b> Alex makes Jordan a volunteer while Jordan makes Alex one. Without care, both checks pass and nobody is a coordinator. So both accounts are locked, lowest id first, and the one acting is checked again after the lock. The second one is refused: "You're not a coordinator any more." A test runs this on two connections, and fails with the lock taken out.</p>
+</div>
+
 <!-- 10 -->
 <h2 id="pages"><span class="num">10</span>The pages</h2>
 <p>The site now has real web addresses, with <b>React Router</b>: a library that shows a different page for each address, without reloading. The Back button and links work as people expect.</p>
@@ -317,13 +331,18 @@ Open the staff setup page, type the username and the setup code, and choose a pa
   <tr><td><code>/login</code>, <code>/staff/login</code></td><td>Log in</td><td><code>pages/LogIn.tsx</code></td></tr>
   <tr><td><code>/setup</code>, <code>/staff/setup</code></td><td>Choose a password with a setup code</td><td><code>pages/SetUp.tsx</code></td></tr>
   <tr><td><code>/counter</code></td><td>Give a student a setup code (staff only)</td><td><code>pages/Counter.tsx</code></td></tr>
-  <tr><td><code>/volunteers</code></td><td>Add volunteers, give new codes, switch accounts off and back on (coordinator only)</td><td><code>pages/Volunteers.tsx</code></td></tr>
+  <tr><td><code>/volunteers</code></td><td>Add volunteers, give new codes, switch accounts off and back on (coordinator only). Now the Staff page, at <code>/coordinator/volunteers</code>.</td><td><code>pages/Volunteers.tsx</code></td></tr>
 </table>
+<p>Since then, the setup code page moved to <code>/counter/setup-code</code> (step 7), and now also asks for the student's last pickup in the food bank's old system (12 Nov, see counter.html, part 4).</p>
+
+<h3>Student and Staff tabs on the Log in page <span class="muted">(added 12 Nov)</span></h3>
+<p>The staff login used to be a "Staff log in" link at the bottom of every page. With the MUN look, that bar at the bottom went, so the Log in page now has two tabs at the top: <b>Student</b> (ID number) and <b>Staff</b> (username). You chose this over a link in the top bar, a button under Log in, or only a bookmarked address.</p>
+<p>The tabs are plain links to <code>/login</code> and <code>/staff/login</code>, so a volunteer's bookmark still works, and the Back button does what people expect.</p>
 <p>Other files: <code>MeProvider.tsx</code> asks <code>/api/me</code> once when the site opens and shares "who's logged in" with every page. <code>Layout.tsx</code> is the top bar and the staff-only guard. <code>forms.tsx</code> has the labelled boxes, the error message and the setup code box. <code>send()</code> in <code>api.ts</code> sends every form as a POST and turns the server's "no" into words.</p>
 
 <h3>Small things that matter at a real counter</h3>
 <ul>
-  <li><b>The volunteer types the card number twice.</b> A typo would make an account for someone else's number, and the student's code wouldn't work with their real one.</li>
+  <li><b>The volunteer types the card number twice.</b> A typo would make an account for someone else's number, and the student's code wouldn't work with their real one. The second box says "Re-enter ID number" (12 Nov).</li>
   <li><b>The number leaves the screen</b> as soon as the code is given. "Done, clear the screen" removes the code too, before the next person steps up.</li>
   <li><b>New passwords are typed twice.</b> A typo would mean another trip to the counter. A "Show the password" box helps on a phone.</li>
   <li><b>"Please don't use your MUN password"</b> is on the setup page <span class="rule">P8</span>.</li>
@@ -380,6 +399,16 @@ npm run dev</pre>
   <li><b>Volunteers:</b> add one, then set them up in another private window.</li>
 </ol>
 <p>Use made-up numbers only. Real ones wait until the Campus Food Bank agrees to anything live.</p>
+
+<h3>Accounts that stay put <span class="muted">(added 12 Nov)</span></h3>
+<p>The demo and the tests empty the <b>test</b> database every time, so anything typed there is gone the next day. For trying things in the <b>working</b> database, one command makes three accounts, all with the password <code>Password</code>:</p>
+<pre class="code">cd "D:\MUN Project\backend"
+.venv\Scripts\python -m app.dev_accounts
+
+<span class="c">Admin       coordinator (Staff tab)
+Staff       volunteer   (Staff tab)
+202681309   student     (Student tab)</span></pre>
+<p>It's safe to run again: it sets the passwords back and switches the accounts on, and never makes anything twice. It refuses any database that isn't on this computer, so these easy passwords can never reach a real server.</p>
 
 </main>
 </body>
