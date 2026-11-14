@@ -191,4 +191,30 @@ def test_no_pickup_days_coming_up(client, db_with_sample_week):
     log_in(client, db, make_staff(db), PACKING)
     stop_the_clock_at(PACKING)
 
-    assert client.get("/api/packing").json() == {"day": None, "bags": []}
+    assert client.get("/api/packing").json() == {"day": None, "bags": [], "coming_up": []}
+
+
+def test_the_next_days_bags_show_as_coming_up(client, setup, db_with_sample_week):
+    """A bag for Thursday is listed while Monday is still being packed (13 Nov night):
+    a volunteer can see it's there, and when packing for it starts."""
+    db = db_with_sample_week
+    thursday = make_pickup_day(db, MONDAY + timedelta(days=3))
+    slot = db.scalars(select(Slot).where(Slot.pickup_day_id == thursday.id).order_by(Slot.starts_at)).first()
+    wednesday_evening = datetime(2026, 11, 11, 21, 0, tzinfo=UTC)  # Thursday's booking is open
+    other = make_student(db)
+    booking_rules.hold_slot(db, other, slot.id, wednesday_evening)
+    bag = booking_rules.book(db, other, [Choice(setup["food"]["rice"].id)], [], wednesday_evening)
+
+    queue = client.get("/api/packing").json()
+
+    assert queue["day"]["pickup_date"] == "2026-11-09"
+    assert [b["code"] for b in queue["bags"]] == [setup["bag"].code]
+    [coming] = queue["coming_up"]
+    assert (coming["pickup_date"], coming["packing_starts_at"]) == ("2026-11-12", "2026-11-12T12:00:00-03:30")
+    assert [(b["code"], b["status"], b["things"]) for b in coming["bags"]] == [(bag.code, "booked", 1)]
+
+
+def test_days_with_no_bags_are_not_coming_up(client, setup, db_with_sample_week):
+    make_pickup_day(db_with_sample_week, MONDAY + timedelta(days=3))
+
+    assert client.get("/api/packing").json()["coming_up"] == []

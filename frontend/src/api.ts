@@ -285,6 +285,8 @@ export type PackingQueue = {
     why_not: string | null
   } | null
   bags: QueueBag[]
+  // Later days that already have bags booked, so none is out of sight (13 Nov night).
+  coming_up: { pickup_date: string; packing_starts_at: string; bags: QueueBag[] }[]
 }
 
 export type BagFood = {

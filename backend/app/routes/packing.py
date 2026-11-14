@@ -53,10 +53,61 @@ class QueueBag(BaseModel):
     packing_is_you: bool
 
 
+class ComingDay(BaseModel):
+    """A later pickup day that already has bags booked: shown, not packed yet (13 Nov night)."""
+
+    pickup_date: date
+    packing_starts_at: datetime
+    bags: list[QueueBag]
+
+
 class PackingQueue(BaseModel):
     # The day being packed now, or packed next. None if no pickup days are coming up.
     day: QueueDay | None
     bags: list[QueueBag]
+    # The next days after it with bags booked already, so a booking is never out of sight.
+    coming_up: list[ComingDay] = []
+
+
+# How many later days the queue looks ahead.
+DAYS_AHEAD = 2
+
+
+def _queue_bags(db, day: PickupDay, staff: Staff) -> list[QueueBag]:
+    return [
+        QueueBag(
+            id=bag.booking.id,
+            code=bag.booking.code,
+            starts_at=_newfoundland(bag.starts_at),
+            status=bag.booking.status,
+            things=bag.things,
+            ran_out=bag.ran_out,
+            packed_at=_newfoundland(bag.booking.packed_at),
+            packed_by=bag.packed_by,
+            packing_by=bag.packing_by,
+            packing_since=_newfoundland(bag.booking.packing_started_at) if bag.packing_by else None,
+            packing_is_you=bag.packing_by is not None and bag.booking.packing_by_staff_id == staff.id,
+        )
+        for bag in packing.queue(db, day)
+    ]
+
+
+def _coming_up(db, after: PickupDay, staff: Staff) -> list[ComingDay]:
+    later = db.scalars(
+        select(PickupDay)
+        .where(PickupDay.pickup_date > after.pickup_date, PickupDay.closed_at.is_(None))
+        .order_by(PickupDay.pickup_date)
+        .limit(DAYS_AHEAD)
+    ).all()
+    days = [
+        ComingDay(
+            pickup_date=day.pickup_date,
+            packing_starts_at=_newfoundland(day.booking_closes_at),
+            bags=_queue_bags(db, day, staff),
+        )
+        for day in later
+    ]
+    return [day for day in days if day.bags]
 
 
 @router.get("/packing")
@@ -74,22 +125,8 @@ def packing_queue(staff: CurrentStaff, db: DB, now: Now) -> PackingQueue:
             can_pack=why_not is None,
             why_not=why_not,
         ),
-        bags=[
-            QueueBag(
-                id=bag.booking.id,
-                code=bag.booking.code,
-                starts_at=_newfoundland(bag.starts_at),
-                status=bag.booking.status,
-                things=bag.things,
-                ran_out=bag.ran_out,
-                packed_at=_newfoundland(bag.booking.packed_at),
-                packed_by=bag.packed_by,
-                packing_by=bag.packing_by,
-                packing_since=_newfoundland(bag.booking.packing_started_at) if bag.packing_by else None,
-                packing_is_you=bag.packing_by is not None and bag.booking.packing_by_staff_id == staff.id,
-            )
-            for bag in packing.queue(db, day)
-        ],
+        bags=_queue_bags(db, day, staff),
+        coming_up=_coming_up(db, day, staff),
     )
 
 

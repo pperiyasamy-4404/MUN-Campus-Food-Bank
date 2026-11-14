@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import type { PackingQueue, QueueBag } from '../api.ts'
 import { useMe } from '../me.ts'
-import { showClock, showDate } from '../time.ts'
+import { showClock, showDate, showDayAndClock } from '../time.ts'
 import { STATUS_WORDS } from './packingTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
 import { Loading } from '../ui/Loading.tsx'
@@ -100,6 +100,26 @@ export function Packing() {
           </ul>
         </>
       )}
+
+      {/* The next days' bags, so a booking is never out of sight (13 Nov night). They're
+          packed once their own booking closes. */}
+      {load.queue.coming_up.map((next) => (
+        <section key={next.pickup_date} className="coming-up">
+          <h2>
+            Coming up: {showDate(next.pickup_date)} ({next.bags.length})
+          </h2>
+          {/* No full stop after a time: it ends in "p.m." already. */}
+          <p className="muted">
+            Packing starts {showDayAndClock(next.packing_starts_at)}, when booking closes. Until then, students can
+            still cancel
+          </p>
+          <ul className="bag-list">
+            {next.bags.map((bag) => (
+              <BagRow key={bag.id} bag={bag} action="Open" />
+            ))}
+          </ul>
+        </section>
+      ))}
     </div>
   )
 }
