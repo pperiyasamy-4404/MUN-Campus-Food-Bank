@@ -37,7 +37,9 @@ SAMPLE_SETTINGS = dict(
 # Monday and Thursday, 3:30 to 7:30 pm: the food bank's real hours (13 Nov).
 SAMPLE_PICKUP_HOURS = [(1, time(15, 30), time(19, 30)), (4, time(15, 30), time(19, 30))]
 
-TAGS = ["Vegetarian", "Halal", "Gluten-free", "Contains nuts"]
+# "Canned" (14 Nov, Prakash's choice): not a diet, but a filter on the food pages, so a
+# student can see only canned food (chicken, tuna, beans, vegetables). Not on pasta sauce: it comes in a jar.
+TAGS = ["Vegetarian", "Halal", "Gluten-free", "Contains nuts", "Canned"]
 
 # category -> item -> [(variety, stock, tags)]
 # Most food has no number (None): it's in stock, and nobody counts it (decided 12 Nov).
@@ -71,21 +73,21 @@ SAMPLE_FOOD = {
         ],
     },
     "Protein": {
-        "Canned chicken": [("Chunk chicken", 6, ["Halal"])],
-        "Canned tuna": [("Tuna in water", None, [])],
-        "Chickpeas": [("Chickpeas (canned)", 1, ["Vegetarian", "Halal", "Gluten-free"])],
+        "Canned chicken": [("Chunk chicken", 6, ["Halal", "Canned"])],
+        "Canned tuna": [("Tuna in water", None, ["Canned"])],
+        "Chickpeas": [("Chickpeas (canned)", 1, ["Vegetarian", "Halal", "Gluten-free", "Canned"])],
         "Canned beans": [
-            ("Black beans", None, ["Vegetarian", "Halal", "Gluten-free"]),
-            ("Kidney beans", None, ["Vegetarian", "Halal", "Gluten-free"]),
+            ("Black beans", None, ["Vegetarian", "Halal", "Gluten-free", "Canned"]),
+            ("Kidney beans", None, ["Vegetarian", "Halal", "Gluten-free", "Canned"]),
         ],
         # A sauce can hide wheat, so no "Gluten-free" here.
-        "Baked beans": [("Beans in tomato sauce", None, ["Vegetarian"])],
+        "Baked beans": [("Beans in tomato sauce", None, ["Vegetarian", "Canned"])],
     },
     # One item each, so a student can take a can of each (one of each item, I3).
     "Vegetables": {
-        "Canned corn": [("Whole kernel corn", None, ["Vegetarian", "Halal", "Gluten-free"])],
-        "Canned peas": [("Green peas", None, ["Vegetarian", "Halal", "Gluten-free"])],
-        "Canned tomatoes": [("Diced tomatoes", None, ["Vegetarian", "Halal", "Gluten-free"])],
+        "Canned corn": [("Whole kernel corn", None, ["Vegetarian", "Halal", "Gluten-free", "Canned"])],
+        "Canned peas": [("Green peas", None, ["Vegetarian", "Halal", "Gluten-free", "Canned"])],
+        "Canned tomatoes": [("Diced tomatoes", None, ["Vegetarian", "Halal", "Gluten-free", "Canned"])],
     },
     "Cooking": {
         "Cooking oil": [("Sunflower oil", None, ["Vegetarian"]), ("Vegetable oil", None, ["Vegetarian"])],

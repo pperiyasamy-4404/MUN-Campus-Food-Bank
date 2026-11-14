@@ -4,9 +4,11 @@ import type { Category } from './api.ts'
 // sees only food that fits. Pure, so it's easy to test.
 
 // Only these two since 13 Nov night (the user's choice): Halal and Nut-free were taken off.
-export type Diet = 'Vegetarian' | 'Gluten-free'
+// Canned added 14 Nov (Prakash's choice): not a diet, but a tag like the others, so the
+// same filter works ("Vegetarian" + "Canned" = vegetarian canned food).
+export type Diet = 'Vegetarian' | 'Gluten-free' | 'Canned'
 
-export const DIETS: Diet[] = ['Vegetarian', 'Gluten-free']
+export const DIETS: Diet[] = ['Vegetarian', 'Gluten-free', 'Canned']
 
 /** Does a variety with these tags fit every chosen diet? */
 export function fits(tags: string[], wanted: Diet[]): boolean {

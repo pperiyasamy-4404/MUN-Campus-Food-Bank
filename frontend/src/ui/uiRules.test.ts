@@ -2,7 +2,7 @@
 // the food filters and the packing progress bar.
 import { describe, expect, it } from 'vitest'
 import type { Bag, Category, PackingPlan } from '../api.ts'
-import { countVarieties, filterFood, fits } from '../foodFilter.ts'
+import { countVarieties, DIETS, filterFood, fits } from '../foodFilter.ts'
 import { linesToTick, startingFindings, stillToTick, substituteKey, withPicked, foodKey } from '../pages/packingTools.ts'
 import { holdLevel, holdShare, untilText } from './timing.ts'
 
@@ -53,7 +53,7 @@ describe('the food filters', () => {
       items: [
         {
           id: 3, name: 'Canned beans', photo_url: null,
-          varieties: [{ id: 31, name: 'Black beans', stock: null, few_left: false, tags: ['Vegetarian', 'Halal', 'Gluten-free'] }],
+          varieties: [{ id: 31, name: 'Black beans', stock: null, few_left: false, tags: ['Vegetarian', 'Halal', 'Gluten-free', 'Canned'] }],
         },
       ],
     },
@@ -71,6 +71,14 @@ describe('the food filters', () => {
     expect(countVarieties(filterFood(food, ['Vegetarian']))).toBe(3)
     expect(filterFood(food, [])).toBe(food)
     expect(countVarieties(food)).toBe(3)
+  })
+
+  it('shows only canned food, and works with a diet too (14 Nov)', () => {
+    const canned = filterFood(food, ['Canned'])
+    expect(canned.map((category) => category.name)).toEqual(['Protein'])
+    expect(countVarieties(canned)).toBe(1)
+    expect(countVarieties(filterFood(food, ['Vegetarian', 'Canned']))).toBe(1)
+    expect(DIETS).toContain('Canned')
   })
 })
 
