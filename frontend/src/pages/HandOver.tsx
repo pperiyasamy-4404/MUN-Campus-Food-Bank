@@ -4,14 +4,16 @@ import { send, type BagAtCounter, type HandedOver, type ShelfFood } from '../api
 import { Field, Problem } from '../forms.tsx'
 import { useMe } from '../me.ts'
 import { showClock, showDate } from '../time.ts'
-import { CounterNav, ExtrasPicker, ShelfPicker } from './CounterParts.tsx'
+import { CounterNav, ShelfPicker } from './CounterParts.tsx'
 import { asChoices, total, useCounterPage, type Chosen } from './counterTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
 import { Loading } from '../ui/Loading.tsx'
 
 // Handing over a booked bag (P5, B3, U6, E3). The student says their code, the
-// volunteer finds the bag, adds any extras they ask for, types the number on
-// their MUN card, and hands the bag over. The server checks the card matches.
+// volunteer finds the bag, types the number on their MUN card, and hands the
+// bag over. The server checks the card matches.
+// Extras like bread and eggs aren't asked about here since 13 Nov night (the
+// user's choice): students take them at the counter, so the page leaves them out.
 // No code (a dead phone, say)? The bag can be found by the card instead (decided 12 Nov).
 
 export function HandOver() {
@@ -120,7 +122,6 @@ export function HandOver() {
               key={bag.id}
               bag={bag}
               food={page.food}
-              extras={page.extras}
               maxPerItem={page.limits.max_per_item}
               cardTyped={foundByCard}
               onDone={setDone}
@@ -137,7 +138,6 @@ export function HandOver() {
 function TheBag({
   bag,
   food,
-  extras,
   maxPerItem,
   cardTyped,
   onDone,
@@ -146,7 +146,6 @@ function TheBag({
 }: {
   bag: BagAtCounter
   food: ShelfFood[]
-  extras: ShelfFood[]
   maxPerItem: number
   // The card the bag was found by, if it was. Empty otherwise.
   cardTyped: string
@@ -155,7 +154,6 @@ function TheBag({
   onLoggedOut: () => void
 }) {
   const [choices, setChoices] = useState<Chosen>({})
-  const [chosenExtras, setChosenExtras] = useState<Record<number, number>>({})
   const [card, setCard] = useState(cardTyped)
   const [problem, setProblem] = useState<string | null>(null)
   const [fields, setFields] = useState<Record<string, string>>({})
@@ -173,7 +171,7 @@ function TheBag({
       code: bag.code,
       id_number: card,
       choices: asChoices(choices),
-      extras: Object.values(chosenExtras),
+      extras: [],
     })
     setSending(false)
     if (answer.ok) return onDone(answer.data)
@@ -264,10 +262,6 @@ function TheBag({
             </>
           )}
 
-          <h3>Extras they ask for</h3>
-          <p className="muted">One of each.</p>
-          <ExtrasPicker lines={extras} chosen={chosenExtras} onChange={setChosenExtras} />
-
           <h3>Check their MUN card</h3>
           <Problem message={problem} />
           <Field
@@ -281,7 +275,7 @@ function TheBag({
           <button type="submit" disabled={sending || card.trim() === ''} aria-busy={sending}>
             {sending
               ? 'Saving...'
-              : `Hand over bag ${bag.code}${total(choices) + Object.keys(chosenExtras).length > 0 ? ' with the extra food' : ''}`}
+              : `Hand over bag ${bag.code}${total(choices) > 0 ? ' with the extra food' : ''}`}
           </button>
         </form>
       )}

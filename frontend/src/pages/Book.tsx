@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router'
 import { send, type BookingDetails, type BookingStatus, type Food, type HeldTime, type MyBooking, type PickupDay, type Slot } from '../api.ts'
 import { Problem } from '../forms.tsx'
 import { useMe } from '../me.ts'
@@ -12,6 +13,7 @@ import { Icon } from '../ui/Icon.tsx'
 import { Loading } from '../ui/Loading.tsx'
 import { untilText } from '../ui/timing.ts'
 import { useToast } from '../ui/toast.ts'
+import { firstTimeFor, wantedSlot } from '../wantedSlot.ts'
 
 // A student's booking page, in three stages (S8):
 //   1. choose a time: it's held for them for 10 minutes
@@ -33,6 +35,7 @@ async function getJson<T>(path: string): Promise<T> {
 
 export function Book() {
   const { forget } = useMe()
+
   const [data, setData] = useState<Data>({ state: 'loading' })
   const [version, setVersion] = useState(0)
   // Something to tell the student after the page changes stage, like "Your 10 minutes ran out."
@@ -174,6 +177,21 @@ function ChooseTime({
     setProblem({ date: day.pickup_date, message: answer.message })
     if (answer.status === 409) onTaken() // someone else took it: show the times as they are now
   }
+
+  // The time tapped on the home page: hold it now, just like a tap here. If it's gone,
+  // or the student can't have it, the server says why in that day's card.
+  // Used once per visit: "Choose a different time" later must not hold it again.
+  const location = useLocation()
+  const holdWanted = useRef(wantedSlot(location.state))
+  useEffect(() => {
+    const slotId = holdWanted.current?.slotId
+    holdWanted.current = null
+    if (slotId === undefined || !firstTimeFor(location.key)) return
+    const day = days.find((one) => one.slots.some((slot) => slot.id === slotId))
+    const slot = day?.slots.find((one) => one.id === slotId)
+    if (day && slot) void hold(day, slot)
+    // Only once, when the page first shows the times.
+  }, [])
 
   return (
     <>

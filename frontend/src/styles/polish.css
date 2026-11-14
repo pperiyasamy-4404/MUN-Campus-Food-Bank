@@ -1,0 +1,711 @@
+/*
+ * The second round of polish (13 Nov night), from the user's walk-through:
+ * smooth page changes, a sliding tab line, the header's Log in and Log out,
+ * the Log in and Set up cards, tappable times on the home page, bigger food
+ * cards on hover, the slim hold bar and Book bar, "Ready to book?", and the
+ * goodbye screen. Loaded last, so it can adjust the older rules.
+ *
+ * Colours come from theme.css only. Anyone whose phone asks for less movement
+ * gets none of the movement (index.css, and the rule at the end here for page changes).
+ */
+
+/* ---------- changing page ---------- */
+
+/* React's <ViewTransition default="page"> in Layout.tsx. The old page fades and
+   lifts away quickly; the new one rises in a moment later, slower, with a gentle stop. */
+@keyframes page-out {
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes page-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+::view-transition-group(.page) {
+  animation-duration: 480ms;
+  animation-timing-function: var(--ease-out);
+}
+
+::view-transition-old(.page) {
+  animation: page-out 200ms ease-in both;
+}
+
+::view-transition-new(.page) {
+  animation: page-rise 460ms var(--ease-out) 110ms both;
+}
+
+/* The header only changes a little (the bold tab), so it just cross-fades, briefly. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+}
+
+/* The white line under the tab you're on glides to the new tab. */
+::view-transition-group(.tab-bar) {
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* Loading shapes wait a moment before showing, so a quick page never flashes them. */
+@keyframes loading-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.loading {
+  animation: loading-in 280ms ease 220ms both;
+}
+
+/* ---------- the tabs: a line that slides ---------- */
+
+/* The line is its own element now (so it can glide), not the tab's bottom border. */
+.tabs a {
+  position: relative;
+}
+
+.tabs a:hover,
+.tabs a.active {
+  border-bottom-color: transparent;
+}
+
+.tab-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  border-radius: 2px 2px 0 0;
+  background: var(--tab-active-bar);
+}
+
+/* On the other tabs, a fainter line grows in under the mouse. */
+.tab-bar-hover {
+  opacity: 0;
+  transform: scaleX(0.3);
+  transition:
+    opacity var(--duration-normal) ease,
+    transform var(--duration-normal) var(--ease-out);
+}
+
+.tabs a:hover .tab-bar-hover {
+  opacity: 0.6;
+  transform: none;
+}
+
+/* ---------- the header: Log in and Log out as buttons ---------- */
+
+.account-links a.header-login,
+.account-links a.header-login:hover {
+  min-height: 2.5rem;
+  padding: 0 1.2rem;
+  border-radius: 999px;
+  color: var(--header-bg);
+  background: var(--header-text);
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: var(--shadow-soft);
+  transition:
+    transform var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease;
+}
+
+.account-links a.header-login:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-raised);
+}
+
+.account-links button.header-logout {
+  min-height: 2.5rem;
+  padding: 0 1.1rem;
+  border-radius: 999px;
+  color: var(--header-text);
+  background: transparent;
+  border: 2px solid var(--header-text);
+  font-weight: 700;
+}
+
+.account-links button.header-logout:hover:not(:disabled) {
+  color: var(--header-bg);
+  background: var(--header-text);
+  border-color: var(--header-text);
+}
+
+/* On a phone: a little less space, so the name and the button share the first line. */
+@media (width < 48rem) {
+  .top-inner {
+    column-gap: 0.75rem;
+  }
+
+  .account-links a.header-login,
+  .account-links a.header-login:hover,
+  .account-links button.header-logout {
+    min-height: 2.4rem;
+    padding: 0 0.9rem;
+  }
+}
+
+/* ---------- Log in and Set up: a card in the middle ---------- */
+
+.auth {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0 2rem;
+}
+
+.auth-card {
+  box-sizing: border-box;
+  width: min(28rem, 100%);
+  padding: 1.8rem 2rem 1.6rem;
+  background: var(--bg-page);
+  border: 1px solid var(--border-subtle);
+  border-top: 4px solid var(--accent-line);
+  border-radius: calc(var(--radius) * 3);
+  box-shadow: var(--shadow-raised);
+}
+
+.auth-logo {
+  display: block;
+  width: 9.5rem;
+  height: auto;
+  margin: 0 auto 1rem;
+}
+
+.auth-card h1 {
+  margin: 0;
+  text-align: center;
+}
+
+.auth-lead {
+  margin: 0.35rem 0 1.2rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+/* Student / Staff as one rounded switch. */
+.auth-card .login-switch {
+  gap: 4px;
+  margin: 0 0 0.4rem;
+  padding: 4px;
+  border: none;
+  border-radius: 999px;
+  background: var(--bg-surface);
+}
+
+.auth-card .login-switch a {
+  min-height: 2.6rem;
+  border-radius: 999px;
+  color: var(--text-primary);
+  background: transparent;
+  transition:
+    background-color var(--duration-normal) var(--ease-out),
+    color var(--duration-normal) ease,
+    box-shadow var(--duration-normal) ease;
+}
+
+.auth-card .login-switch a:hover {
+  background: var(--bg-page);
+}
+
+.auth-card .login-switch a[aria-current='page'] {
+  color: var(--action-primary-text);
+  background: var(--action-primary-bg);
+  box-shadow: var(--shadow-soft);
+}
+
+.auth-card .login-switch a:focus-visible {
+  outline-offset: 2px;
+}
+
+.auth-card input:not([type='checkbox']) {
+  border-radius: calc(var(--radius) * 1.5);
+  transition:
+    border-color var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease;
+}
+
+.auth-card input:not([type='checkbox']):hover {
+  border-color: var(--text-secondary);
+}
+
+/* A claret edge and a soft claret glow on the box being typed in. */
+.auth-card input:not([type='checkbox']):focus {
+  border-color: var(--action-primary-bg);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--action-primary-bg) 16%, transparent);
+}
+
+.auth-card .field-wrong input:not([type='checkbox']) {
+  border-color: var(--alert-error-accent);
+}
+
+.auth-submit {
+  width: 100%;
+  min-height: 3rem;
+  margin-top: 0.3rem;
+  font-size: 1.05rem;
+  border-radius: calc(var(--radius) * 1.5);
+}
+
+/* "New here?" between two thin lines. */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 1.6rem 0 1rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+a.button.auth-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  border-radius: calc(var(--radius) * 1.5);
+}
+
+.auth-small {
+  margin: 0.9rem 0 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+@media (width < 30rem) {
+  .auth {
+    padding-top: 0;
+  }
+
+  .auth-card {
+    padding: 1.4rem 1.1rem 1.3rem;
+    box-shadow: var(--shadow-soft);
+  }
+}
+
+/* ---------- food cards grow under the mouse ---------- */
+
+.food-card {
+  position: relative;
+  transition:
+    transform 320ms var(--ease-out),
+    box-shadow 320ms var(--ease-out),
+    border-color var(--duration-fast) ease;
+}
+
+.card-photo .food-photo {
+  transition:
+    opacity var(--duration-slow) ease,
+    transform 520ms var(--ease-out);
+}
+
+@media (hover: hover) {
+  .food-card:hover {
+    z-index: 1;
+    transform: translateY(-6px) scale(1.035);
+    box-shadow: var(--shadow-raised);
+  }
+
+  .food-card:hover .card-photo .food-photo {
+    transform: scale(1.09);
+  }
+}
+
+/* ---------- choosing food: one slim bar at the top ---------- */
+
+.hold-bar {
+  margin: 0.2rem 0 0.6rem;
+  padding: 0.35rem 0.8rem 0.45rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.hold-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 1rem;
+}
+
+.hold-when {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.hold-icon {
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--text-secondary);
+}
+
+.hold-left,
+.hold-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.hold-count {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+button.link-button.hold-change {
+  font-size: 0.875rem;
+}
+
+.hold-meter {
+  height: 4px;
+  margin: 0.25rem 0 0;
+}
+
+.choose-rules {
+  margin: 0 0 0.3rem;
+  font-size: 0.875rem;
+}
+
+.steps-bar {
+  margin-bottom: 0.8rem;
+}
+
+/* ---------- the Book bar: a hint, or the count and one button ---------- */
+
+.book-bar {
+  padding: 0.6rem 0;
+  box-shadow: 0 -10px 18px -14px rgb(35 31 32 / 0.35);
+}
+
+.book-bar-empty {
+  padding: 0.4rem 0;
+  border-top: none;
+  box-shadow: none;
+}
+
+.book-hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.book-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.book-bar .book-row button {
+  width: auto;
+  font-size: 1rem;
+  padding-inline: 1.5rem;
+}
+
+@media (width < 30rem) {
+  .book-bar .book-row button {
+    flex: 1;
+  }
+}
+
+/* ---------- "Ready to book?" ---------- */
+
+dialog.confirm-dialog {
+  width: min(30rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 0;
+  border: none;
+  border-top: 4px solid var(--accent-line);
+  border-radius: calc(var(--radius) * 2);
+  color: var(--text-primary);
+  background: var(--bg-page);
+  box-shadow: var(--shadow-dialog);
+  overflow: auto;
+}
+
+dialog.confirm-dialog[open] {
+  animation: pop-in var(--duration-normal) var(--ease-spring) both;
+}
+
+dialog.confirm-dialog::backdrop {
+  background: var(--overlay-bg);
+  backdrop-filter: blur(3px);
+  animation: fade-in var(--duration-normal) ease both;
+}
+
+.confirm-body {
+  padding: 1.2rem 1.3rem 0;
+}
+
+.confirm-body h2 {
+  margin: 0 0 0.6rem;
+}
+
+.confirm-body h3 {
+  margin: 1rem 0 0.2rem;
+  font-size: 1rem;
+}
+
+.confirm-when {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+}
+
+.confirm-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.confirm-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 1rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.confirm-ranked {
+  counter-reset: rank;
+}
+
+.confirm-ranked li > span:first-child::before {
+  counter-increment: rank;
+  content: counter(rank) '. ';
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.confirm-note {
+  margin: 1rem 0 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* The two buttons stay in view at the bottom, even with a long list. */
+.confirm-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+  padding: 0.8rem 0 1.1rem;
+  background: var(--bg-page);
+}
+
+@media (width < 30rem) {
+  .confirm-actions button {
+    flex: 1;
+  }
+}
+
+/* ---------- the goodbye screen after Log out ---------- */
+
+@keyframes wave {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(8px);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.03) rotate(-3deg);
+  }
+  65% {
+    transform: rotate(2deg);
+  }
+  82% {
+    transform: rotate(-1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes goodbye-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes drift-up {
+  to {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
+.splash.goodbye .splash-mark {
+  animation: wave 1000ms var(--ease-out) both;
+}
+
+/* The line draws out from the middle. */
+.splash.goodbye .splash-line {
+  transform-origin: center;
+}
+
+.splash.goodbye.leaving {
+  animation: goodbye-out 420ms ease both;
+}
+
+.splash.goodbye.leaving > * {
+  animation: drift-up 420ms ease-in both;
+}
+
+/* ---------- fixes after the second walk-through (13 Nov, late) ---------- */
+
+/* A card growing under the mouse slid over the time bar and the Book bar.
+   The two bars sit above the cards now. */
+.hold-bar,
+.book-bar {
+  z-index: 5;
+}
+
+/* The welcome and goodbye screens stay on top while the page underneath
+   changes (Log out sends a student's page to Log in behind the goodbye). */
+.splash {
+  view-transition-name: splash;
+}
+
+/* ---------- Setup code: its own page, as a card ---------- */
+
+.auth-card-wide {
+  width: min(34rem, 100%);
+}
+
+.auth-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto 0.8rem;
+  border-radius: 50%;
+  color: var(--text-on-claret);
+  background: var(--action-primary-bg);
+  box-shadow: var(--shadow-soft);
+}
+
+.auth-badge svg {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+/* 1 Check their MUN card · 2 Type the number twice · 3 Read them the code */
+.steps-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.steps-strip li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.7rem 0.4rem;
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: center;
+  counter-increment: step;
+}
+
+.steps-strip li::before {
+  content: counter(step);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  color: var(--text-on-claret);
+  background: var(--action-primary-bg);
+}
+
+.small-print {
+  margin: 0 0 0.4rem;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+@media (width < 30rem) {
+  .steps-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .steps-strip li {
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
+/* ---------- the header with six staff tabs ---------- */
+
+/* A little wider than the page, and a little tighter, so the six staff tabs
+   (Setup code made six) stay on one line on a laptop. */
+.top-inner {
+  max-width: 78rem;
+  column-gap: 1.1rem;
+}
+
+.tabs a {
+  padding-left: 0.6rem;
+  padding-right: 0.6rem;
+}
+
+/* Staff on a narrower screen: the MUN mark alone, the name only for screen readers. */
+@media (48rem <= width < 75rem) {
+  .top-staff .brand-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* ---------- Packing: the next days' bags ---------- */
+
+.coming-up {
+  margin-top: 2rem;
+  padding-top: 0.4rem;
+  border-top: 1px dashed var(--border-input);
+}

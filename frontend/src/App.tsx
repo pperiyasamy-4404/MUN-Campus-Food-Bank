@@ -67,14 +67,16 @@ function App() {
                 </StaffOnly>
               }
             />
+            {/* Its own tab since 13 Nov night. The old address still works. */}
             <Route
-              path="counter/setup-code"
+              path="setup-code"
               element={
                 <StaffOnly>
                   <SetupCode />
                 </StaffOnly>
               }
             />
+            <Route path="counter/setup-code" element={<Navigate to="/setup-code" replace />} />
             <Route
               path="stock"
               element={

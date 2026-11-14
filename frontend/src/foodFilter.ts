@@ -3,13 +3,14 @@ import type { Category } from './api.ts'
 // The food filters (13 Nov): a student taps "Vegetarian" or "Gluten-free" and
 // sees only food that fits. Pure, so it's easy to test.
 
-export type Diet = 'Vegetarian' | 'Halal' | 'Gluten-free' | 'Nut-free'
+// Only these two since 13 Nov night (the user's choice): Halal and Nut-free were taken off.
+export type Diet = 'Vegetarian' | 'Gluten-free'
 
-export const DIETS: Diet[] = ['Vegetarian', 'Halal', 'Gluten-free', 'Nut-free']
+export const DIETS: Diet[] = ['Vegetarian', 'Gluten-free']
 
-/** Does a variety with these tags fit every chosen diet? "Nut-free" means no "Contains nuts" tag. */
+/** Does a variety with these tags fit every chosen diet? */
 export function fits(tags: string[], wanted: Diet[]): boolean {
-  return wanted.every((diet) => (diet === 'Nut-free' ? !tags.includes('Contains nuts') : tags.includes(diet)))
+  return wanted.every((diet) => tags.includes(diet))
 }
 
 /**

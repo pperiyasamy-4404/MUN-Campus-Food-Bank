@@ -1,10 +1,16 @@
-import type { ReactNode } from 'react'
+import { useState, ViewTransition, type ReactNode } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { useMe } from './me.ts'
 import logoMark from './assets/logo-mark-white.png'
 import { useOnline } from './ui/hooks.ts'
 import { Loading } from './ui/Loading.tsx'
-import { useToast } from './ui/toast.ts'
+import { WelcomeSplash } from './ui/WelcomeSplash.tsx'
+
+// Browsers that can't do a smooth change between pages (React's <ViewTransition>)
+// get the old fade-in on each new page instead.
+const smoothPageChanges = typeof document !== 'undefined' && 'startViewTransition' in document
+// How long the goodbye screen takes to cover the page (its fade in is 140 ms).
+const GOODBYE_COVERS_MS = 250
 
 /** The bar at the top of every page, and the page under it. */
 export function Layout() {
@@ -12,13 +18,22 @@ export function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
   const online = useOnline()
-  const toast = useToast()
   const account = me.state === 'ready' ? me.me : null
+  // On the Log in and Set up pages, the Log in button up top would only point at the page itself.
+  const onLogInPage = /^\/(staff\/)?(login|setup)$/.test(location.pathname)
+  // Logging out shows a goodbye screen (13 Nov night), so it feels like something happened.
+  const [leaving, setLeaving] = useState(false)
 
-  async function logOutAndLeave() {
-    await logOut()
-    navigate('/')
-    toast("You're logged out. See you soon.")
+  // The goodbye screen covers everything first; only then does the logging out
+  // happen underneath it, so the page never jumps to Log in before the goodbye.
+  // Under the cover it goes straight to the pickup days, then logs out there, so the
+  // Log in page never shows on the way (13 Nov night).
+  function logOutAndLeave() {
+    setLeaving(true)
+    window.setTimeout(() => {
+      navigate('/')
+      void logOut()
+    }, GOODBYE_COVERS_MS)
   }
 
   return (
@@ -26,64 +41,65 @@ export function Layout() {
       {/* A claret bar (decided 12 Nov night): the name, the tabs with icons like the
           my.mun.ca portal, and the account links on the right, in one row. */}
       <header className="top">
-        <div className="top-inner">
+        <div className={account?.kind === 'staff' ? 'top-inner top-staff' : 'top-inner'}>
           {/* The food bank's logo, in white so it shows on the claret bar (13 Nov). Only the
               MUN shape: its small "Campus Food Bank" lettering can't be read this size, so
               the name stays as text. alt="" because the words next to it say it already. */}
           <Link to="/" className="brand">
             <img className="brand-mark" src={logoMark} alt="" width="80" height="45" />
-            Campus Food Bank
+            {/* Staff have six tabs: on a narrower screen the name hides (still read out). */}
+            <span className="brand-name">Campus Food Bank</span>
           </Link>
           <nav aria-label="Account" className="account-links">
-            {account === null && me.state !== 'loading' && (
-              <>
-                <NavLink to="/setup">Set up your account</NavLink>
-                <NavLink to="/login">Log in</NavLink>
-              </>
+            {/* Only Log in up here (13 Nov night): setting up an account is a one-time
+                thing, so its link lives on the Log in page instead. */}
+            {account === null && me.state !== 'loading' && !onLogInPage && (
+              <NavLink to="/login" className="header-login">
+                Log in
+              </NavLink>
             )}
             {account !== null && (
               <>
                 {account.kind === 'staff' && <span className="who">{account.username}</span>}
-                <button type="button" className="link-button" onClick={logOutAndLeave}>
+                <button type="button" className="header-logout" onClick={logOutAndLeave} disabled={leaving}>
                   Log out
                 </button>
               </>
             )}
           </nav>
           <nav aria-label="Main" className="tabs">
-            <NavLink to="/" end>
-              <TabIcon shape="calendar" />
+            <Tab to="/" end shape="calendar">
               Pickup days
-            </NavLink>
+            </Tab>
             {account?.kind === 'student' && (
-              <NavLink to="/book">
-                <TabIcon shape="bag" />
+              <Tab to="/book" shape="bag">
                 Book
-              </NavLink>
+              </Tab>
             )}
             {account?.kind === 'staff' && (
-              <NavLink to="/counter">
-                <TabIcon shape="card" />
+              <Tab to="/counter" shape="card">
                 Counter
-              </NavLink>
+              </Tab>
             )}
             {account?.kind === 'staff' && (
-              <NavLink to="/packing">
-                <TabIcon shape="box" />
+              <Tab to="/setup-code" shape="key">
+                Setup code
+              </Tab>
+            )}
+            {account?.kind === 'staff' && (
+              <Tab to="/packing" shape="box">
                 Packing
-              </NavLink>
+              </Tab>
             )}
             {account?.kind === 'staff' && (
-              <NavLink to="/stock">
-                <TabIcon shape="list" />
+              <Tab to="/stock" shape="list">
                 Stock
-              </NavLink>
+              </Tab>
             )}
             {account?.kind === 'staff' && account.role === 'coordinator' && (
-              <NavLink to="/coordinator">
-                <TabIcon shape="sliders" />
+              <Tab to="/coordinator" shape="sliders">
                 Coordinator
-              </NavLink>
+              </Tab>
             )}
           </nav>
         </div>
@@ -96,21 +112,59 @@ export function Layout() {
       {me.state === 'failed' && online && (
         <p className="problem banner">Could not reach the server. Is it running?</p>
       )}
-      <main>
-        {/* A new page fades in. The key starts the animation again on each address. */}
-        <div key={location.pathname} className="page-enter">
-          <Outlet />
-        </div>
-      </main>
+      {/* Changing page (13 Nov night): the old page fades and lifts away, and the new one
+          rises in (React's <ViewTransition>, styled as "page" in motion.css). The header
+          stays put. The key makes each address a fresh page. */}
+      <ViewTransition default="page">
+        <main>
+          <div key={location.pathname} className={smoothPageChanges ? undefined : 'page-enter'}>
+            <Outlet />
+          </div>
+        </main>
+      </ViewTransition>
+      {leaving && (
+        <WelcomeSplash
+          goodbye
+          words="See you soon"
+          sub="You're logged out"
+          onDone={() => setLeaving(false)}
+        />
+      )}
     </>
   )
 }
 
 /**
+ * One tab in the header. The white line under the tab you're on slides across
+ * to the new tab when you change page (a shared <ViewTransition> name, 13 Nov night).
+ */
+function Tab({ to, end = false, shape, children }: { to: string; end?: boolean; shape: TabShape; children: ReactNode }) {
+  return (
+    <NavLink to={to} end={end}>
+      {({ isActive }) => (
+        <>
+          <TabIcon shape={shape} />
+          {children}
+          {isActive ? (
+            <ViewTransition name="tab-bar" share="tab-bar">
+              <span className="tab-bar" aria-hidden="true" />
+            </ViewTransition>
+          ) : (
+            <span className="tab-bar tab-bar-hover" aria-hidden="true" />
+          )}
+        </>
+      )}
+    </NavLink>
+  )
+}
+
+type TabShape = 'calendar' | 'bag' | 'card' | 'key' | 'box' | 'list' | 'sliders'
+
+/**
  * A small line drawing for each tab, like the icons in the portal's tabs. Drawn
  * here, so no icon package is needed. Hidden from screen readers: the tab's words say it.
  */
-function TabIcon({ shape }: { shape: 'calendar' | 'bag' | 'card' | 'box' | 'list' | 'sliders' }) {
+function TabIcon({ shape }: { shape: TabShape }) {
   const lines = {
     calendar: (
       <>
@@ -135,6 +189,12 @@ function TabIcon({ shape }: { shape: 'calendar' | 'bag' | 'card' | 'box' | 'list
       <>
         <path d="M21 8 12 3 3 8v8l9 5 9-5z" />
         <path d="m3 8 9 5 9-5M12 13v8" />
+      </>
+    ),
+    key: (
+      <>
+        <circle cx="7.5" cy="15.5" r="4.5" />
+        <path d="m10.7 12.3 9.8-9.8M17 6l3 3M14.5 8.5l2 2" />
       </>
     ),
     list: <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />,

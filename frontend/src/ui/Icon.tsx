@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 // here, like the tab icons, so no icon package is needed. Always hidden from
 // screen readers: the words next to them say it.
 
-export type IconName = 'check' | 'info' | 'close' | 'box' | 'calendar' | 'chart' | 'search' | 'copy' | 'wifi-off' | 'expand'
+export type IconName = 'check' | 'info' | 'close' | 'box' | 'calendar' | 'chart' | 'search' | 'copy' | 'wifi-off' | 'expand' | 'clock'
 
 const SHAPES: Record<IconName, ReactNode> = {
   check: (
@@ -20,6 +20,12 @@ const SHAPES: Record<IconName, ReactNode> = {
     </>
   ),
   close: <path d="M6 6l12 12M18 6 6 18" />,
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </>
+  ),
   box: (
     <>
       <path d="M21 8 12 3 3 8v8l9 5 9-5z" />

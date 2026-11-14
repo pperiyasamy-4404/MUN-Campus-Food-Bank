@@ -1,6 +1,7 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { send, type BookingDetails, type Food, type HeldTime, type Limits, type Variety } from '../api.ts'
 import { FoodCard, FoodRow, StockNote } from '../FoodCards.tsx'
+import { FoodGrid } from '../FoodList.tsx'
 import { Problem } from '../forms.tsx'
 import { showDayAndClock } from '../time.ts'
 import { PageHeading } from '../PageHeading.tsx'
@@ -8,6 +9,7 @@ import { countVarieties, filterFood, type Diet } from '../foodFilter.ts'
 import { BookingSteps } from '../ui/BookingSteps.tsx'
 import { DietFilters } from '../ui/DietFilters.tsx'
 import { Empty } from '../ui/Empty.tsx'
+import { Icon } from '../ui/Icon.tsx'
 import { holdLevel, holdShare } from '../ui/timing.ts'
 
 // Stage 2 of booking: the time is held, a countdown runs, and the student
@@ -44,6 +46,8 @@ export function ChooseFood({
   const [substitutes, setSubstitutes] = useState<number[]>([])
   const [problem, setProblem] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
+  // "Ready to book?" (13 Nov night): Book opens a check first, so a stray tap never books.
+  const [confirming, setConfirming] = useState(false)
   // The diet filters (13 Nov). They only change what's shown: chosen food stays chosen.
   const [diets, setDiets] = useState<Diet[]>([])
   const shown = filterFood(food.bookable, diets)
@@ -91,6 +95,7 @@ export function ChooseFood({
     })
     setSending(false)
     if (answer.ok) return onBooked()
+    setConfirming(false)
     if (answer.status === 401) return onLoggedOut()
     // 410: the held time is gone, so back to choosing a time.
     if (answer.status === 410) return onTimeUp()
@@ -109,37 +114,46 @@ export function ChooseFood({
   const substituteChoices = lines.filter(
     (line) => !(line.variety.id in chosen) && !substitutes.includes(line.variety.id) && line.variety.stock !== 0,
   )
-  const extras = food.extras.flatMap((category) => category.items.map((item) => item.name))
-
   return (
     <div>
       <BookingSteps current={2} />
       <PageHeading>Choose your food</PageHeading>
-      {/* Not a live region: it changes every second, and a screen reader would read
+      {/* One slim bar since 13 Nov night (it was three lines and a link): the time, the
+          minutes left, the count, and a thin line that runs down. It stays at the top.
+          Not a live region: it changes every second, and a screen reader would read
           every change. The hidden line below speaks only at a few moments. */}
       <div className={`hold-bar ${holdLevel(secondsLeft)}`}>
         <p className="visually-hidden" role="status">
           {timeLeftToSay(secondsLeft, limits.hold_minutes)}
         </p>
-        <p>
-          <strong>{showDayAndClock(hold.starts_at)}</strong> is kept for you for{' '}
-          <strong className={secondsLeft < 60 ? 'time-short' : undefined}>{asMinutes(secondsLeft)}</strong> more.
-        </p>
+        <div className="hold-row">
+          <span className="hold-when">
+            <Icon name="clock" className="hold-icon" />
+            <span>
+              <strong>{showDayAndClock(hold.starts_at)}</strong>
+              <span className="hold-left">
+                {' '}
+                · kept{' '}
+                <strong className={secondsLeft < 60 ? 'time-short' : undefined}>{asMinutes(secondsLeft)}</strong>
+              </span>
+            </span>
+          </span>
+          <span className="hold-count">
+            {total}/{limits.item_limit} food · {substitutes.length}/{limits.substitute_limit} substitutes
+          </span>
+          <button type="button" className="link-button hold-change" onClick={startOver}>
+            Change time
+          </button>
+        </div>
         <div className="hold-meter" aria-hidden="true">
           <div
             className={`hold-meter-fill ${holdLevel(secondsLeft)}`}
             style={{ width: `${holdShare(secondsLeft, limits.hold_minutes) * 100}%` }}
           />
         </div>
-        <p>
-          {total} of {limits.item_limit} chosen · {substitutes.length} of {limits.substitute_limit} substitutes
-        </p>
-        <button type="button" className="link-button" onClick={startOver}>
-          Choose a different time
-        </button>
       </div>
 
-      <p className="lead">
+      <p className="muted choose-rules">
         Up to {limits.item_limit} things, and {limits.max_per_item === 1 ? 'one' : `up to ${limits.max_per_item}`} of
         each kind of food, counting all its varieties together.
       </p>
@@ -224,19 +238,152 @@ export function ChooseFood({
         onChange={setSubstitutes}
       />
 
-      {extras.length > 0 && (
-        <p className="muted">
-          Extras aren't booked: {extras.join(', ')} may be available at pickup. Ask at the counter.
-        </p>
+      {/* The extras with their photos, like on the home page (13 Nov night): not booked,
+          but the student sees what they can ask for at the counter. */}
+      {food.extras.length > 0 && (
+        <section className="food-section">
+          <h2 className="food-section-title">Extras</h2>
+          <p className="muted">Not booked online. Ask at the counter when you pick up your bag: one of each, while they last.</p>
+          <FoodGrid categories={food.extras} empty="No extras today." extras />
+        </section>
       )}
 
-      <div className="book-bar">
+      {/* Slim since 13 Nov night: a small hint until something is chosen, then the
+          count and one button. The button opens "Ready to book?" first. */}
+      <div className={total === 0 ? 'book-bar book-bar-empty' : 'book-bar'}>
         <Problem message={problem} />
-        <button type="button" disabled={total === 0 || sending} aria-busy={sending} onClick={book}>
-          {sending ? 'Booking...' : total === 0 ? 'Choose something first' : `Book ${total} ${total === 1 ? 'thing' : 'things'}`}
-        </button>
+        {total === 0 ? (
+          <p className="book-hint">Add food to your list, then book it here.</p>
+        ) : (
+          <div className="book-row">
+            <span className="book-summary">
+              <strong>
+                {total} {total === 1 ? 'thing' : 'things'}
+              </strong>
+              {substitutes.length > 0 &&
+                ` · ${substitutes.length} ${substitutes.length === 1 ? 'substitute' : 'substitutes'}`}
+            </span>
+            <button type="button" onClick={() => setConfirming(true)}>
+              Book {total} {total === 1 ? 'thing' : 'things'}
+            </button>
+          </div>
+        )}
       </div>
+
+      {confirming && (
+        <ConfirmBooking
+          when={showDayAndClock(hold.starts_at)}
+          timeLeft={asMinutes(secondsLeft)}
+          food={lines
+            .filter((line) => line.variety.id in chosen)
+            .map((line) => ({ ...line, quantity: chosen[line.variety.id] }))}
+          substitutes={substitutes
+            .map((id) => lines.find((line) => line.variety.id === id))
+            .filter((line) => line !== undefined)}
+          sending={sending}
+          onConfirm={book}
+          onBack={() => setConfirming(false)}
+        />
+      )}
     </div>
+  )
+}
+
+/**
+ * "Ready to book?" (13 Nov night): the time, the food and the substitutes, once
+ * more, with Confirm booking and Go back. The browser's own <dialog>, so Escape
+ * or a tap outside means Go back, and the keyboard stays inside it.
+ */
+function ConfirmBooking({
+  when,
+  timeLeft,
+  food,
+  substitutes,
+  sending,
+  onConfirm,
+  onBack,
+}: {
+  when: string
+  timeLeft: string
+  food: (Line & { quantity: number })[]
+  substitutes: Line[]
+  sending: boolean
+  onConfirm: () => void
+  onBack: () => void
+}) {
+  const dialog = useRef<HTMLDialogElement>(null)
+  const title = useId()
+
+  useEffect(() => {
+    const box = dialog.current
+    if (box && !box.open) box.showModal()
+  }, [])
+
+  return (
+    <dialog
+      ref={dialog}
+      className="confirm-dialog"
+      aria-labelledby={title}
+      // While it's booking, Escape and a tap outside wait for the answer.
+      onCancel={(event) => {
+        if (sending) event.preventDefault()
+      }}
+      onClose={onBack}
+      onClick={(event) => {
+        if (event.target === dialog.current && !sending) dialog.current?.close()
+      }}
+    >
+      <div className="confirm-body">
+        <h2 id={title}>Ready to book?</h2>
+        <p className="confirm-when">
+          <Icon name="calendar" className="hold-icon" />
+          <span>
+            <strong>{when}</strong>
+            <span className="muted"> · still kept for {timeLeft}</span>
+          </span>
+        </p>
+
+        <h3>Your food</h3>
+        <ul className="confirm-list">
+          {food.map((line) => (
+            <li key={line.variety.id}>
+              <span>
+                {line.variety.name}
+                {line.quantity > 1 && ` × ${line.quantity}`}
+              </span>
+              <span className="muted">{line.item}</span>
+            </li>
+          ))}
+        </ul>
+
+        {substitutes.length > 0 ? (
+          <>
+            <h3>If something runs out, use these, in order</h3>
+            <ol className="confirm-list confirm-ranked">
+              {substitutes.map((line) => (
+                <li key={line.variety.id}>
+                  <span>{line.variety.name}</span>
+                  <span className="muted">{line.item}</span>
+                </li>
+              ))}
+            </ol>
+          </>
+        ) : (
+          <p className="muted">No substitutes: if something runs out, you can choose something else from the shelf at the counter.</p>
+        )}
+
+        <p className="confirm-note">You can still cancel later on your booking page, until booking closes.</p>
+
+        <div className="confirm-actions">
+          <button type="button" className="secondary" disabled={sending} onClick={() => dialog.current?.close()}>
+            Go back
+          </button>
+          <button type="button" disabled={sending} aria-busy={sending} onClick={onConfirm}>
+            {sending ? 'Booking...' : 'Confirm booking'}
+          </button>
+        </div>
+      </div>
+    </dialog>
   )
 }
 

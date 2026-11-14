@@ -9,7 +9,6 @@ import {
 import { NO_OLD_SYSTEM_ANSWER, oldSystemAnswer, oldSystemProblem, type OldSystem } from '../oldSystem.ts'
 import { useValues } from '../useValues.ts'
 import { useMe } from '../me.ts'
-import { CounterNav } from './CounterParts.tsx'
 import { PageHeading } from '../PageHeading.tsx'
 import { showDate, todayInNewfoundland } from '../time.ts'
 
@@ -18,6 +17,8 @@ import { showDate, todayInNewfoundland } from '../time.ts'
 // code, which is how a forgotten password is reset.
 // While the food bank switches over, the volunteer also types the student's
 // last pickup from the old records, so the 30 days count from it (decided 12 Nov).
+// Its own tab since 13 Nov night (the user's wish): it's too important to be a
+// small link under the counter, so it has a page of its own, as a card.
 
 export function SetupCode() {
   const { forget } = useMe()
@@ -64,9 +65,13 @@ export function SetupCode() {
   }
 
   return (
-    <div className="narrow">
-      <CounterNav />
+    <div className="auth">
+      <section className="auth-card auth-card-wide">
+      <span className="auth-badge" aria-hidden="true">
+        <KeyIcon />
+      </span>
       <PageHeading>Give a setup code</PageHeading>
+      <p className="auth-lead">For a student's first login, or when they forget their password.</p>
       {issued ? (
         <SetupCodeBox
           title={issued.new_account ? 'New account made' : 'New setup code for an existing account'}
@@ -95,9 +100,13 @@ export function SetupCode() {
         </SetupCodeBox>
       ) : (
         <>
-          <p className="lead">
-            Check the student's MUN card first. The number is only used to find or make their account, and is
-            never shown again.
+          <ol className="steps-strip">
+            <li>Check their MUN card</li>
+            <li>Type the number twice</li>
+            <li>Read them the code</li>
+          </ol>
+          <p className="muted small-print">
+            The number is only used to find or make their account, and is never shown again.
           </p>
           <form onSubmit={giveCode} noValidate autoComplete="off">
             <Problem message={problem} />
@@ -124,12 +133,23 @@ export function SetupCode() {
               error={fields.old_system_pickup_on}
               today={todayInNewfoundland()}
             />
-            <button type="submit" disabled={sending} aria-busy={sending}>
+            <button type="submit" className="auth-submit" disabled={sending} aria-busy={sending}>
               {sending ? 'Giving a code...' : 'Give a setup code'}
             </button>
           </form>
         </>
       )}
+      </section>
     </div>
+  )
+}
+
+/** A key, for the top of the page. The same drawing as the Setup code tab. */
+function KeyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" focusable="false">
+      <circle cx="7.5" cy="15.5" r="4.5" />
+      <path d="m10.7 12.3 9.8-9.8M17 6l3 3M14.5 8.5l2 2" />
+    </svg>
   )
 }

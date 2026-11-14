@@ -59,16 +59,16 @@ describe('the food filters', () => {
     },
   ]
 
-  it('"Nut-free" means no "Contains nuts" tag, and the others need their tag', () => {
-    expect(fits(['Vegetarian', 'Contains nuts'], ['Nut-free'])).toBe(false)
-    expect(fits(['Vegetarian'], ['Nut-free', 'Vegetarian'])).toBe(true)
-    expect(fits(['Vegetarian'], ['Halal'])).toBe(false)
+  it('needs every chosen tag', () => {
+    expect(fits(['Vegetarian', 'Contains nuts'], ['Vegetarian'])).toBe(true)
+    expect(fits(['Vegetarian'], ['Vegetarian', 'Gluten-free'])).toBe(false)
+    expect(fits(['Vegetarian', 'Gluten-free'], ['Gluten-free'])).toBe(true)
   })
 
   it('keeps only what fits, and drops empty items and categories', () => {
-    const halal = filterFood(food, ['Halal'])
-    expect(halal.map((category) => category.name)).toEqual(['Protein'])
-    expect(countVarieties(filterFood(food, ['Nut-free']))).toBe(2)
+    const glutenFree = filterFood(food, ['Gluten-free'])
+    expect(glutenFree.map((category) => category.name)).toEqual(['Protein'])
+    expect(countVarieties(filterFood(food, ['Vegetarian']))).toBe(3)
     expect(filterFood(food, [])).toBe(food)
     expect(countVarieties(food)).toBe(3)
   })

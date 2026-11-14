@@ -1,7 +1,7 @@
 import { DIETS, type Diet } from '../foodFilter.ts'
 
 /**
- * Filter chips: "Show only: Vegetarian, Halal, Gluten-free, Nut-free" (13 Nov).
+ * Filter chips: "Show only: Vegetarian, Gluten-free" (13 Nov).
  * Each is a toggle button (aria-pressed), so a screen reader says "pressed".
  * The count says how much is showing, and is read out when it changes.
  */

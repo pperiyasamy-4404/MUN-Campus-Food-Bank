@@ -49,7 +49,8 @@ export function FoodList() {
   )
 }
 
-function FoodGrid({ categories, empty, extras }: { categories: Category[]; empty: string; extras: boolean }) {
+/** Food as cards with photos. Also used for the extras on the booking page (13 Nov night). */
+export function FoodGrid({ categories, empty, extras }: { categories: Category[]; empty: string; extras: boolean }) {
   if (categories.length === 0) return <Empty icon="search" title={empty} />
   return (
     <div className="food-grid">
