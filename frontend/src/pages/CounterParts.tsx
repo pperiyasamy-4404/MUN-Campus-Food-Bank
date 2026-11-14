@@ -12,7 +12,6 @@ export function CounterNav() {
       <NavLink to="/counter" end>
         Hand over a bag
       </NavLink>
-      <NavLink to="/counter/walk-in">Walk-in</NavLink>
       <NavLink to="/counter/fix">Fix a pickup</NavLink>
     </nav>
   )

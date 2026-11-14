@@ -82,6 +82,11 @@ export function Layout() {
               </Tab>
             )}
             {account?.kind === 'staff' && (
+              <Tab to="/walk-in" shape="person">
+                Walk-in
+              </Tab>
+            )}
+            {account?.kind === 'staff' && (
               <Tab to="/setup-code" shape="key">
                 Setup code
               </Tab>
@@ -158,7 +163,7 @@ function Tab({ to, end = false, shape, children }: { to: string; end?: boolean; 
   )
 }
 
-type TabShape = 'calendar' | 'bag' | 'card' | 'key' | 'box' | 'list' | 'sliders'
+type TabShape = 'calendar' | 'bag' | 'card' | 'person' | 'key' | 'box' | 'list' | 'sliders'
 
 /**
  * A small line drawing for each tab, like the icons in the portal's tabs. Drawn
@@ -189,6 +194,12 @@ function TabIcon({ shape }: { shape: TabShape }) {
       <>
         <path d="M21 8 12 3 3 8v8l9 5 9-5z" />
         <path d="m3 8 9 5 9-5M12 13v8" />
+      </>
+    ),
+    person: (
+      <>
+        <circle cx="12" cy="7" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
       </>
     ),
     key: (

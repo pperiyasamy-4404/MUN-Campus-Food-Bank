@@ -51,14 +51,16 @@ function App() {
                 </StaffOnly>
               }
             />
+            {/* Its own tab since 14 Nov, like Setup code. The old address still works. */}
             <Route
-              path="counter/walk-in"
+              path="walk-in"
               element={
                 <StaffOnly>
                   <WalkIn />
                 </StaffOnly>
               }
             />
+            <Route path="counter/walk-in" element={<Navigate to="/walk-in" replace />} />
             <Route
               path="counter/fix"
               element={

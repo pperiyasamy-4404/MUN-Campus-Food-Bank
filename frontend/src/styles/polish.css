@@ -690,8 +690,9 @@ dialog.confirm-dialog::backdrop {
   padding-right: 0.6rem;
 }
 
-/* Staff on a narrower screen: the MUN mark alone, the name only for screen readers. */
-@media (48rem <= width < 75rem) {
+/* Staff on a narrower screen: the MUN mark alone, the name only for screen readers.
+   (Up to 85rem since 14 Nov: Walk-in made seven tabs.) */
+@media (48rem <= width < 85rem) {
   .top-staff .brand-name {
     position: absolute;
     width: 1px;
@@ -708,4 +709,11 @@ dialog.confirm-dialog::backdrop {
   margin-top: 2rem;
   padding-top: 0.4rem;
   border-top: 1px dashed var(--border-input);
+}
+
+/* Seven staff tabs on a small laptop: the words only, without the little icons. */
+@media (48rem <= width < 68rem) {
+  .top-staff .tab-icon {
+    display: none;
+  }
 }

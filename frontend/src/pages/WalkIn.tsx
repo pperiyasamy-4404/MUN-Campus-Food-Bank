@@ -9,7 +9,7 @@ import { NO_OLD_SYSTEM_ANSWER, oldSystemAnswer, oldSystemProblem, type OldSystem
 import { useMe } from '../me.ts'
 import { showDate, todayInNewfoundland } from '../time.ts'
 import { useValues } from '../useValues.ts'
-import { CounterNav, ExtrasPicker, ShelfPicker } from './CounterParts.tsx'
+import { ExtrasPicker, ShelfPicker } from './CounterParts.tsx'
 import { asChoices, total, useCounterPage, type Chosen } from './counterTools.ts'
 import { PageHeading } from '../PageHeading.tsx'
 import { Loading } from '../ui/Loading.tsx'
@@ -19,6 +19,7 @@ import { Loading } from '../ui/Loading.tsx'
 //    old system counts too: the volunteer gives its date, or says none (decided 12 Nov).
 // 2. Choose what they take from the shelf, and any extras.
 // 3. Record it. Their next pickup is 30 days from today, online or in person.
+// Its own tab since 14 Nov (the user's wish), not a small link under the counter.
 
 export function WalkIn() {
   const { forget } = useMe()
@@ -78,7 +79,6 @@ export function WalkIn() {
 
   return (
     <div>
-      <CounterNav />
       <PageHeading>Walk-in</PageHeading>
       <p className="lead">A student without a booking. They take what's on the shelf that nobody booked.</p>
       {!page.walk_ins_open && <p className="notice">{page.walk_ins_why_not}</p>}
