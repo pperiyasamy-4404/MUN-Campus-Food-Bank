@@ -11,6 +11,7 @@ import { DietFilters } from '../ui/DietFilters.tsx'
 import { Empty } from '../ui/Empty.tsx'
 import { Icon } from '../ui/Icon.tsx'
 import { holdLevel, holdShare } from '../ui/timing.ts'
+import { onlyIfSaying, onlyReplaces } from './backupTools.ts'
 
 // Stage 2 of booking: the time is held, a countdown runs, and the student
 // chooses food and substitutes, then presses Book (S8, I3, U2).
@@ -18,7 +19,11 @@ import { holdLevel, holdShare } from '../ui/timing.ts'
 // The limits are checked here so the buttons can say no straight away, and
 // again on the server, which is what really decides.
 
-type Line = { variety: Variety; item: string; itemKey: string }
+type Line = { variety: Variety; item: string; itemKey: string; photoUrl: string | null }
+
+// What the food cards are for right now (14 Nov): adding food to the bag, or
+// choosing backups (substitutes). The same cards, with different buttons.
+type Mode = 'food' | 'backups'
 
 export function ChooseFood({
   hold,
@@ -51,11 +56,18 @@ export function ChooseFood({
   // The diet filters (13 Nov). They only change what's shown: chosen food stays chosen.
   const [diets, setDiets] = useState<Diet[]>([])
   const shown = filterFood(food.bookable, diets)
+  const [mode, setMode] = useState<Mode>('food')
+  const switchRef = useRef<HTMLDivElement>(null)
 
   // Every bookable variety, with its item, in the order the server sent them (A to Z).
   const lines: Line[] = food.bookable.flatMap((category) =>
     category.items.flatMap((item) =>
-      item.varieties.map((variety) => ({ variety, item: item.name, itemKey: `${category.name}/${item.name}` })),
+      item.varieties.map((variety) => ({
+        variety,
+        item: item.name,
+        itemKey: `${category.name}/${item.name}`,
+        photoUrl: item.photo_url,
+      })),
     ),
   )
   const total = Object.values(chosen).reduce((sum, count) => sum + count, 0)
@@ -111,9 +123,53 @@ export function ChooseFood({
     onStartOver()
   }
 
-  const substituteChoices = lines.filter(
-    (line) => !(line.variety.id in chosen) && !substitutes.includes(line.variety.id) && line.variety.stock !== 0,
-  )
+  // Which chosen food a substitute can only stand in for (14 Nov): none means it can replace anything.
+  const replaces = (line: Line) => onlyReplaces(line, lines, chosen, limits.max_per_item)
+  // 1 for the first backup, 0 if it isn't one.
+  const backupNumber = (varietyId: number) => substitutes.indexOf(varietyId) + 1
+  const backupsFull = substitutes.length >= limits.substitute_limit
+  const rankedBackups = substitutes
+    .map((id) => lines.find((line) => line.variety.id === id))
+    .filter((line) => line !== undefined)
+
+  function toggleBackup(line: Line) {
+    setSubstitutes((old) =>
+      old.includes(line.variety.id)
+        ? old.filter((id) => id !== line.variety.id)
+        : old.length >= limits.substitute_limit
+          ? old
+          : [...old, line.variety.id],
+    )
+  }
+
+  /** Switch what the cards are for, and bring the switch into view, so the change is seen. */
+  function switchTo(next: Mode) {
+    setMode(next)
+    const box = switchRef.current
+    if (box && box.getBoundingClientRect().top < 0) box.scrollIntoView({ block: 'start' })
+  }
+
+  /** The button (or reason) on a variety's row while choosing backups. */
+  function backupAction(line: Line) {
+    const name = line.variety.name
+    if (line.variety.id in chosen) return <span className="why-not">In your bag</span>
+    const number = backupNumber(line.variety.id)
+    if (number > 0) {
+      return (
+        <button type="button" className="chosen-button" onClick={() => toggleBackup(line)}>
+          ✓ Backup {number}
+          <span className="visually-hidden">. Remove {name} from your backups</span>
+        </button>
+      )
+    }
+    if (line.variety.stock === 0) return null
+    if (backupsFull) return <span className="why-not">{limits.substitute_limit} backups already</span>
+    return (
+      <button type="button" className="backup-add" onClick={() => toggleBackup(line)}>
+        <span aria-hidden="true">+ </span>Backup<span className="visually-hidden"> {name}</span>
+      </button>
+    )
+  }
   return (
     <div>
       <BookingSteps current={2} />
@@ -139,7 +195,7 @@ export function ChooseFood({
             </span>
           </span>
           <span className="hold-count">
-            {total}/{limits.item_limit} food · {substitutes.length}/{limits.substitute_limit} substitutes
+            {total}/{limits.item_limit} food · {substitutes.length}/{limits.substitute_limit} backups
           </span>
           <button type="button" className="link-button hold-change" onClick={startOver}>
             Change time
@@ -153,10 +209,30 @@ export function ChooseFood({
         </div>
       </div>
 
-      <p className="muted choose-rules">
-        Up to {limits.item_limit} things, and {limits.max_per_item === 1 ? 'one' : `up to ${limits.max_per_item}`} of
-        each kind of food, counting all its varieties together.
-      </p>
+      {/* My food | Backups (14 Nov, option 2 on backup-designs.html): the same cards
+          either add food to the bag or choose backups for it. */}
+      <div ref={switchRef} className="choose-switch" role="group" aria-label="What you're choosing">
+        <button type="button" aria-pressed={mode === 'food'} onClick={() => switchTo('food')}>
+          My food <span className="switch-count">{total}/{limits.item_limit}</span>
+        </button>
+        <button type="button" aria-pressed={mode === 'backups'} onClick={() => switchTo('backups')}>
+          Backups <span className="switch-count">{substitutes.length}/{limits.substitute_limit}</span>
+        </button>
+      </div>
+
+      {mode === 'food' ? (
+        <p className="muted choose-rules">
+          Up to {limits.item_limit} things, and {limits.max_per_item === 1 ? 'one' : `up to ${limits.max_per_item}`} of
+          each kind of food, counting all its varieties together.
+        </p>
+      ) : (
+        <BackupOrder
+          ranked={rankedBackups}
+          limit={limits.substitute_limit}
+          replaces={replaces}
+          onChange={setSubstitutes}
+        />
+      )}
 
       <DietFilters
         chosen={diets}
@@ -177,18 +253,50 @@ export function ChooseFood({
             {category.items.map((item) => {
               const itemKey = `${category.name}/${item.name}`
               const chosenOfItem = ofItem(itemKey)
+              const backupNumbers = item.varieties.map((variety) => backupNumber(variety.id)).filter((n) => n > 0)
+              const choosingBackups = mode === 'backups'
               return (
                 <FoodCard
                   key={item.id}
                   name={item.name}
                   photoUrl={item.photo_url}
-                  highlighted={chosenOfItem > 0}
-                  badge={chosenOfItem > 0 ? `✓ ${chosenOfItem} chosen` : undefined}
+                  highlighted={choosingBackups ? backupNumbers.length > 0 : chosenOfItem > 0}
+                  badge={
+                    choosingBackups
+                      ? backupNumbers.length > 0
+                        ? `Backup ${backupNumbers.sort((a, b) => a - b).join(', ')}`
+                        : chosenOfItem > 0
+                          ? 'In your bag'
+                          : undefined
+                      : chosenOfItem > 0
+                        ? `✓ ${chosenOfItem} chosen`
+                        : undefined
+                  }
                 >
                   {item.varieties.map((variety) => {
-                    const line = { variety, item: item.name, itemKey }
+                    const line = { variety, item: item.name, itemKey, photoUrl: item.photo_url }
                     const have = chosen[variety.id] ?? 0
                     const notMore = whyNotMore(line)
+                    if (choosingBackups) {
+                      const only = have === 0 ? replaces(line) : []
+                      const action = backupAction(line)
+                      return (
+                        <FoodRow
+                          key={variety.id}
+                          name={variety.name}
+                          tags={variety.tags}
+                          dim={have > 0 || (backupNumber(variety.id) === 0 && (variety.stock === 0 || backupsFull))}
+                          note={
+                            <>
+                              <StockNote stock={variety.stock} fewLeft={variety.few_left} />
+                              {only.length > 0 && <span className="backup-only">Used {onlyIfSaying(only)}</span>}
+                            </>
+                          }
+                        >
+                          {action}
+                        </FoodRow>
+                      )
+                    }
                     return (
                       <FoodRow
                         key={variety.id}
@@ -231,12 +339,22 @@ export function ChooseFood({
         </section>
       ))}
 
-      <Substitutes
-        limit={limits.substitute_limit}
-        ranked={substitutes.map((id) => lines.find((line) => line.variety.id === id)).filter((line) => line !== undefined)}
-        choices={substituteChoices}
-        onChange={setSubstitutes}
-      />
+      {/* At the end of the food, so nobody scrolls past backups without knowing about them. */}
+      {mode === 'food' && (
+        <section className="card backup-invite">
+          <div>
+            <h2 className="in-card">Backups, in case something runs out</h2>
+            <p className="muted">
+              {substitutes.length === 0
+                ? `Choose up to ${limits.substitute_limit}. If something you chose is gone when your bag is packed, the volunteer uses these instead.`
+                : `You have ${substitutes.length} of ${limits.substitute_limit}: ${rankedBackups.map((line) => line.variety.name).join(', ')}.`}
+            </p>
+          </div>
+          <button type="button" className="secondary" onClick={() => switchTo('backups')}>
+            {substitutes.length === 0 ? 'Choose backups' : 'Change backups'}
+          </button>
+        </section>
+      )}
 
       {/* The extras with their photos, like on the home page (13 Nov night): not booked,
           but the student sees what they can ask for at the counter. */}
@@ -261,7 +379,7 @@ export function ChooseFood({
                 {total} {total === 1 ? 'thing' : 'things'}
               </strong>
               {substitutes.length > 0 &&
-                ` · ${substitutes.length} ${substitutes.length === 1 ? 'substitute' : 'substitutes'}`}
+                ` · ${substitutes.length} ${substitutes.length === 1 ? 'backup' : 'backups'}`}
             </span>
             <button type="button" onClick={() => setConfirming(true)}>
               Book {total} {total === 1 ? 'thing' : 'things'}
@@ -277,12 +395,16 @@ export function ChooseFood({
           food={lines
             .filter((line) => line.variety.id in chosen)
             .map((line) => ({ ...line, quantity: chosen[line.variety.id] }))}
-          substitutes={substitutes
-            .map((id) => lines.find((line) => line.variety.id === id))
-            .filter((line) => line !== undefined)}
+          substitutes={rankedBackups}
+          replaces={replaces}
           sending={sending}
           onConfirm={book}
           onBack={() => setConfirming(false)}
+          onChooseBackups={() => {
+            switchTo('backups')
+            // The dialog gave the focus back to Book; move it to the switch, where the student now is.
+            switchRef.current?.querySelectorAll('button')[1]?.focus({ preventScroll: true })
+          }}
         />
       )}
     </div>
@@ -299,17 +421,21 @@ function ConfirmBooking({
   timeLeft,
   food,
   substitutes,
+  replaces,
   sending,
   onConfirm,
   onBack,
+  onChooseBackups,
 }: {
   when: string
   timeLeft: string
   food: (Line & { quantity: number })[]
   substitutes: Line[]
+  replaces: (line: Line) => string[]
   sending: boolean
   onConfirm: () => void
   onBack: () => void
+  onChooseBackups: () => void
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
   const title = useId()
@@ -358,18 +484,42 @@ function ConfirmBooking({
 
         {substitutes.length > 0 ? (
           <>
-            <h3>If something runs out, use these, in order</h3>
+            <h3>Your backups: if something runs out, use these, in order</h3>
             <ol className="confirm-list confirm-ranked">
-              {substitutes.map((line) => (
-                <li key={line.variety.id}>
-                  <span>{line.variety.name}</span>
-                  <span className="muted">{line.item}</span>
-                </li>
-              ))}
+              {substitutes.map((line) => {
+                const only = replaces(line)
+                return (
+                  <li key={line.variety.id}>
+                    <span>
+                      {line.variety.name}
+                      {only.length > 0 && <span className="backup-only"> {onlyIfSaying(only)}</span>}
+                    </span>
+                    <span className="muted">{line.item}</span>
+                  </li>
+                )
+              })}
             </ol>
           </>
         ) : (
-          <p className="muted">No substitutes: if something runs out, you can choose something else from the shelf at the counter.</p>
+          // No backups (14 Nov, Prakash's idea): said here, in the check they already read,
+          // not in a second "Are you sure?" pop-up, with a way straight back to choose some.
+          <div className="notice confirm-no-backups">
+            <p>
+              <strong>No backups chosen.</strong> If something you chose runs out, your bag will be one short.
+              Backups take a few seconds and keep your bag full.
+            </p>
+            {/* The filled button, so the easy tap is choosing backups (14 Nov, Prakash). */}
+            <button
+              type="button"
+              disabled={sending}
+              onClick={() => {
+                dialog.current?.close()
+                onChooseBackups()
+              }}
+            >
+              Choose backups
+            </button>
+          </div>
         )}
 
         <p className="confirm-note">You can still cancel later on your booking page, until booking closes.</p>
@@ -378,8 +528,14 @@ function ConfirmBooking({
           <button type="button" className="secondary" disabled={sending} onClick={() => dialog.current?.close()}>
             Go back
           </button>
-          <button type="button" disabled={sending} aria-busy={sending} onClick={onConfirm}>
-            {sending ? 'Booking...' : 'Confirm booking'}
+          <button
+            type="button"
+            className={substitutes.length === 0 ? 'secondary' : undefined}
+            disabled={sending}
+            aria-busy={sending}
+            onClick={onConfirm}
+          >
+            {sending ? 'Booking...' : substitutes.length === 0 ? 'Book without backups' : 'Confirm booking'}
           </button>
         </div>
       </div>
@@ -387,19 +543,26 @@ function ConfirmBooking({
   )
 }
 
-/** Up to the limit of substitutes, ranked: if something is gone at packing, these fill the gap in order (U2, U4). */
-function Substitutes({
-  limit,
+/**
+ * The backups in order, while choosing them (14 Nov, option 2): a row of small photo
+ * chips, numbered. If something is gone at packing, these fill the gap in order (U2, U4).
+ * The arrows change the order; ✕ takes one off. The Backup buttons on the cards add them.
+ *
+ * Packing never gives a second of an item (with the sample limit of 1), so another
+ * variety of something chosen (Corn flakes, with Bran flakes chosen) only fills in if
+ * that pick runs out. The chip says so. The rule itself doesn't change.
+ */
+function BackupOrder({
   ranked,
-  choices,
+  limit,
+  replaces,
   onChange,
 }: {
-  limit: number
   ranked: Line[]
-  choices: Line[]
+  limit: number
+  replaces: (line: Line) => string[]
   onChange: (ids: number[]) => void
 }) {
-  const box = useId()
   const ids = ranked.map((line) => line.variety.id)
   const move = (from: number, to: number) => {
     const reordered = [...ids]
@@ -409,50 +572,66 @@ function Substitutes({
   }
 
   return (
-    <section className="card">
-      <h2 className="in-card">Substitutes (if something runs out)</h2>
-      <p className="muted">
-        If something you chose is gone when your bag is packed, the volunteer uses these instead, in this order.
-        Nothing else is ever put in your bag.
+    <section className="backup-order" aria-labelledby="backup-order-title">
+      <h2 id="backup-order-title" className="backup-order-title">
+        Your backups, in order
+      </h2>
+      <p className="muted backup-order-help">
+        If something you chose is gone when your bag is packed, the volunteer uses backup 1 first, then 2, and so on.
+        Tap <strong>Backup</strong> on any food below, up to {limit}.
       </p>
-      {ranked.length > 0 && (
-        <ol className="ranked">
-          {ranked.map((line, index) => (
-            <li key={line.variety.id}>
-              <span>
-                {line.variety.name} <span className="muted">({line.item})</span>
-              </span>
-              <span className="choose-controls">
-                <button type="button" className="secondary" disabled={index === 0} onClick={() => move(index, index - 1)} aria-label={`Move ${line.variety.name} up`}>
-                  ↑
-                </button>
-                <button type="button" className="secondary" disabled={index === ranked.length - 1} onClick={() => move(index, index + 1)} aria-label={`Move ${line.variety.name} down`}>
-                  ↓
-                </button>
-                <button type="button" className="link-button" onClick={() => onChange(ids.filter((id) => id !== line.variety.id))}>
-                  Remove
-                </button>
-              </span>
-            </li>
-          ))}
+      {ranked.length === 0 ? (
+        <p className="backup-order-empty">No backups yet.</p>
+      ) : (
+        <ol className="backup-chips">
+          {ranked.map((line, index) => {
+            const only = replaces(line)
+            return (
+              <li key={line.variety.id} className="backup-chip">
+                <span className="backup-chip-number" aria-hidden="true">
+                  {index + 1}
+                </span>
+                {line.photoUrl ? (
+                  <img className="backup-chip-photo" src={line.photoUrl} alt="" />
+                ) : (
+                  <span className="backup-chip-photo" aria-hidden="true" />
+                )}
+                <span className="backup-chip-text">
+                  <span className="backup-chip-name">{line.variety.name}</span>
+                  {only.length > 0 && <span className="backup-only">{onlyIfSaying(only)}</span>}
+                </span>
+                <span className="backup-chip-tools">
+                  <button
+                    type="button"
+                    className="chip-tool"
+                    disabled={index === 0}
+                    onClick={() => move(index, index - 1)}
+                    aria-label={`Move ${line.variety.name} earlier`}
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    className="chip-tool"
+                    disabled={index === ranked.length - 1}
+                    onClick={() => move(index, index + 1)}
+                    aria-label={`Move ${line.variety.name} later`}
+                  >
+                    ›
+                  </button>
+                  <button
+                    type="button"
+                    className="chip-tool"
+                    onClick={() => onChange(ids.filter((id) => id !== line.variety.id))}
+                    aria-label={`Remove ${line.variety.name} from your backups`}
+                  >
+                    ✕
+                  </button>
+                </span>
+              </li>
+            )
+          })}
         </ol>
-      )}
-      {ranked.length < limit && choices.length > 0 && (
-        <div className="field">
-          <label htmlFor={box}>Add a substitute</label>
-          <select
-            id={box}
-            value=""
-            onChange={(event) => event.target.value && onChange([...ids, Number(event.target.value)])}
-          >
-            <option value="">Choose one</option>
-            {choices.map((line) => (
-              <option key={line.variety.id} value={line.variety.id}>
-                {line.variety.name} ({line.item})
-              </option>
-            ))}
-          </select>
-        </div>
       )}
     </section>
   )

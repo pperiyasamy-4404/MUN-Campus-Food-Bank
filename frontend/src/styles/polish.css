@@ -711,6 +711,211 @@ dialog.confirm-dialog::backdrop {
   border-top: 1px dashed var(--border-input);
 }
 
+/* Substitutes (14 Nov): "Used only if your Bran flakes runs out" under a backup
+   that can only stand in for the student's own pick. */
+.backup-only {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-link);
+}
+
+/* ---------- Choose your food: My food | Backups (14 Nov, option 2) ---------- */
+
+/* The same pill switch as Student | Staff on the Log in card. */
+.choose-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: 0.4rem 0 0.8rem;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--bg-surface);
+  scroll-margin-top: 5.5rem;
+}
+
+.choose-switch button {
+  min-height: 2.6rem;
+  border: none;
+  border-radius: 999px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: transparent;
+  transition:
+    background-color var(--duration-normal) var(--ease-out),
+    color var(--duration-normal) ease,
+    box-shadow var(--duration-normal) ease;
+}
+
+.choose-switch button:hover {
+  background: var(--bg-page);
+}
+
+.choose-switch button[aria-pressed='true'] {
+  color: var(--action-primary-text);
+  background: var(--action-primary-bg);
+  box-shadow: var(--shadow-soft);
+}
+
+.choose-switch button:focus-visible {
+  outline-offset: 2px;
+}
+
+.switch-count {
+  margin-left: 0.3rem;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+/* Your backups, in order: numbered photo chips. */
+.backup-order {
+  margin: 0 0 1rem;
+  padding: 0.8rem 1rem 1rem;
+  border: 2px dashed var(--selected-border);
+  border-radius: calc(var(--radius) * 2);
+  background: var(--bg-page);
+}
+
+.backup-order-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.backup-order-help {
+  margin: 0.2rem 0 0.7rem;
+  font-size: 0.9rem;
+}
+
+.backup-order-empty {
+  margin: 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.backup-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.backup-chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  max-width: 100%;
+  padding: 0.35rem 0.4rem 0.35rem 0.35rem;
+  border: 1.5px solid var(--selected-border);
+  border-radius: 999px;
+  background: var(--bg-page);
+  box-shadow: var(--shadow-soft);
+}
+
+.backup-chip-number {
+  position: absolute;
+  top: -0.45rem;
+  left: -0.35rem;
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text-on-claret);
+  background: var(--action-primary-bg);
+}
+
+.backup-chip-photo {
+  flex: none;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-surface);
+}
+
+.backup-chip-text {
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.backup-chip-name {
+  display: block;
+  font-weight: 700;
+}
+
+.backup-chip-tools {
+  display: flex;
+  gap: 2px;
+}
+
+.chip-tool {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-link);
+  background: transparent;
+}
+
+.chip-tool:hover:not(:disabled) {
+  background: var(--bg-surface);
+}
+
+.chip-tool:disabled {
+  opacity: 0.3;
+  background: transparent;
+}
+
+/* "+ Backup" on the cards: a dashed claret edge, lighter than the filled Add, so the
+   two modes look different. Chosen, it's the usual "✓" button with a solid edge. */
+button.backup-add {
+  padding: 0.35rem 0.9rem;
+  border: 2px dashed var(--selected-border);
+  color: var(--text-link);
+  background: var(--bg-page);
+}
+
+button.backup-add:hover:not(:disabled) {
+  border-style: solid;
+  color: var(--text-link);
+  background: var(--bg-surface);
+}
+
+/* "Ready to book?" with no backups: the gold note, and a way back to choose some. */
+.confirm-no-backups {
+  margin: 0.8rem 0 0;
+}
+
+.confirm-no-backups p {
+  margin: 0 0 0.6rem;
+}
+
+/* After the food, while adding food: what backups are, and a way in. */
+.backup-invite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+}
+
+.backup-invite > div {
+  flex: 1 1 18rem;
+}
+
+.backup-invite p {
+  margin-bottom: 0;
+}
+
 /* Seven staff tabs on a small laptop: the words only, without the little icons. */
 @media (48rem <= width < 68rem) {
   .top-staff .tab-icon {
