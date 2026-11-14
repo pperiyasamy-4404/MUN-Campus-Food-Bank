@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backups you can see</title>
+<style>
+  :root {
+    color-scheme: light;
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc; --card: #ffffff;
+    --blue: #1d4ed8; --blue-bg: #dbeafe;
+    --green: #065f46; --green-bg: #d1fae5;
+    --amber: #92400e; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9; --claret: #862633; --claret-bg: #f7e9eb; --on-claret: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --ink: #e2e8f0; --muted: #a7b3c4; --line: #334155; --bg: #0f172a; --card: #1e293b;
+      --blue: #93c5fd; --blue-bg: #1e3a5f;
+      --green: #6ee7b7; --green-bg: #064e3b;
+      --amber: #fcd34d; --amber-bg: #451a03;
+      --red: #fca5a5; --red-bg: #450a0a;
+      --slate-bg: #273449; --claret: #f2a7b2; --claret-bg: #3b1a20; --on-claret: #1e293b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 980px; margin: 0 auto; padding: 36px 16px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 8px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 .pill { font-size: .8rem; vertical-align: middle; margin-left: 6px; }
+  p { margin: 10px 0; }
+  ul { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  .muted { color: var(--muted); }
+  .label { display: block; font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 16px 0 2px; }
+  .pill { display: inline-block; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+  .pill.best { background: var(--green-bg); color: var(--green); }
+  .pill.ok { background: var(--blue-bg); color: var(--blue); }
+  .pill.big { background: var(--amber-bg); color: var(--amber); }
+  .note { border-left: 4px solid var(--amber); background: var(--amber-bg); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .note p { margin: 4px 0; }
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; align-items: start; }
+  .pros { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 18px; }
+
+  /* ---------- a phone-ish frame for each picture ---------- */
+  .phone { background: var(--card); border: 2px solid var(--line); border-radius: 22px; padding: 14px; max-width: 420px; font-size: .9rem; }
+  .phone h4 { margin: 0 0 2px; font-size: 1.02rem; }
+  .phone .sub { color: var(--muted); font-size: .82rem; margin: 0 0 10px; }
+  img.food { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; display: block; }
+
+  /* Option 1: the backup shelf */
+  .shelf { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .spot { position: relative; border-radius: 12px; text-align: center; font-size: .72rem; line-height: 1.25; }
+  .spot .n { position: absolute; top: -7px; left: -7px; width: 22px; height: 22px; border-radius: 50%; background: var(--claret); color: var(--on-claret); font-weight: 800; font-size: .75rem; display: grid; place-items: center; z-index: 1; }
+  .spot .x { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; font-size: .7rem; display: grid; place-items: center; }
+  .spot .name { display: block; margin-top: 4px; font-weight: 600; }
+  .spot .for { display: block; color: var(--claret); font-size: .66rem; }
+  .spot.empty { border: 2px dashed var(--line); aspect-ratio: 1; display: grid; place-items: center; color: var(--muted); font-size: 1.4rem; }
+  .spot.empty.glow { border-color: var(--amber); background: var(--amber-bg); color: var(--amber); }
+  .hint { background: var(--amber-bg); color: var(--amber); border-radius: 10px; padding: 7px 10px; font-size: .8rem; margin-top: 10px; }
+
+  /* the pop-up behind a + */
+  .sheet { background: var(--card); border: 2px solid var(--line); border-radius: 22px 22px 14px 14px; padding: 14px; max-width: 420px; font-size: .9rem; box-shadow: 0 10px 30px rgba(0,0,0,.12); }
+  .grab { width: 40px; height: 4px; border-radius: 4px; background: var(--line); margin: 0 auto 10px; }
+  .filters { display: flex; gap: 6px; margin: 4px 0 10px; flex-wrap: wrap; }
+  .filter { font-size: .75rem; border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; }
+  .filter.on { border-color: var(--green); background: var(--green-bg); color: var(--green); font-weight: 700; }
+  .group { font-weight: 700; margin: 10px 0 0; font-size: .86rem; }
+  .group-help { color: var(--muted); font-size: .76rem; margin: 0 0 6px; }
+  .picks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .pick { position: relative; text-align: center; font-size: .72rem; line-height: 1.25; }
+  .pick .name { display: block; margin-top: 3px; font-weight: 600; }
+  .pick .for { display: block; color: var(--claret); font-size: .66rem; }
+  .pick.on img { outline: 3px solid var(--claret); outline-offset: 1px; }
+  .pick .badge { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; background: var(--claret); color: var(--on-claret); font-weight: 800; font-size: .75rem; display: grid; place-items: center; }
+  .sheet-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); margin-top: 12px; padding-top: 10px; }
+  .btn { display: inline-block; background: var(--claret); color: var(--on-claret); border-radius: 999px; padding: 5px 16px; font-weight: 700; font-size: .85rem; }
+  .btn.ghost { background: transparent; color: var(--claret); border: 1.5px solid var(--claret); }
+
+  /* Option 2: mode switch */
+  .switch { display: grid; grid-template-columns: 1fr 1fr; border: 1.5px solid var(--claret); border-radius: 999px; overflow: hidden; margin-bottom: 12px; font-weight: 700; font-size: .85rem; text-align: center; }
+  .switch span { padding: 6px 0; color: var(--claret); }
+  .switch span.on { background: var(--claret); color: var(--on-claret); }
+  .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .fcard { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; position: relative; }
+  .fcard img { width: 100%; height: 86px; object-fit: cover; display: block; }
+  .fcard .body { padding: 6px 8px 8px; font-size: .78rem; }
+  .fcard .row { display: flex; justify-content: space-between; align-items: center; gap: 4px; margin-top: 3px; }
+  .mini-btn { border: 1.5px solid var(--claret); color: var(--claret); border-radius: 999px; padding: 0 8px; font-weight: 700; font-size: .7rem; white-space: nowrap; }
+  .mini-btn.on { background: var(--claret); color: var(--on-claret); }
+  .ribbon { position: absolute; top: 6px; left: 6px; background: var(--claret); color: var(--on-claret); font-weight: 800; font-size: .7rem; border-radius: 999px; padding: 1px 8px; }
+  .fcard.inbag { opacity: .5; }
+  .fcard.inbag .ribbon { background: var(--green); color: #fff; }
+
+  /* Option 3: plan B under each pick */
+  .bagline { display: grid; grid-template-columns: 52px 1fr; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .bagline img { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; }
+  .bagline .what { font-weight: 600; }
+  .planb { display: inline-flex; align-items: center; gap: 6px; margin-top: 3px; font-size: .78rem; color: var(--muted); }
+  .planb img { width: 24px; height: 24px; border-radius: 6px; }
+  .planb .add { border: 1.5px dashed var(--line); border-radius: 999px; padding: 0 9px; }
+
+  /* Option 4: the bag picture */
+  .bagpic { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; }
+  .bag { border: 2px solid var(--line); border-radius: 14px 14px 26px 26px; padding: 26px 8px 8px; position: relative; background: var(--slate-bg); }
+  .bag::before { content: ""; position: absolute; top: -14px; left: 30%; width: 40%; height: 24px; border: 3px solid var(--line); border-bottom: 0; border-radius: 20px 20px 0 0; }
+  .bag .in { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+  .bag .in img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
+  .spare { border: 2px dashed var(--line); border-radius: 14px; padding: 8px; }
+  .spare .in { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+  .spare .in img, .spare .in .e { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
+  .spare .in .e { border: 1.5px dashed var(--line); }
+  .cap { font-size: .72rem; font-weight: 700; color: var(--muted); text-align: center; margin-top: 6px; }
+
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; background: var(--card); font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Campus Food Bank · 14 November 2026</p>
+  <h1>Backups you can see</h1>
+  <p class="lead">
+    The dropdown is gone in every one of these. Each design shows backups as <b>food with photos</b>, so a student
+    can see at a glance what they've chosen and in what order. The pictures use the real photos from the app.
+    Option 1 is the one I'd pick.
+  </p>
+  <div class="note">
+    <p><b>Chosen, 14 November:</b> Prakash picked <b>option 2</b> (the My food | Backups switch), and it's built.
+       It also has a row of numbered photo chips at the top to change the order, and a warning in "Ready to book?"
+       when there are no backups.</p>
+  </div>
+
+  <!-- ===================================================== -->
+  <h2>Option 1: a backup shelf with 5 spots <span class="pill best">My pick</span></h2>
+  <p>Under the food there's a <b>shelf with 5 numbered spots</b>, one for each backup the student can have. Spot 1 is
+     the first one the volunteer tries. Filled spots show the food's photo. Empty spots show a <b>+</b>.</p>
+
+  <div class="two">
+    <div class="phone">
+      <h4>Your backups</h4>
+      <p class="sub">If something runs out, the volunteer uses these, from 1 to 5.</p>
+      <div class="shelf">
+        <div class="spot"><span class="n">1</span><img class="food" src="backend/app/sample_photos/rice.jpg" alt=""><span class="x">✕</span><span class="name">White rice</span></div>
+        <div class="spot"><span class="n">2</span><img class="food" src="backend/app/sample_photos/baked-beans.jpg" alt=""><span class="x">✕</span><span class="name">Baked beans</span></div>
+        <div class="spot"><span class="n">3</span><img class="food" src="backend/app/sample_photos/cereal.jpg" alt=""><span class="x">✕</span><span class="name">Corn flakes</span><span class="for">for your Bran flakes</span></div>
+        <div class="spot"><span class="n">4</span><div class="spot empty glow">+</div></div>
+        <div class="spot"><span class="n">5</span><div class="spot empty">+</div></div>
+      </div>
+      <div class="hint">⚠ Sunflower oil is almost gone. Fill a spot in case it runs out.</div>
+    </div>
+
+    <div class="sheet">
+      <div class="grab"></div>
+      <h4 style="margin:0">Choose a backup for spot 4</h4>
+      <div class="filters"><span class="filter">Vegetarian</span><span class="filter on">✓ Gluten-free</span></div>
+      <p class="group">Can replace anything</p>
+      <p class="group-help">Food you didn't choose. It can fill any gap.</p>
+      <div class="picks">
+        <div class="pick on"><span class="badge">1</span><img class="food" src="backend/app/sample_photos/rice.jpg" alt=""><span class="name">White rice</span></div>
+        <div class="pick"><img class="food" src="backend/app/sample_photos/canned-corn.jpg" alt=""><span class="name">Canned corn</span></div>
+        <div class="pick"><img class="food" src="backend/app/sample_photos/canned-tuna.jpg" alt=""><span class="name">Tuna</span></div>
+        <div class="pick"><img class="food" src="backend/app/sample_photos/chickpeas.jpg" alt=""><span class="name">Chickpeas</span></div>
+      </div>
+      <p class="group">Only if your own pick runs out</p>
+      <p class="group-help">Another kind of something you chose.</p>
+      <div class="picks">
+        <div class="pick"><img class="food" src="backend/app/sample_photos/cereal.jpg" alt=""><span class="name">GF cereal</span><span class="for">for Bran flakes</span></div>
+      </div>
+      <div class="sheet-foot"><span class="muted">Tap one to put it in spot 4</span><span class="btn ghost">Close</span></div>
+    </div>
+  </div>
+
+  <span class="label">How it works</span>
+  <ul>
+    <li><b>Tap a +</b> and a panel comes up from the bottom with photo cards. Tap one and it goes in that spot.</li>
+    <li><b>Change the order:</b> drag a spot onto another to swap them. On a phone, press and hold first. Small ‹ › buttons do the same for anyone who can't drag.</li>
+    <li><b>✕</b> takes a backup off the shelf.</li>
+    <li>Idea 2 stays, inside the panel: <b>"Can replace anything"</b> comes first. A spot like Corn flakes says <b>"for your Bran flakes"</b> in small red letters.</li>
+    <li>The <b>diet filter</b> you set for your food is already on in the panel (idea 3).</li>
+    <li>When something you chose shows <b>Few left</b>, the next empty spot glows and a hint shows (idea 4).</li>
+  </ul>
+
+  <div class="two">
+    <div class="pros">
+      <span class="label">Why it's my pick</span>
+      <ul>
+        <li>You can <b>see the limit</b>: 5 spots, so nobody has to read "up to 5".</li>
+        <li>You can <b>see the order</b>: 1 to 5, left to right.</li>
+        <li>An empty spot asks to be filled, so more students set up backups.</li>
+        <li>It fits a 360 px phone: 5 spots in one row.</li>
+        <li>No server change. The packing rule stays the same.</li>
+      </ul>
+    </div>
+    <div class="pros">
+      <span class="label">Watch out for</span>
+      <ul>
+        <li>Dragging needs care to work with a keyboard and screen reader, which is why there are ‹ › buttons too.</li>
+        <li>Work: about an evening, plus tests.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===================================================== -->
+  <h2>Option 2: a "Backups" switch on the food cards <span class="pill ok">Good too</span></h2>
+  <p>At the top of the food there's a switch: <b>My food | Backups</b>. Switch to Backups and the same big food cards
+     you already use get a <b>Backup</b> button. Food in your bag is faded and marked "In your bag".</p>
+  <div class="two">
+    <div class="phone">
+      <div class="switch"><span>My food (11)</span><span class="on">Backups (2 of 5)</span></div>
+      <div class="cards">
+        <div class="fcard"><span class="ribbon">Backup 1</span><img src="backend/app/sample_photos/rice.jpg" alt="">
+          <div class="body"><b>Rice</b><div class="row"><span>White rice</span><span class="mini-btn on">✓ 1</span></div><div class="row"><span>Brown rice</span><span class="mini-btn">Backup</span></div></div></div>
+        <div class="fcard inbag"><span class="ribbon">In your bag</span><img src="backend/app/sample_photos/cooking-oil.jpg" alt="">
+          <div class="body"><b>Cooking oil</b><div class="row"><span>Sunflower oil</span><span>✓</span></div></div></div>
+        <div class="fcard"><span class="ribbon">Backup 2</span><img src="backend/app/sample_photos/baked-beans.jpg" alt="">
+          <div class="body"><b>Baked beans</b><div class="row"><span>In tomato sauce</span><span class="mini-btn on">✓ 2</span></div></div></div>
+        <div class="fcard"><img src="backend/app/sample_photos/pasta.jpg" alt="">
+          <div class="body"><b>Pasta</b><div class="row"><span>Spaghetti</span><span class="mini-btn">Backup</span></div></div></div>
+      </div>
+    </div>
+    <div class="pros">
+      <span class="label">Why it's good</span>
+      <ul><li>Uses the big photo cards people already know. Nothing new to learn.</li><li>Every food is right there, so there's no extra panel.</li></ul>
+      <span class="label">Why it's not my pick</span>
+      <ul><li>Two modes on one page are easy to mix up. Someone in Backups mode might think they're adding food to their bag.</li>
+          <li>Changing the order is hard to show on cards spread over a long page. It still needs a small row of numbers somewhere.</li></ul>
+    </div>
+  </div>
+
+  <!-- ===================================================== -->
+  <h2>Option 3: a plan B under each food you chose <span class="pill big">Changes the rules</span></h2>
+  <p>A "Your bag" list with a photo of each food you chose. Under each one there's a small spot: <b>"If this runs out → …"</b>.</p>
+  <div class="two">
+    <div class="phone">
+      <h4>Your bag</h4>
+      <div class="bagline"><img src="backend/app/sample_photos/cereal.jpg" alt=""><div><div class="what">Bran flakes</div>
+        <div class="planb">If it runs out → <img src="backend/app/sample_photos/cereal.jpg" alt=""> Corn flakes</div></div></div>
+      <div class="bagline"><img src="backend/app/sample_photos/cooking-oil.jpg" alt=""><div><div class="what">Sunflower oil</div>
+        <div class="planb">If it runs out → <img src="backend/app/sample_photos/rice.jpg" alt=""> White rice</div></div></div>
+      <div class="bagline"><img src="backend/app/sample_photos/jam.jpg" alt=""><div><div class="what">Strawberry jam</div>
+        <div class="planb">If it runs out → <span class="add">+ choose</span></div></div></div>
+    </div>
+    <div class="pros">
+      <span class="label">Why it's good</span>
+      <ul><li>It's the easiest to understand: each food has its own plan B. Nobody has to think about "rules".</li></ul>
+      <span class="label">Why it's not my pick (for now)</span>
+      <ul><li>It's a <b>different rule</b>. Today any backup can fill any gap, in order (U4). This one says "this backup is only for this food". The server, the packing page, the sticky note and many tests would all change.</li>
+          <li>It needs the food bank to agree, because it changes what goes in the bag.</li>
+          <li>Work: several days.</li></ul>
+    </div>
+  </div>
+
+  <!-- ===================================================== -->
+  <h2>Option 4: a picture of your bag and a spare shelf <span class="pill ok">Fun, but heavy</span></h2>
+  <div class="two">
+    <div class="phone">
+      <div class="bagpic">
+        <div><div class="bag"><div class="in">
+          <img src="backend/app/sample_photos/cereal.jpg" alt=""><img src="backend/app/sample_photos/cooking-oil.jpg" alt=""><img src="backend/app/sample_photos/jam.jpg" alt="">
+          <img src="backend/app/sample_photos/pasta.jpg" alt=""><img src="backend/app/sample_photos/canned-tomatoes.jpg" alt=""><img src="backend/app/sample_photos/oats.jpg" alt="">
+        </div></div><div class="cap">Your bag (11)</div></div>
+        <div><div class="spare"><div class="in">
+          <img src="backend/app/sample_photos/rice.jpg" alt=""><img src="backend/app/sample_photos/baked-beans.jpg" alt=""><div class="e"></div><div class="e"></div>
+        </div></div><div class="cap">Spares (2 of 5)</div></div>
+      </div>
+    </div>
+    <div class="pros">
+      <span class="label">Why it's good</span>
+      <ul><li>Friendly and different. It looks like a real bag.</li></ul>
+      <span class="label">Why it's not my pick</span>
+      <ul><li>With 13 foods the bag gets crowded and the photos get tiny on a phone.</li>
+          <li>The order of the spares isn't clear (which one is first?).</li>
+          <li>It's mostly decoration, so it's more work for less help.</li></ul>
+    </div>
+  </div>
+
+  <!-- ===================================================== -->
+  <h2>Side by side</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>See the limit (5)</th><th>See the order</th><th>Server change</th><th>Work</th></tr></thead>
+      <tbody>
+        <tr><td><b>1. Backup shelf</b></td><td>Yes, 5 spots</td><td>Yes, 1 to 5</td><td>No</td><td>About an evening</td></tr>
+        <tr><td><b>2. Backups switch</b></td><td>Count only</td><td>Badges on cards spread over the page</td><td>No</td><td>About an evening</td></tr>
+        <tr><td><b>3. Plan B per food</b></td><td>One per food</td><td>Not needed</td><td><b>Yes, new rule</b></td><td>Several days</td></tr>
+        <tr><td><b>4. Bag picture</b></td><td>Yes</td><td>Not clear</td><td>No</td><td>A day or more</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note">
+    <p><b>What happens to today's dropdown:</b> whichever you pick, the dropdown and the numbered text list go away.
+       The two-group idea you liked stays, inside the new design.</p>
+  </div>
+</main>
+</body>
+</html>

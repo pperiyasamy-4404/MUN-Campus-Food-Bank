@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Better backups</title>
+<style>
+  :root {
+    color-scheme: light;
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc; --card: #ffffff;
+    --blue: #1d4ed8; --blue-bg: #dbeafe;
+    --green: #065f46; --green-bg: #d1fae5;
+    --amber: #92400e; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9; --claret: #862633; --claret-bg: #f7e9eb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --ink: #e2e8f0; --muted: #a7b3c4; --line: #334155; --bg: #0f172a; --card: #1e293b;
+      --blue: #93c5fd; --blue-bg: #1e3a5f;
+      --green: #6ee7b7; --green-bg: #064e3b;
+      --amber: #fcd34d; --amber-bg: #451a03;
+      --red: #fca5a5; --red-bg: #450a0a;
+      --slate-bg: #273449; --claret: #f2a7b2; --claret-bg: #3b1a20;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 960px; margin: 0 auto; padding: 36px 16px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.15rem; line-height: 1.35; margin: 18px 0 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  a { color: var(--blue); }
+  .muted { color: var(--muted); }
+
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; padding: 0; list-style: none; }
+  .toc a { display: inline-block; padding: 6px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); text-decoration: none; font-weight: 600; font-size: .95rem; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--blue); border-radius: 14px; padding: 18px 20px; margin: 20px 0; }
+  .card.bad { border-left-color: var(--red); }
+  .card.good { border-left-color: var(--green); }
+  .card.no { border-left-color: var(--muted); }
+  .card h3 { margin-top: 0; }
+  .label { display: block; font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 14px 0 2px; }
+  .example { background: var(--slate-bg); border-radius: 10px; padding: 10px 14px; margin: 6px 0; }
+  .example p { margin: 4px 0; }
+  .note { border-left: 4px solid var(--amber); background: var(--amber-bg); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .note p { margin: 4px 0; }
+  .word { background: var(--blue-bg); border-radius: 10px; padding: 10px 14px; margin: 12px 0; }
+  .word p { margin: 4px 0; }
+
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; background: var(--card); font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+  td.yes { color: var(--green); font-weight: 700; }
+  td.nope { color: var(--muted); }
+
+  /* ---------- pictures of the screens ---------- */
+  .screens { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin: 16px 0; }
+  .screen { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 14px; font-size: .9rem; }
+  .screen-title { font-size: .75rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .screen h4 { margin: 0 0 4px; font-size: 1rem; }
+  .fake-select { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; background: var(--bg); display: flex; justify-content: space-between; }
+  .fake-options { border: 1px solid var(--line); border-top: 0; border-radius: 0 0 8px 8px; padding: 4px 10px; background: var(--bg); color: var(--muted); }
+  .fake-options div { padding: 2px 0; }
+  .fake-btn { display: inline-block; background: var(--claret); color: #fff; border-radius: 999px; padding: 5px 14px; font-weight: 700; font-size: .85rem; }
+  @media (prefers-color-scheme: dark) { .fake-btn { color: #1e293b; } }
+  .fake-btn.ghost { background: transparent; color: var(--claret); border: 1.5px solid var(--claret); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid var(--claret); color: var(--claret); background: var(--claret-bg); border-radius: 999px; padding: 2px 10px 2px 4px; font-weight: 600; font-size: .85rem; }
+  .chip b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--claret); color: #fff; font-size: .75rem; }
+  @media (prefers-color-scheme: dark) { .chip b { color: #1e293b; } }
+  .group-name { font-weight: 700; margin: 10px 0 2px; font-size: .88rem; }
+  .group-help { color: var(--muted); font-size: .8rem; margin: 0 0 6px; }
+  .mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .mini { border: 1px solid var(--line); border-radius: 10px; padding: 6px; text-align: center; font-size: .78rem; position: relative; }
+  .mini .pic { height: 34px; border-radius: 6px; background: var(--slate-bg); margin-bottom: 4px; display: grid; place-items: center; font-size: 1.2rem; }
+  .mini .t { display: inline-block; font-size: .65rem; font-weight: 700; padding: 0 6px; border-radius: 999px; background: var(--green-bg); color: var(--green); margin-top: 2px; }
+  .mini.picked { border: 2px solid var(--claret); }
+  .mini.picked::after { content: attr(data-n); position: absolute; top: -8px; right: -8px; width: 20px; height: 20px; border-radius: 50%; background: var(--claret); color: #fff; font-weight: 700; font-size: .72rem; display: grid; place-items: center; }
+  .mini.dim { opacity: .4; }
+  .filters { display: flex; gap: 6px; margin: 4px 0 8px; }
+  .filter { font-size: .75rem; border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; }
+  .filter.on { border-color: var(--green); background: var(--green-bg); color: var(--green); font-weight: 700; }
+  .bookbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; }
+  .nudge { background: var(--amber-bg); color: var(--amber); border-radius: 8px; padding: 6px 10px; font-size: .82rem; margin-top: 8px; }
+
+  /* ---------- the "how packing uses backups" picture ---------- */
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; }
+  .box { border: 2px solid var(--line); background: var(--card); border-radius: 10px; padding: 6px 12px; font-weight: 600; }
+  .box.gone { border-color: var(--red); color: var(--red); text-decoration: line-through; }
+  .box.ok { border-color: var(--green); color: var(--green); }
+  .box.skip { border-color: var(--muted); color: var(--muted); border-style: dashed; }
+  .arrow { color: var(--muted); font-weight: 700; }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Campus Food Bank · 14 November 2026</p>
+  <h1>Better backups</h1>
+  <p class="lead">
+    When a student books, they can choose up to <b>5 backups</b>. A backup is food the volunteer puts in the bag
+    if something the student chose has run out. The code calls these <b>substitutes</b>. This page explains what's
+    wrong with how students choose backups today, what I want to change, and the three options (A, B, C).
+  </p>
+
+  <div class="note">
+    <p><b>Update, 14 November:</b> idea 2 (two groups) was built in the dropdown first, then the dropdown was
+       replaced. Backups are now chosen on the food cards themselves, with a "My food | Backups" switch: option 2 on
+       <a href="backup-designs.html">backup-designs.html</a>. This page is kept as a record of the first ideas.</p>
+  </div>
+
+  <ul class="toc">
+    <li><a href="#today">How it works today</a></li>
+    <li><a href="#problems">The 3 problems</a></li>
+    <li><a href="#ideas">The 5 ideas</a></li>
+    <li><a href="#options">Options A, B, C</a></li>
+    <li><a href="#not">What I would not do</a></li>
+  </ul>
+
+  <!-- ===================================================== -->
+  <h2 id="today">How it works today</h2>
+
+  <div class="word">
+    <p><b>Two words first.</b></p>
+    <p>An <b>item</b> is a kind of food, like <i>Cereal</i> or <i>Jam</i>.</p>
+    <p>A <b>variety</b> is one version of that item, like <i>Bran flakes</i> or <i>Corn flakes</i> (both are Cereal),
+      or <i>Strawberry jam</i> and <i>Raspberry jam</i> (both are Jam).</p>
+    <p>The rule today: a student can have only <b>1 of each item</b> (1 cereal, 1 jam, and so on).</p>
+  </div>
+
+  <p>At the bottom of the food page there's a card called <b>"Substitutes (if something runs out)"</b>.
+     The student opens a plain dropdown and picks a name. Each pick goes into a numbered list.</p>
+
+  <div class="screens">
+    <div class="screen">
+      <p class="screen-title">Today</p>
+      <h4>Substitutes (if something runs out)</h4>
+      <p class="muted" style="margin:0 0 8px">The volunteer uses these instead, in this order.</p>
+      <ol style="margin:0 0 8px">
+        <li>White rice</li>
+        <li>Corn flakes</li>
+      </ol>
+      <div class="fake-select"><span>Add a substitute</span><span>▾</span></div>
+      <div class="fake-options">
+        <div>Baked beans</div><div>Canned chicken</div><div>Pasta</div><div>Raspberry jam</div><div>…</div>
+      </div>
+    </div>
+  </div>
+
+  <p>Some things it already does well: it hides food the student already chose, food already on the backup list,
+     and food that's run out.</p>
+
+  <h3>How packing uses the backups</h3>
+  <p>When a volunteer packs a bag and something is missing, the server goes down the backup list from the top.
+     It skips a backup if it would give the student a <b>second</b> of the same item.</p>
+  <div class="example">
+    <p><b>Example.</b> Mia chose <b>Bran flakes</b> and <b>Sunflower oil</b>. Her backups: 1. Corn flakes, 2. White rice.</p>
+    <p>At packing, the <b>Sunflower oil</b> is gone:</p>
+    <div class="flow">
+      <span class="box gone">Sunflower oil</span><span class="arrow">→ try 1.</span>
+      <span class="box skip">Corn flakes: skipped, she already has a cereal</span><span class="arrow">→ try 2.</span>
+      <span class="box ok">White rice ✓</span>
+    </div>
+    <p>But if the <b>Bran flakes</b> was the one that's gone, Corn flakes <b>would</b> be used, because then she has no cereal.</p>
+  </div>
+  <p>That rule is correct and fair, and I'm <b>not</b> changing it. The problem is that students can't see it.</p>
+
+  <!-- ===================================================== -->
+  <h2 id="problems">The 3 problems</h2>
+
+  <div class="card bad">
+    <h3>Problem 1: just names, no photos, no diet tags</h3>
+    <p>Everywhere else on the food page, food is a card with a photo and tags like <i>Vegetarian</i> or
+       <i>Gluten-free</i>. The backup dropdown only has names.</p>
+    <div class="example"><p><b>Example.</b> Sam eats gluten-free and turned on the Gluten-free filter. Sam picks
+       <i>Pasta</i> as a backup from the dropdown. The dropdown doesn't follow the filter, so Sam could get pasta Sam can't eat.</p></div>
+    <p><b>Why it matters:</b> it's a health risk, not just looks. It's also the only part of the booking page that
+       still looks old.</p>
+  </div>
+
+  <div class="card bad">
+    <h3>Problem 2: some backups can only fill one gap, and students can't tell</h3>
+    <p>This is the Mia example above. <i>Corn flakes</i> looks like a normal backup, but it can only help if her
+       <i>Bran flakes</i> runs out. If something else runs out, it's skipped.</p>
+    <div class="example"><p><b>Example.</b> A student picks 5 backups, all other varieties of things they already
+       chose (Corn flakes, Raspberry jam, …). Their own sunflower oil runs out, and <b>none</b> of the 5 can replace it.
+       The bag is short and they have to choose at the counter, even though they set up 5 backups.</p></div>
+  </div>
+
+  <div class="card bad">
+    <h3>Problem 3: no help choosing</h3>
+    <p>The dropdown is a long list in name order. It doesn't show which backups are <b>most useful</b> (ones that can
+       replace anything), and it doesn't say when a backup matters most (when something they chose is almost gone).</p>
+  </div>
+
+  <!-- ===================================================== -->
+  <h2 id="ideas">The 5 ideas</h2>
+
+  <div class="card good">
+    <h3>Idea 1: a "Choose backups" pop-up with photo cards</h3>
+    <p>The dropdown becomes a button. It opens a pop-up with the <b>same food cards</b> as the rest of the page.
+       Tap a card to add it. It gets a number badge (1, 2, 3…). The chosen backups show as numbered <b>chips</b>
+       that can be moved up or down or removed.</p>
+    <div class="screens">
+      <div class="screen">
+        <p class="screen-title">On the food page</p>
+        <h4>Backups (if something runs out)</h4>
+        <div class="chips">
+          <span class="chip"><b>1</b>White rice ✕</span>
+          <span class="chip"><b>2</b>Baked beans ✕</span>
+        </div>
+        <span class="fake-btn ghost">+ Choose backups (2 of 5)</span>
+      </div>
+      <div class="screen">
+        <p class="screen-title">The pop-up</p>
+        <div class="mini-grid">
+          <div class="mini picked" data-n="1"><div class="pic">🍚</div>White rice<br><span class="t">GF</span></div>
+          <div class="mini picked" data-n="2"><div class="pic">🫘</div>Baked beans</div>
+          <div class="mini"><div class="pic">🍝</div>Pasta</div>
+          <div class="mini"><div class="pic">🥫</div>Canned corn<br><span class="t">GF</span></div>
+          <div class="mini"><div class="pic">🍜</div>Noodles</div>
+          <div class="mini"><div class="pic">☕</div>Coffee<br><span class="t">GF</span></div>
+        </div>
+        <div class="bookbar"><span class="muted">2 of 5 chosen</span><span class="fake-btn">Done</span></div>
+      </div>
+    </div>
+    <span class="label">Why</span>
+    <p>Same look as the rest of the page, so nothing new to learn. Photos help people choose faster. It fixes problem 1.</p>
+    <span class="label">Why a pop-up, and not the cards on the page itself</span>
+    <p>The page already has many cards. Putting backups there too would mix up "food I want" with "food if something runs out".</p>
+  </div>
+
+  <div class="card good">
+    <h3>Idea 2: two groups inside the pop-up</h3>
+    <p>The pop-up puts food in two groups, so students see which backups are most useful.</p>
+    <div class="screens">
+      <div class="screen">
+        <p class="screen-title">The pop-up, in two groups</p>
+        <p class="group-name">Can replace anything</p>
+        <p class="group-help">Food you didn't choose. If anything runs out, these can fill the gap.</p>
+        <div class="mini-grid">
+          <div class="mini"><div class="pic">🍚</div>White rice</div>
+          <div class="mini"><div class="pic">🫘</div>Baked beans</div>
+          <div class="mini"><div class="pic">🍝</div>Pasta</div>
+        </div>
+        <p class="group-name" style="margin-top:12px">Only if your own pick runs out</p>
+        <p class="group-help">Another kind of something you chose. Corn flakes is only used if your Bran flakes runs out.</p>
+        <div class="mini-grid">
+          <div class="mini"><div class="pic">🥣</div>Corn flakes<br><span class="muted" style="font-size:.65rem">for Bran flakes</span></div>
+          <div class="mini"><div class="pic">🍓</div>Raspberry jam<br><span class="muted" style="font-size:.65rem">for Strawberry jam</span></div>
+        </div>
+      </div>
+    </div>
+    <span class="label">Why</span>
+    <p>It shows students the packing rule in plain words without them having to learn it. It fixes problem 2.
+       Both groups are still allowed. A student who really wants Corn flakes if Bran flakes is gone can still pick it.</p>
+    <span class="label">Why not hide the second group</span>
+    <p>Those backups are still useful for a cereal lover. Hiding them would take away a choice students have today.</p>
+  </div>
+
+  <div class="card good">
+    <h3>Idea 3: the diet filter works in the pop-up too</h3>
+    <p>If the student turned on <i>Gluten-free</i> or <i>Vegetarian</i> on the food page, the pop-up starts with
+       the same filter on. They can turn it off if they want.</p>
+    <div class="screens">
+      <div class="screen">
+        <p class="screen-title">Gluten-free is on</p>
+        <div class="filters"><span class="filter">Vegetarian</span><span class="filter on">✓ Gluten-free</span></div>
+        <div class="mini-grid">
+          <div class="mini"><div class="pic">🍚</div>White rice<br><span class="t">GF</span></div>
+          <div class="mini"><div class="pic">🥫</div>Canned corn<br><span class="t">GF</span></div>
+          <div class="mini"><div class="pic">☕</div>Coffee<br><span class="t">GF</span></div>
+        </div>
+      </div>
+    </div>
+    <span class="label">Why</span>
+    <p>Sam (problem 1) never sees Pasta, so Sam can't pick it by mistake. Very little work: the filter code already exists.</p>
+  </div>
+
+  <div class="card good">
+    <h3>Idea 4: a hint on the Book bar when something is almost gone</h3>
+    <p>If something the student chose shows <b>Few left</b>, the Book bar shows a short hint.
+       It's only a hint and never stops them booking.</p>
+    <div class="screens">
+      <div class="screen">
+        <p class="screen-title">The Book bar</p>
+        <div class="nudge">⚠ Sunflower oil is almost gone. <u>Add a backup</u> in case it runs out.</div>
+        <div class="bookbar"><span><b>11 things</b> · 0 backups</span><span class="fake-btn">Book</span></div>
+      </div>
+    </div>
+    <span class="label">Why</span>
+    <p>It tells students about backups right when they need them most. Fewer short bags means fewer people
+       choosing at the counter, so lines move faster.</p>
+    <span class="label">When it does not show</span>
+    <p>When the student already has at least one backup that can replace anything, or has chosen 5 already.</p>
+  </div>
+
+  <div class="card">
+    <h3>Idea 5 (later): "Suggest backups for me"</h3>
+    <p>A button in the pop-up that fills in good backups by itself: food with plenty in stock, from the
+       "Can replace anything" group, that matches their diet filter.</p>
+    <span class="label">Why later</span>
+    <p>Ideas 1–4 are enough to fix all 3 problems. A "suggest" button also needs its own choices
+       (Which food first? What about food nobody likes?), and it's better to see how students use 1–4 first.</p>
+  </div>
+
+  <div class="note">
+    <p><b>Server and rules stay the same.</b> Every idea changes only the booking page in the browser. The server
+       already sends what the page needs: photos, diet tags, which item each food belongs to, and "Few left".
+       The packing rule and the 5-backup limit don't change. The server tests stay as they are, and I add page tests.</p>
+  </div>
+
+  <!-- ===================================================== -->
+  <h2 id="options">Options A, B, C</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>1. Pop-up with photos</th><th>2. Two groups</th><th>3. Diet filter</th><th>4. Book bar hint</th><th>5. Suggest for me</th><th>Work</th></tr></thead>
+      <tbody>
+        <tr><td><b>A</b> (my pick)</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="nope">later</td><td>About an evening</td></tr>
+        <tr><td><b>B</b></td><td class="yes">✓</td><td class="yes">✓</td><td class="nope">no</td><td class="nope">no</td><td class="nope">no</td><td>A bit less</td></tr>
+        <tr><td><b>C</b></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td>About a day</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><b>Why A:</b> it fixes all 3 problems. B leaves the gluten-free risk open (problem 1, idea 3), and idea 3 is the
+     smallest piece. C adds a feature we'd be guessing about before real students have tried 1–4.</p>
+
+  <!-- ===================================================== -->
+  <h2 id="not">What I would not do</h2>
+  <div class="card no">
+    <h3>A "Backup" button on every food card</h3>
+    <p>Every card would have two buttons: "Add" and "Backup". The page we just cleaned up would get crowded again,
+       and on a phone it's easy to tap the wrong one.</p>
+  </div>
+  <div class="card no">
+    <h3>Changing the packing rule so a backup can give a second of the same item</h3>
+    <p>That would break the "1 of each item" rule the food bank set, so it's not fair to everyone else.
+       The fix is to <b>show</b> the rule, not change it.</p>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ideas to make it better</title>
+<style>
+  :root {
+    color-scheme: light;
+    --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc; --card: #ffffff;
+    --blue: #1d4ed8; --blue-bg: #dbeafe;
+    --green: #065f46; --green-bg: #d1fae5;
+    --amber: #92400e; --amber-bg: #fef3c7;
+    --red: #b91c1c; --red-bg: #fee2e2;
+    --slate-bg: #f1f5f9; --suggest-bg: #eff6ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --ink: #e2e8f0; --muted: #a7b3c4; --line: #334155; --bg: #0f172a; --card: #1e293b;
+      --blue: #93c5fd; --blue-bg: #1e3a5f;
+      --green: #6ee7b7; --green-bg: #064e3b;
+      --amber: #fcd34d; --amber-bg: #451a03;
+      --red: #fca5a5; --red-bg: #450a0a;
+      --slate-bg: #273449; --suggest-bg: #172a46;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 960px; margin: 0 auto; padding: 36px 16px 90px; }
+  .eyebrow { margin: 0; color: var(--blue); font-weight: 700; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 4px 0 10px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.15rem; line-height: 1.35; margin: 0 0 6px; }
+  h3 .num { color: var(--blue); margin-right: 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  a { color: var(--blue); }
+
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; padding: 0; list-style: none; }
+  .toc a { display: inline-block; padding: 6px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); text-decoration: none; font-weight: 600; font-size: .95rem; }
+
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; background: var(--card); font-size: .94rem; border: 1px solid var(--line); margin: 14px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--slate-bg); }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--blue); border-radius: 14px; padding: 18px 20px; margin: 20px 0; }
+  .card.top { border-left-color: var(--green); }
+  .card.no { border-left-color: var(--red); }
+  .head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { font-size: .78rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .small { color: var(--green); background: var(--green-bg); }
+  .medium { color: var(--amber); background: var(--amber-bg); }
+  .big { color: var(--red); background: var(--red-bg); }
+  .high { color: var(--blue); background: var(--blue-bg); }
+  .label { display: block; font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 14px 0 2px; }
+  .example { background: var(--slate-bg); border-radius: 10px; padding: 10px 14px; margin: 6px 0; }
+  .example p { margin: 4px 0; }
+  .note { border-left: 4px solid var(--amber); background: var(--amber-bg); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .note p { margin: 4px 0; }
+  .suggest { background: var(--suggest-bg); border-radius: 10px; padding: 10px 14px; margin: 8px 0; }
+  .suggest p { margin: 4px 0; }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Campus Food Bank · 14 November 2026</p>
+  <h1>Ideas to make the website even better</h1>
+  <p class="lead">
+    The website works and looks good now. This page is a list of ideas to make it <b>easier</b>, <b>faster</b> and
+    <b>friendlier</b> for students, volunteers and the coordinator. Each idea says what it is, a tiny example, why it
+    helps, and how much work it is. At the end there are tricks to find more ideas yourself, and a few ideas
+    I would <b>not</b> do.
+  </p>
+
+  <div class="note">
+    <p><b>How to read the tags</b></p>
+    <p>
+      <span class="tag small">Small work</span> an evening or less ·
+      <span class="tag medium">Medium work</span> a day or two ·
+      <span class="tag big">Big work</span> a week or more, or it changes the rules ·
+      <span class="tag high">Big help</span> people would really notice it
+    </p>
+  </div>
+
+  <ul class="toc">
+    <li><a href="#top-picks">Top picks</a></li>
+    <li><a href="#students">For students</a></li>
+    <li><a href="#volunteers">For volunteers</a></li>
+    <li><a href="#coordinator">For the coordinator</a></li>
+    <li><a href="#everyone">For everyone</a></li>
+    <li><a href="#tricks">Tricks to find more ideas</a></li>
+    <li><a href="#not">Ideas I would not do</a></li>
+  </ul>
+
+  <!-- ===================================================== -->
+  <h2 id="top-picks">If you only do six, do these</h2>
+  <p>These give the most help for the least work. Each one is explained further down.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Idea</th><th>Who it helps</th><th>Work</th><th>Why it's a top pick</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><a href="#s1">Your code works with no internet</a></td><td>Students</td><td><span class="tag small">Small</span></td><td>Phones lose signal in basements. A student should never stand at the counter without their code.</td></tr>
+        <tr><td>2</td><td><a href="#v1">One total pick list for packing</a></td><td>Volunteers</td><td><span class="tag small">Small</span></td><td>Walk to the shelf once, not once per bag. Packing gets much faster.</td></tr>
+        <tr><td>3</td><td><a href="#s2">"Add to my calendar" button</a></td><td>Students</td><td><span class="tag small">Small</span></td><td>Fewer no-shows. No email or phone number needed.</td></tr>
+        <tr><td>4</td><td><a href="#v2">"Coming next" list at the counter</a></td><td>Volunteers</td><td><span class="tag small">Small</span></td><td>Volunteers get the next bags ready before students arrive, so lines move faster.</td></tr>
+        <tr><td>5</td><td><a href="#e1">A short "How it works" help page</a></td><td>Everyone</td><td><span class="tag small">Small</span></td><td>Answers the same questions every student asks, before they ask.</td></tr>
+        <tr><td>6</td><td><a href="#t1">Watch 5 real people use it</a></td><td>Everyone</td><td><span class="tag small">Small</span></td><td>Finds problems no list of ideas can. Do this before building anything big.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===================================================== -->
+  <h2 id="students">For students</h2>
+
+  <div class="card top" id="s1">
+    <div class="head">
+      <h3><span class="num">S1</span>Your booking code works with no internet</h3>
+      <div class="tags"><span class="tag small">Small work</span><span class="tag high">Big help</span></div>
+    </div>
+    <span class="label">What it is</span>
+    <p>When a student books, the phone keeps a copy of their code, day and time. If there's no signal at the counter, the booking page still shows the code.</p>
+    <span class="label">Tiny example</span>
+    <div class="example"><p>Priya walks into the basement, her phone says "No service". She opens the website from her home screen and still sees <b>Q3J · Monday 3:30 pm</b>, with a small note "Saved on this phone".</p></div>
+    <span class="label">Why it helps</span>
+    <p>The code is the one thing a student needs at the counter. Losing it means a longer line while the volunteer searches by MUN card.</p>
+    <span class="label">Watch out</span>
+    <p>Keep only the code, day and time on the phone, never the ID number. Clear it when they log out or the day is over.</p>
+  </div>
+
+  <div class="card top" id="s2">
+    <div class="head">
+      <h3><span class="num">S2</span>"Add to my calendar" after booking</h3>
+      <div class="tags"><span class="tag small">Small work</span><span class="tag high">Big help</span></div>
+    </div>
+    <span class="label">What it is</span>
+    <p>A button on "You're booked!" that downloads a small calendar file. The phone's own calendar adds the pickup with a reminder an hour before.</p>
+    <span class="label">Tiny example</span>
+    <div class="example"><p>Tap <b>Add to my calendar</b> → the phone shows "Campus Food Bank pickup, Mon 16 Nov, 3:30 pm, code Q3J. Bring your MUN card." → reminder at 2:30 pm.</p></div>
+    <span class="label">Why it helps</span>
+    <p>Students are busy and forget. Every no-show is a bag packed for nobody. A reminder is the cheapest way to cut no-shows.</p>
+    <span class="label">Why not email or text reminders</span>
+    <p>The site keeps no email or phone number, on purpose (privacy). A calendar file needs nothing new to be stored.</p>
+  </div>
+
+  <div class="card" id="s3">
+    <div class="head">
+      <h3><span class="num">S3</span>Change your food without cancelling</h3>
+      <div class="tags"><span class="tag big">Big work</span><span class="tag high">Big help</span></div>
+    </div>
+    <span class="label">What it is</span>
+    <p>Until booking closes, a student can open their booking and swap food or change the time, instead of cancelling.</p>
+    <span class="label">Tiny example</span>
+    <div class="example"><p>Ali booked oats, then sees eggs came in. Today he must cancel, and then he can't book that day again (rule S6). With this, he taps <b>Change my food</b>, swaps oats for cereal, done.</p></div>
+    <span class="label">Why it helps</span>
+    <p>People change their minds. Today the only way out is a cancel that locks them out of that day, which feels harsh.</p>
+    <span class="label">Watch out</span>
+    <p>It touches the stock rules (food goes back, new food comes off) and needs careful tests, like booking did. That's why it's big.</p>
+  </div>
+
+  <div class="card" id="s4">
+    <div class="head">
+      <h3><span class="num">S4</span>"Book the same as last time"</h3>
+      <div class="tags"><span class="tag medium">Medium work</span></div>
+    </div>
+    <span class="label">What it is</span>
+    <p>On the food page, one button fills in last time's food and substitutes (only what's still in stock). The student can still change anything.</p>
+    <span class="label">Tiny example</span>
+    <div class="example"><p>Most students take the same 10 things every month. Instead of 10 taps: <b>1 tap</b>, check, book.</p></div>
+    <span class="label">Why it helps</span>
+    <p>Faster booking inside the 10-minute hold, so fewer holds run out.</p>
+    <span class="label">Watch out</span>
+    <p>It only works while the last booking's details are still kept (P7 deletes them after a while). If they're gone, the button just doesn't show.</p>
+  </div>
+
+  <div class="card" id="s5">
+    <div class="head">
+      <h3><span class="num">S5</span>Keep the food list if the 10 minutes run out</h3>
+      <div class="tags"><span class="tag small">Small work</span></div>
+    </div>
+    <span class="label">What it is</span>
+    <p>If the hold runs out, the food they chose is remembered on the phone. When they pick a new time, it's filled back in.</p>
+    <span class="label">Tiny example</span>
+    <div class="example"><p>Sara chose 9 things, her friend called, the 10 minutes ran out. Today: start again from zero. With this: "We kept your list" and her 9 things are back.</p></div>
+    <span class="label">Why it helps</span>
+    <p>Losing work is the most annoying thing on any website. This removes it.</p>
+  </div>
+
+  <div class="card" id="s6">
+    <div class="head">
+      <h3><span class="num">S6</span>A tap when booking opens (notifications)</h3>
+      <div class="tags"><span class="tag medium">Medium work</span></div>
+    </div>
+    <span class="label">What it is</span>
+    <p>Students who add the site to their home screen can turn on a notification: "Booking for Monday is open now."</p>
+    <span class="label">Why it helps</span>
+    <p>Popular times go fast. A notice at 5 pm is fairer than students refreshing the page all afternoon.</p>
+    <span class="label">Watch out</span>
+    <p>Only if the student turns it on. Never more than one message per pickup day, or people turn it off.</p>
+  </div>
+
+  <div class="card" id="s7">
+    <div class="head">
+      <h3><span class="num">S7</span>Remember the diet filters</h3>
+      <div class="tags"><span class="tag small">Small work</span></div>
+    </div>
+    <p>If a student ticks <b>Vegetarian</b> once, keep it ticked next time on that phone. A vegetarian student shouldn't have to tick it every visit. Kept only on their own phone, nothing on the server.</p>
+  </div>
+
+  <div class="card" id="s8">
+    <div class="head">
+      <h3><span class="num">S8</span>A big "show at the counter" screen</h3>
+      <div class="tags"><span class="tag small">Small work</span></div>
+    </div>
+    <p>A button on the booking page that fills the whole screen with the code in huge letters, on a white background. The student turns their phone to the volunteer, and the volunteer reads it from a metre away. No squinting, no "can you say that again".</p>
+  </div>
+
+  <div class="card" id="s9">
+    <div class="head">
+      <h3><span class="num">S9</span>Other languages</h3>
+      <div class="tags"><span class="tag big">Big work</span><span class="tag high">Big help</span></div>
+    </div>
+    <span class="label">What it is</span>
+    <p>A language button: English, French, and the languages MUN's international students use most (ask the food bank which).</p>
+    <span class="label">Why it helps</span>
+    <p>Many students who need the food bank are new to Canada. Reading food names and rules in your own language makes it far less stressful.</p>
+    <span class="label">Watch out</span>
+    <p>Every sentence on the site has to move into a translation file, and every new sentence needs translating. Do it once the words stop changing.</p>
+  </div>
+
+  <!-- ===================================================== -->
+  <h2 id="volunteers">For volunteers (packing, counter, walk-ins)</h2>
+
+  <div class="card top" id="v1">
+    <div class="head">
+      <h3><span class="num">V1</span>One total pick list for packing</h3>
+      <div class="tags"><span class="tag small">Small work</span><span class="tag high">Big help</span></div>
+    </div>
+    <span class="label">What it is</span>
+    <p>At the top of the Packing page: everything the day's bags need, added up, in shelf order.</p>
+    <span class="label">Tiny example</span>
+    <div class="example">
+      <p>Monday, 18 bags:</p>
+      <p>Cereal: <b>12</b> (Bran flakes 7, Corn flakes 5) · Jam: <b>9</b> · Oats: <b>6</b> · Canned tuna: <b>4</b> ...</p>
+    </div>
+    <span class="label">Why it helps</span>
+    <p>A volunteer brings all 12 cereals to the table in one trip, then fills the bags. It's how warehouses pack, and it's much faster than walking to the shelf for every bag.</p>
+  </div>
+
+  <div class="card top" id="v2">
+    <div class="head">
+      <h3><span class="num">V2</span>"Coming next" list at the counter</h3>
+      <div class="tags"><span class="tag small">Small work</span><span class="tag high">Big help</span></div>
+    </div>
+    <span class="label">What it is</span>
+    <p>On Hand over a bag: a small list of the bags due in the next 30 minutes, with their codes and whether they're packed.</p>
+    <span class="label">Tiny example</span>
+    <div class="example"><p><b>4:00 pm</b> Q3J ✓ packed · <b>4:10 pm</b> R7S ✓ packed · <b>4:20 pm</b> K2M <i>not packed yet</i></p></div>
+    <span class="label">Why it helps</span>
+    <p>The volunteer puts the next bags near the counter before students arrive, and spots an unpacked bag before the student is standing there waiting.</p>
+    <span class="label">Watch out</span>
+    <p>Codes and times only. No names or ID numbers (P4).</p>
+  </div>
+
+  <div class="card" id="v3">
+    <div class="head">
+      <h3><span class="num">V3</span>Print bag labels</h3>
+      <div class="tags"><span class="tag small">Small work</span></div>
+    </div>
+    <p>A <b>Print labels</b> button on the Packing page that prints each bag's code and pickup time in large letters, plus the sticky-note lines (like "Oats → Rice"). Volunteers tape one on each bag. No more hand-writing codes, and no bad handwriting at the counter.</p>
+  </div>
+
+  <div class="card" id="v4">
+    <div class="head">
+      <h3><span class="num">V4</span>Undo for 10 seconds after "Handed over"</h3>
+      <div class="tags"><span class="tag medium">Medium work</span></div>
+    </div>
+    <p>After handing over a bag, show a message with <b>Undo</b> for 10 seconds. Busy counters make mistakes (wrong bag, a student who walks away). Today the fix is the separate Fix a pickup page, which is slower and feels serious. Undo is quick and calm.</p>
+  </div>
+
+  <div class="card" id="v5">
+    <div class="head">
+      <h3><span class="num">V5</span>The keyboard does everything at the counter</h3>
+      <div class="tags"><span class="tag small">Small work</span></div>
+    </div>
+    <p>The cursor is already in the code box when the page opens. <b>Enter</b> finds the bag, then jumps to the MUN card box. <b>Enter</b> again hands it over. A volunteer serving 40 students saves hundreds of mouse moves, and the line moves faster.</p>
+  </div>
+
+  <div class="card" id="v6">
+    <div class="head">
+      <h3><span class="num">V6</span>Scan instead of type</h3>
+      <div class="tags"><span class="tag medium">Medium work</span></div>
+    </div>
+    <span class="label">What it is</span>
+    <p>If MUN cards have a barcode, a cheap USB scanner (about $25) can type the ID number into the box. The scanner acts like a keyboard, so the website barely needs to change.</p>
+    <span class="label">Why it helps</span>
+    <p>No typos, and no typing the number twice on Walk-in and Setup code.</p>
+    <span class="label">Watch out</span>
+    <p>Check first that the card's barcode really is the ID number. Don't add phone-camera scanning of booking codes: a 3-letter code is already quicker to say than to scan.</p>
+  </div>
+
+  <div class="card" id="v7">
+    <div class="head">
+      <h3><span class="num">V7</span>Packing updates live</h3>
+      <div class="tags"><span class="tag medium">Medium work</span></div>
+    </div>
+    <p>Today the Packing page asks the server again every 30 seconds. With live updates, when one volunteer marks Tuna "ran out", every other volunteer sees it at once, not up to 30 seconds later. Nice, but 30 seconds is usually fine, so this can wait.</p>
+  </div>
+
+  <!-- ===================================================== -->
+  <h2 id="coordinator">For the coordinator</h2>
+
+  <div class="card" id="c1">
+    <div class="head">
+      <h3><span class="num">C1</span>A "running low" list</h3>
+      <div class="tags"><span class="tag small">Small work</span><span class="tag high">Big help</span></div>
+    </div>
+    <span class="label">What it is</span>
+    <p>On Stock or the Coordinator page: food that is low or out, with how many were booked last week.</p>
+    <span class="label">Tiny example</span>
+    <div class="example"><p>⚠ <b>Canned tuna</b>: 0 left, 9 booked last week · ⚠ <b>Chickpeas</b>: 1 left, 6 booked last week</p></div>
+    <span class="label">Why it helps</span>
+    <p>It becomes the shopping and donation-request list. The coordinator knows what to ask donors for without walking the shelves.</p>
+  </div>
+
+  <div class="card" id="c2">
+    <div class="head">
+      <h3><span class="num">C2</span>Charts on the weekly totals</h3>
+      <div class="tags"><span class="tag medium">Medium work</span></div>
+    </div>
+    <p>The totals are a table of numbers today. A simple line chart ("bags per week this term") and a bar chart ("most booked food") make reports to MUN or donors easy, and show trends like the rush before exams. Keep the privacy rule: small numbers still show as "fewer than 5" (P12).</p>
+  </div>
+
+  <div class="card" id="c3">
+    <div class="head">
+      <h3><span class="num">C3</span>Download the totals as a spreadsheet</h3>
+      <div class="tags"><span class="tag small">Small work</span></div>
+    </div>
+    <p>A <b>Download (CSV)</b> button that opens in Excel. Coordinators often have to send numbers to someone, and copying from a web page is slow and error-prone. Same privacy rule as the charts.</p>
+  </div>
+
+  <div class="card" id="c4">
+    <div class="head">
+      <h3><span class="num">C4</span>A notice banner for students</h3>
+      <div class="tags"><span class="tag small">Small work</span></div>
+    </div>
+    <p>A box on the Coordinator page: type "Extra eggs this week!" or "Closed 21 Dec to 6 Jan", and it shows at the top of the home page until a chosen date. The coordinator can tell every student something without a developer.</p>
+  </div>
+
+  <!-- ===================================================== -->
+  <h2 id="everyone">For everyone</h2>
+
+  <div class="card top" id="e1">
+    <div class="head">
+      <h3><span class="num">E1</span>A short "How it works" page</h3>
+      <div class="tags"><span class="tag small">Small work</span><span class="tag high">Big help</span></div>
+    </div>
+    <p>Five questions with short answers, linked from the home page:</p>
+    <ul>
+      <li>How do I get an account? (Go to the counter with your MUN card.)</li>
+      <li>How often can I get food? (Once every 30 days.)</li>
+      <li>What if I can't come? (Cancel before booking closes.)</li>
+      <li>What if something runs out? (Your substitutes, then the shelf.)</li>
+      <li>Is my information private? (What's kept, and for how long.)</li>
+    </ul>
+    <p>It saves volunteers from answering the same questions all evening, and the privacy answer builds trust.</p>
+  </div>
+
+  <div class="card" id="e2">
+    <div class="head">
+      <h3><span class="num">E2</span>A 3-step welcome for first-time students</h3>
+      <div class="tags"><span class="tag small">Small work</span></div>
+    </div>
+    <p>The very first time a student logs in: three small cards, "1 Pick a time → 2 Choose food → 3 Say your code at the counter", and a <b>Got it</b> button. Shown once. People learn faster from three pictures than from a page of rules.</p>
+  </div>
+
+  <div class="card" id="e3">
+    <div class="head">
+      <h3><span class="num">E3</span>Every error has a "Try again" button</h3>
+      <div class="tags"><span class="tag small">Small work</span></div>
+    </div>
+    <p>Today some failures say "Could not get the food list. Is the server running?" That's a developer's sentence. Better: "We couldn't load the food. Check your internet and try again." with a <b>Try again</b> button. Tell people what happened and what to do, in their words.</p>
+  </div>
+
+  <div class="card" id="e4">
+    <div class="head">
+      <h3><span class="num">E4</span>Lighter photos, a faster site</h3>
+      <div class="tags"><span class="tag small">Small work</span></div>
+    </div>
+    <p>Save food photos in a modern format (WebP) at the size they're shown. Photos are usually most of a page's weight. On a cheap phone with weak signal, the food page could load in about half the time. Test it once on the slowest phone you can find.</p>
+  </div>
+
+  <div class="card" id="e5">
+    <div class="head">
+      <h3><span class="num">E5</span>Try it with only a keyboard and a screen reader</h3>
+      <div class="tags"><span class="tag small">Small work</span></div>
+    </div>
+    <p>The automatic checker (axe) says the pages are clean, but it can't catch everything. Spend 20 minutes booking with only the <b>Tab</b> and <b>Enter</b> keys, then with <b>NVDA</b>, the free Windows screen reader. If you get stuck, a blind or low-vision student would too.</p>
+  </div>
+
+  <div class="card" id="e6">
+    <div class="head">
+      <h3><span class="num">E6</span>Make every page follow the same pattern</h3>
+      <div class="tags"><span class="tag medium">Medium work</span></div>
+    </div>
+    <p>Log in, Set up and Setup code are now neat centred cards. Walk-in, Fix a pickup and Settings are still plain forms. Pick one look for "a form you fill in" and use it everywhere: same widths, same button place, same spacing. When things look the same, people trust them and learn them once.</p>
+  </div>
+
+  <!-- ===================================================== -->
+  <h2 id="tricks">Tricks to find more ideas yourself</h2>
+  <p>The best ideas come from watching real people, not from guessing. These are simple and free.</p>
+
+  <div class="card top" id="t1">
+    <div class="head">
+      <h3><span class="num">T1</span>Watch 5 people book</h3>
+      <div class="tags"><span class="tag small">1 hour</span><span class="tag high">Big help</span></div>
+    </div>
+    <p>Ask 5 friends (or real students) to book a pickup while you watch. Say only: "Please book a pickup for Monday. Say out loud what you're thinking." <b>Don't help them</b>, even when they get stuck. Write down every pause, every wrong tap, every "hmm".</p>
+    <p>Why 5: after about 5 people you keep seeing the same problems again. Five people find most of the big ones.</p>
+  </div>
+
+  <div class="card" id="t2">
+    <div class="head">
+      <h3><span class="num">T2</span>The 5-second test</h3>
+      <div class="tags"><span class="tag small">10 minutes</span></div>
+    </div>
+    <p>Show someone a page for 5 seconds, then hide it. Ask: "What was that page for? What would you click first?" If they can't say, the page's main point isn't clear enough.</p>
+  </div>
+
+  <div class="card" id="t3">
+    <div class="head">
+      <h3><span class="num">T3</span>Ask volunteers three questions after a shift</h3>
+      <div class="tags"><span class="tag small">5 minutes</span></div>
+    </div>
+    <ul>
+      <li>What was slow tonight?</li>
+      <li>What did students ask you most?</li>
+      <li>What did you do on paper instead of the website?</li>
+    </ul>
+    <p>The third question is gold: anything done on paper is something the website is missing.</p>
+  </div>
+
+  <div class="card" id="t4">
+    <div class="head">
+      <h3><span class="num">T4</span>Count where people give up</h3>
+      <div class="tags"><span class="tag medium">Medium work</span></div>
+    </div>
+    <p>Count things, not people. Example: "This week, 23 holds ran out before booking." If that number is high, the food page is too slow or confusing. Other good counts: cancellations, no-shows, setup codes never used. Numbers only, no names, so privacy stays safe.</p>
+  </div>
+
+  <div class="card" id="t5">
+    <div class="head">
+      <h3><span class="num">T5</span>Read every page out loud</h3>
+      <div class="tags"><span class="tag small">30 minutes</span></div>
+    </div>
+    <p>If a sentence sounds strange when you say it, it reads strange too. Also check that each page has <b>one</b> main button. When everything shouts, nothing does.</p>
+  </div>
+
+  <div class="card" id="t6">
+    <div class="head">
+      <h3><span class="num">T6</span>Look at the error log every week</h3>
+      <div class="tags"><span class="tag small">5 minutes</span></div>
+    </div>
+    <p>The server already writes its errors to <b>errors.log</b>. Five minutes a week reading it finds bugs before students report them, or before they give up quietly and never tell you.</p>
+  </div>
+
+  <!-- ===================================================== -->
+  <h2 id="not">Ideas I would not do (and why)</h2>
+
+  <div class="card no">
+    <h3>Dark mode</h3>
+    <p>It's popular, but MUN's brand colours were chosen for light backgrounds, and you decided on light only (12 Nov). Claret on dark grey is hard to read. Only revisit if students ask for it.</p>
+  </div>
+
+  <div class="card no">
+    <h3>A chatbot</h3>
+    <p>A good "How it works" page (E1) answers the same questions better, costs nothing to run, and never gives a wrong answer about the rules.</p>
+  </div>
+
+  <div class="card no">
+    <h3>Email or text reminders</h3>
+    <p>They'd need students' email addresses or phone numbers, which the site deliberately doesn't keep. The calendar button (S2) and notifications (S6) give the same help without any new personal data.</p>
+  </div>
+
+  <div class="card no">
+    <h3>Points, badges or "streaks"</h3>
+    <p>Fine for a fitness app, wrong for a food bank. Using a food bank can feel sensitive, so the site should feel calm, private and respectful, never like a game.</p>
+  </div>
+
+  <div class="card no">
+    <h3>Even more animation</h3>
+    <p>The site now has enough movement to feel modern. More would make it slower on cheap phones and tiring for staff who use it all evening. New movement should only help people see what changed.</p>
+  </div>
+
+  <div class="suggest">
+    <p><b>My suggestion for what to do next:</b> first T1 (watch 5 people), because it may change which ideas matter most. Then the six top picks, one at a time, each tried by you before the next one starts.</p>
+  </div>
+</main>
+</body>
+</html>
